@@ -1,0 +1,69 @@
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Giriş";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="bi bi-lock-fill"></i> Sistemə Giriş
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Login" method="post">
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="EmailOrUsername" class="form-label">
+                                <i class="bi bi-person-fill"></i> Email və ya İstifadəçi adı
+                            </label>
+                            <input asp-for="EmailOrUsername" class="form-control form-control-lg" placeholder="admin" />
+                            <span asp-validation-for="EmailOrUsername" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">
+                                <i class="bi bi-key-fill"></i> Şifrə
+                            </label>
+                            <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="••••••••" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="RememberMe" type="checkbox" class="form-check-input" id="rememberMe" />
+                            <label asp-for="RememberMe" class="form-check-label" for="rememberMe">
+                                Məni yadda saxla
+                            </label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Daxil ol
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center bg-light py-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> 
+                        Default login: <strong>admin</strong> / <strong>Admin123!</strong>
+                    </small>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Company" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-arrow-left-circle"></i> Şirkət seçiminə qayıt
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

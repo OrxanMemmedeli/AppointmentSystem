@@ -1,0 +1,157 @@
+/* Global Styles */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+}
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Header */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Footer */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+    background-color: #f8f9fa;
+}
+
+/* Cards */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    border-radius: 6px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Validation */
+.validation-summary-errors {
+    color: var(--danger-color);
+}
+
+.field-validation-error {
+    color: var(--danger-color);
+    font-size: 0.875em;
+}
+
+.input-validation-error {
+    border-color: var(--danger-color);
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+/* Company Cards */
+.company-card {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.company-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Meeting Status Colors */
+.status-pending {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.status-approved {
+    background-color: var(--success-color);
+    color: #fff;
+}
+
+.status-declined {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+
+.status-cancelled {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+/* Time Slots */
+.time-slot {
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--primary-color);
+    background-color: #fff;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-slot:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.time-slot.selected {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    html {
+        font-size: 12px;
+    }
+}

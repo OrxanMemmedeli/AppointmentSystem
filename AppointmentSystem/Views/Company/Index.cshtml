@@ -1,0 +1,110 @@
+@model List<CompanyViewModel>
+
+@{
+    ViewData["Title"] = "Şirkət Seçimi";
+}
+
+<div class="container py-5">
+    <h1 class="text-center mb-5 display-4">
+        <i class="bi bi-building"></i> Təhsil Müəssisəsini Seçin
+    </h1>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> Hal-hazırda heç bir müəssisə qeydiyyatdan keçməyib.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var company in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm company-card">
+                        <div class="position-relative company-header">
+                            <img src="@(company.BackgroundImagePath ?? "/images/default-bg.jpg")" 
+                                 class="card-img-top" 
+                                 style="height: 200px; object-fit: cover;" 
+                                 alt="@company.Name" />
+                            <img src="@(company.LogoPath ?? "/images/default-logo.png")" 
+                                 class="company-logo" 
+                                 alt="@company.Name Logo" />
+                        </div>
+                        <div class="card-body text-center pt-5">
+                            <h5 class="card-title fw-bold">@company.Name</h5>
+                            
+                            @if (!string.IsNullOrEmpty(company.Description))
+                            {
+                                <p class="card-text text-muted small">@company.Description</p>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(company.Address))
+                            {
+                                <p class="card-text mb-2">
+                                    <i class="bi bi-geo-alt text-primary"></i> @company.Address
+                                </p>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(company.Phone))
+                            {
+                                <p class="card-text mb-2">
+                                    <i class="bi bi-telephone text-primary"></i> @company.Phone
+                                </p>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(company.Email))
+                            {
+                                <p class="card-text mb-3">
+                                    <i class="bi bi-envelope text-primary"></i> @company.Email
+                                </p>
+                            }
+                            
+                            <div class="d-grid gap-2">
+                                @if (!string.IsNullOrEmpty(company.MapUrl))
+                                {
+                                    <a href="@company.MapUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-map"></i> Xəritədə gör
+                                    </a>
+                                }
+                                <form asp-action="Select" asp-controller="Company" method="post">
+                                    <input type="hidden" name="companyId" value="@company.Id" />
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-check-circle"></i> Bu müəssisəni seç
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .company-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .company-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+        }
+        .company-header {
+            position: relative;
+        }
+        .company-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 5px solid white;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+}

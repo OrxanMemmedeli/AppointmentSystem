@@ -1,0 +1,190 @@
+﻿@model TeacherCalendarViewModel
+
+@{
+    ViewData["Title"] = "Görüşlərim";
+}
+
+@section Styles {
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+    <style>
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: #e3f2fd !important;
+        }
+
+        .fc-event {
+            cursor: pointer;
+            border: none;
+            padding: 2px 5px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+        }
+
+        .meeting-card {
+            transition: all 0.3s ease;
+        }
+
+            .meeting-card:hover {
+                transform: translateX(5px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+    </style>
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0">
+                <i class="bi bi-calendar-week text-primary"></i> Görüşlərim
+            </h2>
+            <p class="text-muted">Görüş təqviminiz və gündəlik görüşlər</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="AllMeetings" class="btn btn-outline-primary">
+                <i class="bi bi-list-ul"></i> Bütün Görüşlər
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Calendar -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Təqvim</h5>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Meetings -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Bu gün
+                        <span class="badge bg-light text-primary float-end">@Model.Meetings.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    @if (!Model.Meetings.Any())
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Bu gün görüş yoxdur</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var meeting in Model.Meetings.OrderBy(m => m.StartTime))
+                            {
+                                <a asp-action="MeetingDetails" asp-route-id="@meeting.Id"
+                                   class="list-group-item list-group-item-action meeting-card">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="bi bi-person-circle text-primary"></i> @meeting.StudentName
+                                            </h6>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> @meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")
+                                            </small>
+                                            <br />
+                                            <small class="text-muted">
+                                                <i class="bi bi-building"></i> @meeting.ClassName
+                                            </small>
+                                        </div>
+                                        <span class="badge status-badge @GetStatusBadgeClass(meeting.Status)">
+                                            @GetStatusText(meeting.Status)
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(meeting.ParentNote))
+                                    {
+                                        <p class="mb-0 mt-2 small text-muted">
+                                            <i class="bi bi-chat-left-text"></i> @meeting.ParentNote
+                                        </p>
+                                    }
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-graph-up"></i> Statistika</h6>
+                    <div class="row text-center mt-3">
+                        <div class="col-6 mb-3">
+                            <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                <h3 class="mb-0 text-warning">@Model.Meetings.Count(m => m.Status == MeetingStatus.Pending)</h3>
+                                <small class="text-muted">Gözləyir</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3 bg-success bg-opacity-10 rounded">
+                                <h3 class="mb-0 text-success">@Model.Meetings.Count(m => m.Status == MeetingStatus.Approved)</h3>
+                                <small class="text-muted">Təsdiqlənib</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'az',
+                events: function(info, successCallback, failureCallback) {
+                    fetch(`/Teacher/GetCalendarMeetings?startDate=${info.startStr}&endDate=${info.endStr}`)
+                        .then(response => response.json())
+                        .then(data => successCallback(data))
+                        .catch(error => failureCallback(error));
+                },
+                eventClick: function(info) {
+                    window.location.href = '/Teacher/MeetingDetails/' + info.event.id;
+                }
+            });
+            calendar.render();
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "bg-warning",
+        MeetingStatus.Approved => "bg-success",
+        MeetingStatus.Declined => "bg-danger",
+        MeetingStatus.Cancelled => "bg-secondary",
+        MeetingStatus.Completed => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "Gözləyir",
+        MeetingStatus.Approved => "Təsdiqlənib",
+        MeetingStatus.Declined => "İmtina",
+        MeetingStatus.Cancelled => "Ləğv edilib",
+        MeetingStatus.Completed => "Tamamlanıb",
+        _ => "Bilinmir"
+    };
+}

@@ -1,0 +1,214 @@
+﻿@model CreateMeetingViewModel
+
+@{
+    ViewData["Title"] = "Yeni Görüş";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> Yeni Görüş Yarat
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateMeeting" method="post" id="createMeetingForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Step 1: Select Student -->
+                        <div class="step-section mb-4">
+                            <h5 class="mb-3">
+                                <span class="badge bg-primary rounded-circle me-2">1</span>
+                                Şagird Seçin
+                            </h5>
+                            <div class="form-group">
+                                <label asp-for="StudentId" class="form-label">Şagird</label>
+                                <select asp-for="StudentId" class="form-select form-select-lg" id="studentSelect" required>
+                                    <option value="">-- Şagird seçin --</option>
+                                    <!-- Bu dinamik olaraq yüklənməlidir -->
+                                </select>
+                                <span asp-validation-for="StudentId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Step 2: Select Teacher -->
+                        <div class="step-section mb-4">
+                            <h5 class="mb-3">
+                                <span class="badge bg-primary rounded-circle me-2">2</span>
+                                Müəllim Seçin
+                            </h5>
+                            <div class="form-group">
+                                <label asp-for="TeacherId" class="form-label">Müəllim</label>
+                                <select asp-for="TeacherId" class="form-select form-select-lg" id="teacherSelect" required>
+                                    <option value="">-- Müəllim seçin --</option>
+                                    <!-- Bu dinamik olaraq yüklənməlidir -->
+                                </select>
+                                <span asp-validation-for="TeacherId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Step 3: Select Date -->
+                        <div class="step-section mb-4">
+                            <h5 class="mb-3">
+                                <span class="badge bg-primary rounded-circle me-2">3</span>
+                                Tarix Seçin
+                            </h5>
+                            <div class="form-group">
+                                <label asp-for="MeetingDate" class="form-label">Görüş Tarixi</label>
+                                <input asp-for="MeetingDate" type="date" class="form-control form-control-lg"
+                                       id="dateInput" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="MeetingDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Step 4: Select Time -->
+                        <div class="step-section mb-4">
+                            <h5 class="mb-3">
+                                <span class="badge bg-primary rounded-circle me-2">4</span>
+                                Vaxt Seçin
+                            </h5>
+                            <div id="timeSlotsContainer" class="text-center py-4">
+                                <p class="text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    Müsait vaxtları görmək üçün müəllim və tarix seçin
+                                </p>
+                            </div>
+                            <input asp-for="StartTime" type="hidden" id="selectedTimeInput" />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                        </div>
+
+                        <hr />
+
+                        <!-- Step 5: Add Note -->
+                        <div class="step-section mb-4">
+                            <h5 class="mb-3">
+                                <span class="badge bg-primary rounded-circle me-2">5</span>
+                                Qeyd Əlavə Edin (Opsional)
+                            </h5>
+                            <div class="form-group">
+                                <label asp-for="ParentNotes" class="form-label">Qeyd</label>
+                                <textarea asp-for="ParentNotes" class="form-control" rows="4"
+                                          placeholder="Görüşlə bağlı əlavə məlumat..."></textarea>
+                                <span asp-validation-for="ParentNotes" class="text-danger"></span>
+                                <small class="form-text text-muted">
+                                    Müəllimlə danışmaq istədiyiniz mövzunu qeyd edə bilərsiniz
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                                <i class="bi bi-check-circle"></i> Görüşü Yarat
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Ləğv et
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info">
+                        <i class="bi bi-info-circle-fill"></i> Məlumat
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Görüş müəllimin təsdiqindən sonra aktiv olacaq</li>
+                        <li>Görüş müddəti: <strong>30 dəqiqə</strong></li>
+                        <li>Görüşü təsdiq gözləyərkən və ya təsdiqlənəndən sonra ləğv edə bilərsiniz</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const teacherSelect = document.getElementById('teacherSelect');
+        const dateInput = document.getElementById('dateInput');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const selectedTimeInput = document.getElementById('selectedTimeInput');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Load available time slots
+        async function loadTimeSlots() {
+            const teacherId = teacherSelect.value;
+            const date = dateInput.value;
+
+            if (!teacherId || !date) {
+                timeSlotsContainer.innerHTML = `
+                    <p class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Müsait vaxtları görmək üçün müəllim və tarix seçin
+                    </p>`;
+                submitBtn.disabled = true;
+                return;
+            }
+
+            timeSlotsContainer.innerHTML = '<div class="spinner-border text-primary"></div>';
+
+            try {
+                const response = await fetch(`/Parent/GetAvailableTimeSlots?teacherId=${teacherId}&date=${date}`);
+                const slots = await response.json();
+
+                if (slots.length === 0) {
+                    timeSlotsContainer.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Bu gün üçün boş vaxt yoxdur
+                        </div>`;
+                    submitBtn.disabled = true;
+                    return;
+                }
+
+                let html = '<div class="row g-2">';
+                slots.forEach(slot => {
+                    const time = slot.replace(/^(\d{2}):(\d{2}):(\d{2})$/, '$1:$2');
+                    html += `
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <button type="button" class="btn btn-outline-primary w-100 time-slot-btn"
+                                    data-time="${slot}">
+                                <i class="bi bi-clock"></i> ${time}
+                            </button>
+                        </div>`;
+                });
+                html += '</div>';
+                timeSlotsContainer.innerHTML = html;
+
+                // Time slot selection
+                document.querySelectorAll('.time-slot-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.time-slot-btn').forEach(b => {
+                            b.classList.remove('active');
+                            b.classList.replace('btn-primary', 'btn-outline-primary');
+                        });
+                        this.classList.add('active');
+                        this.classList.replace('btn-outline-primary', 'btn-primary');
+                        selectedTimeInput.value = this.dataset.time;
+                        submitBtn.disabled = false;
+                    });
+                });
+            } catch (error) {
+                timeSlotsContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-octagon"></i> Xəta baş verdi
+                    </div>`;
+            }
+        }
+
+        teacherSelect.addEventListener('change', loadTimeSlots);
+        dateInput.addEventListener('change', loadTimeSlots);
+    </script>
+}

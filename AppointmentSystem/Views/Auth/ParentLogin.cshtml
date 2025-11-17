@@ -1,0 +1,177 @@
+﻿@model ParentLoginViewModel
+
+@{
+    ViewData["Title"] = "Valideyn Girişi";
+    var company = ViewData["Company"] as Company;
+}
+
+@section Styles {
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .company-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .company-logo-circle {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            border: 4px solid white;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .form-floating-custom {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+            .form-floating-custom .form-control {
+                height: 60px;
+                border-radius: 10px;
+                border: 2px solid #e9ecef;
+                transition: all 0.3s ease;
+            }
+
+                .form-floating-custom .form-control:focus {
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+                }
+
+        .btn-login {
+            height: 60px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+            .btn-login:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            }
+    </style>
+}
+
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-card">
+                    <!-- Company Header -->
+                    @if (company != null)
+                    {
+                        <div class="company-header">
+                            <div class="company-logo-circle">
+                                <img src="@(company.LogoPath ?? "/images/default-logo.png")"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover;"
+                                     alt="@company.Name" />
+                            </div>
+                            <h4 class="mb-0">@company.Name</h4>
+                        </div>
+                    }
+
+                    <!-- Login Form -->
+                    <div class="p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <h3 class="fw-bold">
+                                <i class="bi bi-people-fill text-primary"></i> Valideyn Girişi
+                            </h3>
+                            <p class="text-muted">FIN kod və şəxsi məlumatlarınızla daxil olun</p>
+                        </div>
+
+                        <form asp-action="ParentLogin" method="post">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                            <input type="hidden" asp-for="CompanyId" />
+                            <input type="hidden" asp-for="ReturnUrl" />
+
+                            <!-- FIN Code -->
+                            <div class="form-floating-custom">
+                                <label asp-for="FinCode" class="form-label fw-semibold">
+                                    <i class="bi bi-credit-card-2-front"></i> FIN Kod
+                                </label>
+                                <input asp-for="FinCode"
+                                       class="form-control text-uppercase"
+                                       placeholder="1234567"
+                                       maxlength="7"
+                                       style="text-transform: uppercase;" />
+                                <span asp-validation-for="FinCode" class="text-danger small"></span>
+                            </div>
+
+                            <!-- First Name -->
+                            <div class="form-floating-custom">
+                                <label asp-for="FirstName" class="form-label fw-semibold">
+                                    <i class="bi bi-person"></i> Ad
+                                </label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Adınız" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="form-floating-custom">
+                                <label asp-for="LastName" class="form-label fw-semibold">
+                                    <i class="bi bi-person"></i> Soyad
+                                </label>
+                                <input asp-for="LastName" class="form-control" placeholder="Soyadınız" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-login">
+                                    <i class="bi bi-box-arrow-in-right"></i> Daxil Ol
+                                </button>
+                            </div>
+
+                            <!-- Info Alert -->
+                            <div class="alert alert-info border-0">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <small>
+                                    <strong>Qeyd:</strong> FIN kodunuz 7 rəqəmli şəxsiyyət kodu və ad-soyad məlumatlarınızdır
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="text-center p-3 bg-light border-top">
+                        <a asp-action="SelectCompany" class="text-decoration-none">
+                            <i class="bi bi-arrow-left-circle"></i> Şirkət seçiminə qayıt
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Auto uppercase FIN code
+        document.getElementById('FinCode').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+    </script>
+}

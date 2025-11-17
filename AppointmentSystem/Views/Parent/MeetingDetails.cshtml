@@ -1,0 +1,234 @@
+﻿@model Meeting
+
+@{
+    ViewData["Title"] = "Görüş Detalları";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Görüşlərim</a></li>
+                    <li class="breadcrumb-item active">Detal</li>
+                </ol>
+            </nav>
+
+            <!-- Meeting Info Card -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-gradient py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h4 class="mb-0 text-white">
+                        <i class="bi bi-calendar-event"></i> Görüş Detalları
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Status Badge -->
+                    <div class="text-center mb-4">
+                        <span class="badge @GetStatusBadgeClass(Model.Status) p-3" style="font-size: 1.1rem;">
+                            <i class="bi @GetStatusIcon(Model.Status)"></i> @GetStatusText(Model.Status)
+                        </span>
+                    </div>
+
+                    <!-- Date & Time -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 text-center">
+                            <div class="info-box p-3 bg-light rounded">
+                                <i class="bi bi-calendar3 text-primary" style="font-size: 2rem;"></i>
+                                <h5 class="mt-2 mb-0">@Model.MeetingDate.ToString("dd MMMM yyyy")</h5>
+                                <small class="text-muted">Tarix</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="info-box p-3 bg-light rounded">
+                                <i class="bi bi-clock text-success" style="font-size: 2rem;"></i>
+                                <h5 class="mt-2 mb-0">
+                                    @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
+                                </h5>
+                                <small class="text-muted">Vaxt</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Teacher Info -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-person-badge"></i> Müəllim Məlumatları
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle me-3">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">@Model.Teacher.FirstName @Model.Teacher.LastName</h5>
+                                @if (!string.IsNullOrEmpty(Model.Teacher.Email))
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-envelope"></i> @Model.Teacher.Email
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Info -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-person-circle"></i> Şagird
+                        </h6>
+                        <h5>@Model.Student.FirstName @Model.Student.LastName</h5>
+                        @if (Model.Student.Class != null)
+                        {
+                            <span class="badge bg-secondary">@Model.Student.Class.Name</span>
+                        }
+                    </div>
+
+                    <!-- Parent Note -->
+                    @if (!string.IsNullOrEmpty(Model.ParentNote))
+                    {
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-chat-left-text"></i> Mənim qeydim
+                            </h6>
+                            <p class="mb-0">@Model.ParentNote</p>
+                        </div>
+                    }
+
+                    <!-- Teacher Response -->
+                    @if (!string.IsNullOrEmpty(Model.TeacherResponse))
+                    {
+                        <div class="alert alert-success">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-chat-right-text"></i> Müəllimin cavabı
+                            </h6>
+                            <p class="mb-0">@Model.TeacherResponse</p>
+                        </div>
+                    }
+
+                    <!-- Decline Reason -->
+                    @if (!string.IsNullOrEmpty(Model.DeclineReason))
+                    {
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle"></i> İmtina səbəbi
+                            </h6>
+                            <p class="mb-0">@Model.DeclineReason</p>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Index" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left"></i> Geri qayıt
+                        </a>
+                        @if (Model.Status == MeetingStatus.Pending || Model.Status == MeetingStatus.Approved)
+                        {
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <i class="bi bi-x-circle"></i> Görüşü Ləğv Et
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-muted text-center">
+                    <small>
+                        <i class="bi bi-clock-history"></i>
+                        Yaradılıb: @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CancelMeeting" method="post">
+                <input type="hidden" name="MeetingId" value="@Model.Id" />
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle"></i> Görüşü Ləğv Et
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Ləğv səbəbi <span class="text-danger">*</span></label>
+                        <textarea name="CancellationReason" class="form-control" rows="4" required
+                                  placeholder="Görüşü ləğv etmə səbəbinizi yazın..."></textarea>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> Bu əməliyyat geri qaytarıla bilməz!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Bağla
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-check"></i> Bəli, Ləğv Et
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .info-box {
+            transition: all 0.3s ease;
+        }
+
+            .info-box:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+    </style>
+}
+
+@functions {
+    string GetStatusBadgeClass(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "bg-warning",
+        MeetingStatus.Approved => "bg-success",
+        MeetingStatus.Declined => "bg-danger",
+        MeetingStatus.Cancelled => "bg-secondary",
+        MeetingStatus.Completed => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "Gözləyir",
+        MeetingStatus.Approved => "Təsdiqlənib",
+        MeetingStatus.Declined => "İmtina Edilib",
+        MeetingStatus.Cancelled => "Ləğv Edilib",
+        MeetingStatus.Completed => "Tamamlanıb",
+        _ => "Bilinmir"
+    };
+
+    string GetStatusIcon(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "bi-hourglass-split",
+        MeetingStatus.Approved => "bi-check-circle",
+        MeetingStatus.Declined => "bi-x-circle",
+        MeetingStatus.Cancelled => "bi-slash-circle",
+        MeetingStatus.Completed => "bi-check2-all",
+        _ => "bi-question-circle"
+    };
+}

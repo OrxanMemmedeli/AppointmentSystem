@@ -1,0 +1,192 @@
+﻿@model List<CompanyCardViewModel>
+
+@{
+    ViewData["Title"] = "Təhsil Müəssisəsi Seçimi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .company-selection-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+
+        .company-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: none;
+            overflow: hidden;
+        }
+
+            .company-card:hover {
+                transform: translateY(-15px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+            }
+
+            .company-card .card-img-overlay {
+                background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+            }
+
+        .company-logo-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            position: relative;
+            margin-top: -60px;
+        }
+
+        .company-logo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 5px solid white;
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .login-type-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .login-type-btn:before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.3);
+                transform: translate(-50%, -50%);
+                transition: width 0.6s, height 0.6s;
+            }
+
+            .login-type-btn:hover:before {
+                width: 300px;
+                height: 300px;
+            }
+    </style>
+}
+
+<!-- Hero Section -->
+<div class="company-selection-hero">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">
+            <i class="bi bi-building"></i> Xoş gəlmisiniz!
+        </h1>
+        <p class="lead mb-0">
+            Davam etmək üçün təhsil müəssisənizi seçin
+        </p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (!Model.Any())
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card text-center shadow-lg">
+                    <div class="card-body py-5">
+                        <i class="bi bi-inbox" style="font-size: 5rem; color: #e9ecef;"></i>
+                        <h3 class="mt-4">Müəssisə Tapılmadı</h3>
+                        <p class="text-muted">Hal-hazırda aktiv müəssisə mövcud deyil</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var company in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card company-card shadow-lg h-100">
+                        <!-- Background Image -->
+                        <div class="position-relative" style="height: 200px; overflow: hidden;">
+                            <img src="@(company.BackgroundImagePath ?? "/images/default-company-bg.jpg")"
+                                 class="card-img-top w-100 h-100"
+                                 style="object-fit: cover;"
+                                 alt="@company.Name Background" />
+                            <div class="card-img-overlay d-flex align-items-end">
+                                <h5 class="text-white fw-bold mb-0">@company.Name</h5>
+                            </div>
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="company-logo-wrapper">
+                            <img src="@(company.LogoPath ?? "/images/default-logo.png")"
+                                 class="company-logo"
+                                 alt="@company.Name Logo" />
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body text-center pt-3">
+                            @if (!string.IsNullOrEmpty(company.Description))
+                            {
+                                <p class="text-muted small mb-3">@company.Description</p>
+                            }
+
+                            <!-- Contact Info -->
+                            <div class="mb-4">
+                                @if (!string.IsNullOrEmpty(company.Address))
+                                {
+                                    <p class="mb-2 small">
+                                        <i class="bi bi-geo-alt text-primary"></i> @company.Address
+                                    </p>
+                                }
+                                @if (!string.IsNullOrEmpty(company.PhoneNumber))
+                                {
+                                    <p class="mb-2 small">
+                                        <i class="bi bi-telephone text-success"></i> @company.PhoneNumber
+                                    </p>
+                                }
+                                @if (!string.IsNullOrEmpty(company.Email))
+                                {
+                                    <p class="mb-0 small">
+                                        <i class="bi bi-envelope text-info"></i> @company.Email
+                                    </p>
+                                }
+                            </div>
+
+                            <!-- Login Buttons -->
+                            <div class="d-grid gap-2">
+                                <a asp-action="ParentLogin" asp-route-companyId="@company.Id"
+                                   class="btn btn-primary btn-lg login-type-btn">
+                                    <i class="bi bi-people-fill"></i> Valideyn Girişi
+                                </a>
+                                <a asp-action="TeacherLogin" asp-route-companyId="@company.Id"
+                                   class="btn btn-success btn-lg login-type-btn">
+                                    <i class="bi bi-person-badge-fill"></i> Müəllim Girişi
+                                </a>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(company.MapCoordinates))
+                        {
+                            <div class="card-footer bg-white border-top-0">
+                                <a href="https://maps.google.com/?q=@company.MapCoordinates"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="bi bi-map"></i> Xəritədə Gör
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Admin Login Link -->
+    <div class="text-center mt-5">
+        <hr class="my-4" />
+        <p class="text-muted mb-3">Administrator və ya Menecersiniz?</p>
+        <a asp-action="AdminLogin" class="btn btn-outline-dark btn-lg">
+            <i class="bi bi-shield-lock"></i> Admin Paneli
+        </a>
+    </div>
+</div>

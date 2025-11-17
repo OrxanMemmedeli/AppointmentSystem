@@ -1,0 +1,156 @@
+﻿@model List<TeacherMeetingViewModel>
+
+@{
+    ViewData["Title"] = "Bütün Görüşlər";
+}
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0">
+                <i class="bi bi-list-ul text-primary"></i> Bütün Görüşlər
+            </h2>
+            <p class="text-muted">Keçmiş və gələcək görüşləriniz</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-week"></i> Təqvimə qayıt
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="date" class="form-control" id="filterDate" placeholder="Tarix seç">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterStatus">
+                        <option value="">Bütün statuslar</option>
+                        <option value="Pending">Gözləyir</option>
+                        <option value="Approved">Təsdiqlənib</option>
+                        <option value="Declined">İmtina edilib</option>
+                        <option value="Cancelled">Ləğv edilib</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Şagird adı ilə axtar...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">Görüş yoxdur</h4>
+            <p class="text-muted">Hələ heç bir görüş təyin edilməyib</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th><i class="bi bi-calendar3"></i> Tarix</th>
+                        <th><i class="bi bi-clock"></i> Vaxt</th>
+                        <th><i class="bi bi-person"></i> Şagird</th>
+                        <th><i class="bi bi-people"></i> Valideyn</th>
+                        <th><i class="bi bi-building"></i> Sinif</th>
+                        <th><i class="bi bi-flag"></i> Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="meetingsTable">
+                    @foreach (var meeting in Model.OrderByDescending(m => m.MeetingDate))
+                    {
+                        <tr data-date="@meeting.MeetingDate" data-status="@meeting.Status" data-student="@meeting.StudentName.ToLower()">
+                            <td>
+                                <strong>@meeting.MeetingDate.ToString("dd.MM.yyyy")</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    @meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")
+                                </span>
+                            </td>
+                            <td>
+                                <i class="bi bi-person-circle text-primary"></i> @meeting.StudentName
+                            </td>
+                            <td>
+                                <small class="text-muted">@meeting.ParentName</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@meeting.ClassName</span>
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(meeting.Status)">
+                                    @GetStatusText(meeting.Status)
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="MeetingDetails" asp-route-id="@meeting.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Detallar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        document.getElementById('filterDate').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const dateFilter = document.getElementById('filterDate').value;
+            const rows = document.querySelectorAll('#meetingsTable tr');
+
+            rows.forEach(row => {
+                const student = row.dataset.student;
+                const status = row.dataset.status;
+                const date = row.dataset.date;
+
+                const matchesSearch = !searchTerm || student.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+                const matchesDate = !dateFilter || date === dateFilter;
+
+                row.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
+            });
+        }
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "bg-warning",
+        MeetingStatus.Approved => "bg-success",
+        MeetingStatus.Declined => "bg-danger",
+        MeetingStatus.Cancelled => "bg-secondary",
+        MeetingStatus.Completed => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(MeetingStatus status) => status switch
+    {
+        MeetingStatus.Pending => "Gözləyir",
+        MeetingStatus.Approved => "Təsdiqlənib",
+        MeetingStatus.Declined => "İmtina",
+        MeetingStatus.Cancelled => "Ləğv edilib",
+        MeetingStatus.Completed => "Tamamlanıb",
+        _ => "Bilinmir"
+    };
+}
