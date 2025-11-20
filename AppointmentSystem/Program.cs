@@ -56,12 +56,12 @@ builder.Services.AddAuthorization(options =>
 // FluentValidation (yeni yol)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// Services
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<IMeetingService, MeetingService>();
-builder.Services.AddScoped<ICompanyService, CompanyService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-
+// Services (Scrutor kitabxanası ilə avtomatik qeydiyyat)
+builder.Services.Scan(scan => scan
+    .FromAssembliesOf(typeof(MeetingService))
+    .AddClasses()
+    .AsMatchingInterface()
+    .WithScopedLifetime());
 
 var app = builder.Build();
 

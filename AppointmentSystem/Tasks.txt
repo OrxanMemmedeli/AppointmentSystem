@@ -2,4 +2,7 @@
 * Identity ucun qalan hisseleri yaz. 
 * Layout-Menuda Idendity ucun saheleri elave et.
 
+
+
+------------------------------------------------------ Hazir ------------------------------------------------------
 * Service-ler merkezi olaraq inject edilsin. 
