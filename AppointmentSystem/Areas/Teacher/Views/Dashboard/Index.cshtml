@@ -1,0 +1,157 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    var stats = ViewBag.Stats;
+    var todayMeetings = ViewBag.TodayMeetings as List<AppointmentSystem.Models.Entities.Meeting>;
+    var pendingMeetings = ViewBag.PendingMeetings as List<AppointmentSystem.Models.Entities.Meeting>;
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-0">Xoş gəlmisiniz! 👋</h2>
+        <p class="text-muted">Bu gün @DateTime.Today.ToString("dd MMMM yyyy, dddd")</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Bu Gün</h6>
+                        <h2 class="mb-0 text-primary">@stats.TodayMeetings</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-calendar-event text-primary fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Gözləyir</h6>
+                        <h2 class="mb-0 text-warning">@stats.PendingMeetings</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-hourglass-split text-warning fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Təsdiqlənib</h6>
+                        <h2 class="mb-0 text-success">@stats.ApprovedMeetings</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-check-circle text-success fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Bu Ay</h6>
+                        <h2 class="mb-0 text-info">@stats.CompletedThisMonth</h2>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-check2-all text-info fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Meetings -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0"><i class="bi bi-calendar-day"></i> Bu Günkü Görüşlər</h5>
+            </div>
+            <div class="card-body">
+                @if (todayMeetings?.Any() == true)
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var meeting in todayMeetings)
+                        {
+                            <a asp-area="Teacher" asp-controller="Meeting" asp-action="Details" asp-route-id="@meeting.Id"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="bi bi-person-circle text-primary"></i>
+                                            @meeting.Student.FirstName @meeting.Student.LastName
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> @meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")
+                                            | <i class="bi bi-building"></i> @meeting.Student.Class?.Name
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-@(meeting.Status == AppointmentSystem.Models.Enums.MeetingStatus.Pending ? "warning" : "success")">
+                                        @meeting.Status
+                                    </span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Bu gün görüş yoxdur</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-warning bg-opacity-10 border-0 py-3">
+                <h5 class="mb-0 text-warning"><i class="bi bi-hourglass-split"></i> Təsdiq Gözləyir</h5>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                @if (pendingMeetings?.Any() == true)
+                {
+                    @foreach (var meeting in pendingMeetings)
+                    {
+                        <div class="mb-3 p-3 border rounded">
+                            <h6 class="mb-1">@meeting.Student.FirstName @meeting.Student.LastName</h6>
+                            <small class="text-muted d-block mb-2">
+                                @meeting.MeetingDate.ToString("dd.MM.yyyy") - @meeting.StartTime.ToString(@"hh\:mm")
+                            </small>
+                            <a asp-area="Teacher" asp-controller="Meeting" asp-action="Details" asp-route-id="@meeting.Id"
+                               class="btn btn-sm btn-warning w-100">
+                                <i class="bi bi-eye"></i> Bax
+                            </a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center">Təsdiq gözləyən görüş yoxdur</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

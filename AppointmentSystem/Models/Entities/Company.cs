@@ -26,10 +26,10 @@ public class Company : AuditableEntity
     public string? Email { get; set; }
 
     /// <summary>Logo path</summary>
-    public string? LogoPath { get; set; }
+    public string? LogoPath { get; set; } = "images/default-company-logo.jpg";
 
     /// <summary>Background image path</summary>
-    public string? BackgroundImagePath { get; set; }
+    public string? BackgroundImagePath { get; set; } = "images/default-company-background-logo.jpg";
 
     /// <summary>Xəritə (Google Maps URL)</summary>
     public string? MapUrl { get; set; }

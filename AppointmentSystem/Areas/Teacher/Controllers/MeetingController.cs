@@ -1,39 +1,43 @@
+﻿using AppointmentSystem.Data;
 using AppointmentSystem.Models.Enums;
-using AppointmentSystem.Services;
 using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Security.Claims;
 
-namespace AppointmentSystem.Controllers;
+namespace AppointmentSystem.Areas.Teacher.Controllers;
 
-/// <summary>
-/// Müəllim paneli
-/// </summary>
+[Area("Teacher")]
 [Authorize(Policy = "TeacherOnly")]
-public class TeacherController : Controller
+public class MeetingController : Controller
 {
     private readonly IMeetingService _meetingService;
-    private readonly ILogger<TeacherController> _logger;
+    private readonly AppDbContext _context;
+    private readonly ILogger<MeetingController> _logger;
 
-    public TeacherController(
+    public MeetingController(
         IMeetingService meetingService,
-        ILogger<TeacherController> logger)
+        AppDbContext context,
+        ILogger<MeetingController> logger)
     {
         _meetingService = meetingService;
+        _context = context;
         _logger = logger;
     }
 
     private Guid GetTeacherId()
     {
-        // Real implementation-da Teacher entity-dən UserId ilə tapılmalıdır
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Guid.Empty;
+
+        var teacher = _context.Teachers.FirstOrDefault(t => t.UserId == userId);
+        return teacher?.Id ?? Guid.Empty;
     }
 
     /// <summary>
-    /// Müəllim ana səhifəsi - Təqvim görünüşü
+    /// Təqvim görünüşü
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Index(DateOnly? date)
@@ -41,8 +45,10 @@ public class TeacherController : Controller
         try
         {
             var teacherId = GetTeacherId();
-            var selectedDate = date ?? DateOnly.FromDateTime(DateTime.Today);
+            if (teacherId == Guid.Empty)
+                return RedirectToAction("Logout", "Auth");
 
+            var selectedDate = date ?? DateOnly.FromDateTime(DateTime.Today);
             var meetings = await _meetingService.GetTeacherMeetingsAsync(teacherId, selectedDate);
 
             var viewModel = new TeacherCalendarViewModel
@@ -62,14 +68,17 @@ public class TeacherController : Controller
     }
 
     /// <summary>
-    /// Bütün görüşlər (siyahı görünüşü)
+    /// Bütün görüşlər
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> AllMeetings()
+    public async Task<IActionResult> All()
     {
         try
         {
             var teacherId = GetTeacherId();
+            if (teacherId == Guid.Empty)
+                return RedirectToAction("Logout", "Auth");
+
             var meetings = await _meetingService.GetTeacherMeetingsAsync(teacherId);
             return View(meetings);
         }
@@ -84,12 +93,12 @@ public class TeacherController : Controller
     /// Görüş detalları
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> MeetingDetails(Guid id)
+    public async Task<IActionResult> Details(Guid id)
     {
         try
         {
             var meeting = await _meetingService.GetMeetingDetailsAsync(id);
-            
+
             if (meeting == null)
                 return NotFound();
 
@@ -107,7 +116,7 @@ public class TeacherController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApproveMeeting(Guid meetingId, string? teacherNotes)
+    public async Task<IActionResult> Approve(Guid meetingId, string? teacherNotes)
     {
         try
         {
@@ -117,17 +126,17 @@ public class TeacherController : Controller
             if (!success)
             {
                 TempData["ErrorMessage"] = "Görüş təsdiqlənə bilmədi";
-                return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+                return RedirectToAction(nameof(Details), new { id = meetingId });
             }
 
             TempData["SuccessMessage"] = "Görüş uğurla təsdiqləndi";
-            return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+            return RedirectToAction(nameof(Details), new { id = meetingId });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Görüş təsdiqlənərkən xəta baş verdi");
             TempData["ErrorMessage"] = "Xəta baş verdi";
-            return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+            return RedirectToAction(nameof(Details), new { id = meetingId });
         }
     }
 
@@ -136,14 +145,14 @@ public class TeacherController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeclineMeeting(Guid meetingId, string declineReason, string? teacherNotes)
+    public async Task<IActionResult> Decline(Guid meetingId, string declineReason, string? teacherNotes)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(declineReason))
             {
                 TempData["ErrorMessage"] = "İmtina səbəbi tələb olunur";
-                return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+                return RedirectToAction(nameof(Details), new { id = meetingId });
             }
 
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -152,7 +161,7 @@ public class TeacherController : Controller
             if (!success)
             {
                 TempData["ErrorMessage"] = "Görüşdən imtina edilə bilmədi";
-                return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+                return RedirectToAction(nameof(Details), new { id = meetingId });
             }
 
             TempData["SuccessMessage"] = "Görüşdən imtina edildi";
@@ -162,35 +171,24 @@ public class TeacherController : Controller
         {
             _logger.LogError(ex, "Görüşdən imtina edilərkən xəta baş verdi");
             TempData["ErrorMessage"] = "Xəta baş verdi";
-            return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+            return RedirectToAction(nameof(Details), new { id = meetingId });
         }
     }
 
     /// <summary>
-    /// Qeyd əlavə et/yenilə
-    /// </summary>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateNotes(Guid meetingId, string teacherNotes)
-    {
-        // Bu metod Meeting entity-ni yeniləməlidir
-        // Simplicity üçün burada implement edilməyib, amma real sistemdə olmalıdır
-        TempData["SuccessMessage"] = "Qeyd yeniləndi";
-        return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
-    }
-
-    /// <summary>
-    /// Təqvim üçün görüşləri al (AJAX)
+    /// Təqvim məlumatları (AJAX)
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetCalendarMeetings(DateOnly startDate, DateOnly endDate)
+    public async Task<IActionResult> GetCalendarData(DateOnly startDate, DateOnly endDate)
     {
         try
         {
             var teacherId = GetTeacherId();
+            if (teacherId == Guid.Empty)
+                return Unauthorized();
+
             var meetings = await _meetingService.GetTeacherMeetingsAsync(teacherId);
-            
-            // Filter by date range
+
             var filtered = meetings
                 .Where(m => m.MeetingDate >= startDate && m.MeetingDate <= endDate)
                 .Select(m => new

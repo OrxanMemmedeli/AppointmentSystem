@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using AppointmentSystem.Data;
 
 namespace AppointmentSystem.Services;
 
@@ -9,10 +11,19 @@ namespace AppointmentSystem.Services;
 public class CurrentUserService : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly AppDbContext _context;
 
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    // Cache üçün
+    private Guid? _cachedTeacherId;
+    private Guid? _cachedParentId;
+    private Guid? _cachedStudentId;
+
+    public CurrentUserService(
+        IHttpContextAccessor httpContextAccessor,
+        AppDbContext context)
     {
         _httpContextAccessor = httpContextAccessor;
+        _context = context;
     }
 
     public Guid? UserId
@@ -28,6 +39,17 @@ public class CurrentUserService : ICurrentUserService
 
     public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
 
+    public string? FullName => _httpContextAccessor.HttpContext?.User?.FindFirst("FullName")?.Value;
+
+    public Guid? CompanyId
+    {
+        get
+        {
+            var companyIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("CompanyId")?.Value;
+            return Guid.TryParse(companyIdClaim, out var companyId) ? companyId : null;
+        }
+    }
+
     public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
 
     public bool IsInRole(string role)
@@ -37,6 +59,61 @@ public class CurrentUserService : ICurrentUserService
 
     public IEnumerable<string> GetRoles()
     {
-        return _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role).Select(c => c.Value) ?? Enumerable.Empty<string>();
+        return _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role).Select(c => c.Value)
+               ?? Enumerable.Empty<string>();
     }
+
+    /// <summary>
+    /// Teacher ID-ni qaytarır (cache ilə)
+    /// </summary>
+    public async Task<Guid?> GetTeacherIdAsync()
+    {
+        if (_cachedTeacherId.HasValue)
+            return _cachedTeacherId;
+
+        if (!UserId.HasValue)
+            return null;
+
+        var teacher = await _context.Teachers
+            .FirstOrDefaultAsync(t => t.UserId == UserId.Value && t.IsActive);
+
+        _cachedTeacherId = teacher?.Id;
+        return _cachedTeacherId;
+    }
+
+    /// <summary>
+    /// Parent ID-ni qaytarır (cache ilə)
+    /// </summary>
+    public async Task<Guid?> GetParentIdAsync()
+    {
+        if (_cachedParentId.HasValue)
+            return _cachedParentId;
+
+        if (!UserId.HasValue)
+            return null;
+
+        var parent = await _context.Parents
+            .FirstOrDefaultAsync(p => p.UserId == UserId.Value && p.IsActive);
+
+        _cachedParentId = parent?.Id;
+        return _cachedParentId;
+    }
+
+    /// <summary>
+    /// Student ID-ni qaytarır (cache ilə)
+    /// </summary>
+    //public async Task<Guid?> GetStudentIdAsync()
+    //{
+    //    if (_cachedStudentId.HasValue)
+    //        return _cachedStudentId;
+
+    //    if (!UserId.HasValue)
+    //        return null;
+
+    //    var student = await _context.Students
+    //        .FirstOrDefaultAsync(s => s.UserId == UserId.Value && s.IsActive);
+
+    //    _cachedStudentId = student?.Id;
+    //    return _cachedStudentId;
+    //}
 }

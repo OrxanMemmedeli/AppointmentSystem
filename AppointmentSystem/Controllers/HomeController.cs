@@ -3,33 +3,44 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AppointmentSystem.Controllers;
 
-[Authorize]
 public class HomeController : Controller
 {
+    /// <summary>
+    /// Ana səhifə - Role-based redirect
+    /// </summary>
+    [Authorize]
     public IActionResult Index()
     {
-        // Role əsasında redirect
-        if (User.IsInRole("SUPERADMIN"))
+        // ✅ Role əsasında AREA-ya redirect
+        if (User.IsInRole("SUPERADMIN") || User.IsInRole("MANAGER"))
         {
-            return RedirectToAction("Index", "SuperAdmin");
-        }
-        else if (User.IsInRole("MANAGER"))
-        {
-            return RedirectToAction("Index", "Manager");
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
         else if (User.IsInRole("TEACHER"))
         {
-            return RedirectToAction("Index", "Teacher");
+            return RedirectToAction("Index", "Dashboard", new { area = "Teacher" });
         }
         else if (User.IsInRole("PARENT"))
         {
-            return RedirectToAction("Index", "Parent");
+            return RedirectToAction("Index", "Dashboard", new { area = "Parent" });
         }
 
+        // Rol yoxdursa, çıxış et
+        return RedirectToAction("Logout", "Auth");
+    }
+
+    /// <summary>
+    /// Xəta səhifəsi
+    /// </summary>
+    public IActionResult Error()
+    {
         return View();
     }
 
-    public IActionResult Error()
+    /// <summary>
+    /// Giriş qadağan
+    /// </summary>
+    public IActionResult AccessDenied()
     {
         return View();
     }

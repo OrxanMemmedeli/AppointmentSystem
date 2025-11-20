@@ -29,7 +29,7 @@
                                 </span>
                             </li>
                             <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-outline-light btn-sm">
                                         <i class="bi bi-box-arrow-right"></i> Çıxış
                                     </button>
@@ -39,7 +39,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">
+                                <a class="nav-link" asp-controller="Auth" asp-action="AdminLogin">
                                     <i class="bi bi-box-arrow-in-right"></i> Giriş
                                 </a>
                             </li>

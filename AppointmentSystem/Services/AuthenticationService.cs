@@ -1,210 +1,258 @@
-using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Data;
+using AppointmentSystem.Models.Entities;
+using AppointmentSystem.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using AppointmentSystem.Models.Entities;
 
 namespace AppointmentSystem.Services;
 
-/// <summary>
-/// Authentication service interface
-/// </summary>
-public interface IAuthenticationService
-{
-    Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateParentAsync(ParentLoginViewModel model);
-    Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateTeacherAsync(TeacherLoginViewModel model);
-    Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateAdminAsync(AdminLoginViewModel model);
-    Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(User user, Guid companyId);
-}
-
-/// <summary>
-/// Authentication service implementation
-/// </summary>
 public class AuthenticationService : IAuthenticationService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<AuthenticationService> _logger;
 
-    public AuthenticationService(AppDbContext context)
+    public AuthenticationService(AppDbContext context, ILogger<AuthenticationService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
-    public async Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateParentAsync(ParentLoginViewModel model)
-    {
-        // Valideyn-i FIN və Ad/Soyad əsasında tap
-        var parent = await _context.Parents
-            .Include(p => p.User)
-            .ThenInclude(u => u!.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .Where(p => p.CompanyId == model.CompanyId &&
-                       p.FinCode == model.FinCode.ToUpper() &&
-                       p.FirstName.ToLower() == model.FirstName.ToLower() &&
-                       p.LastName.ToLower() == model.LastName.ToLower())
-            .FirstOrDefaultAsync();
-
-        if (parent == null)
-            return (false, "Valideyn tapılmadı. Məlumatları yoxlayın.", null);
-
-        // Əgər User yoxdursa, yarat
-        if (parent.User == null)
-        {
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                FirstName = parent.FirstName,
-                LastName = parent.LastName,
-                Email = parent.Email ?? $"{parent.FinCode}@parent.local",
-                UserName = $"P_{parent.FinCode}",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(parent.FinCode), // FIN kod şifrə kimi
-                UserTypeId = Guid.Parse("44444444-4444-4444-4444-444444444444"), // Parent Type
-                IsEmailConfirmed = true,
-                IsActive = true,
-                IsDeleted = false,
-                CreatedDate = DateTimeOffset.UtcNow
-            };
-
-            _context.Users.Add(user);
-
-            // Parent role əlavə et
-            var parentRoleId = Guid.Parse("DDDDDDDD-DDDD-DDDD-DDDD-DDDDDDDDDDDD");
-            _context.UserRoles.Add(new UserRole
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                RoleId = parentRoleId,
-                AssignedDate = DateTimeOffset.UtcNow,
-                IsActive = true,
-                IsDeleted = false,
-                CreatedDate = DateTimeOffset.UtcNow
-            });
-
-            parent.UserId = user.Id;
-            await _context.SaveChangesAsync();
-
-            parent.User = user;
-        }
-
-        if (parent.User.IsLocked)
-            return (false, "Hesabınız bloklanıb. Administrator ilə əlaqə saxlayın.", null);
-
-        // Son giriş tarixini yenilə
-        parent.User.LastLoginDate = DateTimeOffset.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return (true, null, parent.User);
-    }
-
-    public async Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateTeacherAsync(TeacherLoginViewModel model)
-    {
-        var teacher = await _context.Teachers
-            .Include(t => t.User)
-            .ThenInclude(u => u!.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .Where(t => t.CompanyId == model.CompanyId &&
-                       t.Email.ToLower() == model.Email.ToLower())
-            .FirstOrDefaultAsync();
-
-        if (teacher == null || teacher.User == null)
-            return (false, "Email və ya şifrə yanlışdır.", null);
-
-        if (teacher.User.IsLocked)
-            return (false, "Hesabınız bloklanıb. Administrator ilə əlaqə saxlayın.", null);
-
-        // Şifrəni yoxla
-        if (!BCrypt.Net.BCrypt.Verify(model.Password, teacher.User.PasswordHash))
-        {
-            // Uğursuz cəhdləri artır - DÜZƏLDILDI
-            teacher.User.FailedLoginAttempts += 1;
-
-            if (teacher.User.FailedLoginAttempts >= 5)
-            {
-                teacher.User.IsLocked = true;
-                teacher.User.LockoutEnd = DateTimeOffset.UtcNow.AddHours(1);
-                await _context.SaveChangesAsync();
-                return (false, "Çox sayda uğursuz cəhd. Hesabınız 1 saat bloklanıb.", null);
-            }
-
-            await _context.SaveChangesAsync();
-            return (false, "Email və ya şifrə yanlışdır.", null);
-        }
-
-        // Uğurlu giriş
-        teacher.User.FailedLoginAttempts = 0;
-        teacher.User.LastLoginDate = DateTimeOffset.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return (true, null, teacher.User);
-    }
+    #region Admin Authentication
 
     public async Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateAdminAsync(AdminLoginViewModel model)
     {
-        var user = await _context.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .Where(u => (u.UserName.ToLower() == model.UserNameOrEmail.ToLower() ||
-                        u.Email.ToLower() == model.UserNameOrEmail.ToLower()))
-            .FirstOrDefaultAsync();
-
-        if (user == null)
-            return (false, "İstifadəçi adı və ya şifrə yanlışdır.", null);
-
-        if (user.IsLocked)
-            return (false, "Hesabınız bloklanıb. Administrator ilə əlaqə saxlayın.", null);
-
-        // Şifrəni yoxla
-        if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+        try
         {
-            // DÜZƏLDILDI
-            user.FailedLoginAttempts += 1;
+            var user = await _context.Users
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u =>
+                    (u.Email == model.UserNameOrEmail || u.UserName == model.UserNameOrEmail) &&
+                    u.IsActive && !u.IsDeleted);
 
-            if (user.FailedLoginAttempts >= 5)
-            {
-                user.IsLocked = true;
-                user.LockoutEnd = DateTimeOffset.UtcNow.AddHours(1);
-                await _context.SaveChangesAsync();
-                return (false, "Çox sayda uğursuz cəhd. Hesabınız 1 saat bloklanıb.", null);
-            }
+            if (user == null)
+                return (false, "İstifadəçi adı və ya şifrə yanlışdır", null);
 
-            await _context.SaveChangesAsync();
-            return (false, "İstifadəçi adı və ya şifrə yanlışdır.", null);
+            // ✅ Lockout yoxlaması
+            var lockoutCheck = CheckLockout(user);
+            if (!lockoutCheck.Success)
+                return lockoutCheck;
+
+            // ✅ Şifrə yoxlaması
+            var passwordCheck = await ValidatePasswordAsync(user, model.Password);
+            if (!passwordCheck.Success)
+                return passwordCheck;
+
+            // Admin rolunu yoxla
+            var isAdmin = user.UserRoles.Any(ur =>
+                ur.Role.IsActive &&
+                (ur.Role.Code == "SUPERADMIN" || ur.Role.Code == "MANAGER"));
+
+            if (!isAdmin)
+                return (false, "Bu istifadəçinin admin girişi yoxdur", null);
+
+            // ✅ Uğurlu giriş
+            await UpdateSuccessfulLoginAsync(user);
+            return (true, null, user);
         }
-
-        // Admin və ya Super Admin rolunu yoxla
-        var hasAdminRole = user.UserRoles.Any(ur =>
-            ur.Role.Code == "SUPER_ADMIN" || ur.Role.Code == "COMPANY_ADMIN");
-
-        if (!hasAdminRole)
-            return (false, "Bu girişə icazəniz yoxdur.", null);
-
-        // Uğurlu giriş
-        user.FailedLoginAttempts = 0;
-        user.LastLoginDate = DateTimeOffset.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return (true, null, user);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Admin authentication xətası");
+            return (false, "Sistemdə xəta baş verdi", null);
+        }
     }
 
-    public async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(User user, Guid companyId)
+    #endregion
+
+    #region Teacher Authentication
+
+    public async Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateTeacherAsync(TeacherLoginViewModel model)
+    {
+        try
+        {
+            var teacher = await _context.Teachers
+                .Include(t => t.User).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(t =>
+                    t.CompanyId == model.CompanyId &&
+                    t.User.Email == model.Email &&
+                    t.IsActive &&
+                    t.User.IsActive &&
+                    !t.User.IsDeleted);
+
+            if (teacher == null)
+                return (false, "Email və ya şifrə yanlışdır", null);
+
+            var user = teacher.User;
+
+            // ✅ Lockout yoxlaması
+            var lockoutCheck = CheckLockout(user);
+            if (!lockoutCheck.Success)
+                return lockoutCheck;
+
+            // ✅ Şifrə yoxlaması
+            var passwordCheck = await ValidatePasswordAsync(user, model.Password);
+            if (!passwordCheck.Success)
+                return passwordCheck;
+
+            // Teacher rolunu yoxla
+            var hasTeacherRole = user.UserRoles.Any(ur =>
+                ur.Role.IsActive && ur.Role.Code == "TEACHER");
+
+            if (!hasTeacherRole)
+                return (false, "Bu istifadəçinin müəllim girişi yoxdur", null);
+
+            // ✅ Uğurlu giriş
+            await UpdateSuccessfulLoginAsync(user);
+            return (true, null, user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Teacher authentication xətası");
+            return (false, "Sistemdə xəta baş verdi", null);
+        }
+    }
+
+    #endregion
+
+    #region Parent Authentication
+
+    public async Task<(bool Success, string? ErrorMessage, User? User)> AuthenticateParentAsync(ParentLoginViewModel model)
+    {
+        try
+        {
+            // FIN və Initials-i normalize et
+            var normalizedFin = model.FinCode.ToUpperInvariant().Trim();
+            var normalizedInitials = (model.Initials ?? string.Empty).ToUpperInvariant().Trim();
+
+            if (normalizedFin.Length == 0 || normalizedInitials.Length != 2)
+                return (false, "FIN və ya baş hərflər düzgün deyil", null);
+
+            // İlk və son baş hərfləri ayır (stringdə artıq trim edilmişdir)
+            var firstInitial = normalizedInitials[0].ToString();
+            var lastInitial = normalizedInitials[normalizedInitials.Length - 1].ToString();
+
+            // Parent-i tap
+            var parent = await _context.Parents
+            .AsNoTracking()
+            .Include(p => p.User)
+                .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(p =>
+                p.FinCode == normalizedFin &&
+                p.FirstName.StartsWith(firstInitial, StringComparison.OrdinalIgnoreCase) &&
+                p.LastName.StartsWith(lastInitial, StringComparison.OrdinalIgnoreCase) &&
+                p.IsActive &&
+                !p.IsDeleted &&
+                p.User!.IsActive &&
+                !p.User.IsDeleted);
+
+            if (parent == null)
+                return (false, "FIN kod və ya ad/soyad yanlışdır", null);
+
+            var user = parent.User;
+
+            // ✅ Lockout yoxlaması
+            var lockoutCheck = CheckLockout(user);
+            if (!lockoutCheck.Success)
+                return lockoutCheck;
+
+            // Parent rolunu yoxla
+            var hasParentRole = user.UserRoles.Any(ur =>
+                ur.Role.IsActive && ur.Role.Code == "PARENT");
+
+            if (!hasParentRole)
+                return (false, "Bu istifadəçinin valideyn girişi yoxdur", null);
+
+            // ✅ Uğurlu giriş
+            await UpdateSuccessfulLoginAsync(user);
+            return (true, null, user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Parent authentication xətası");
+            return (false, "Sistemdə xəta baş verdi", null);
+        }
+    }
+
+    #endregion
+
+    #region Claims Principal
+
+    public async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(User user, Guid? companyId)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.UserName),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.GivenName, $"{user.FirstName} {user.LastName}"),
-            new("CompanyId", companyId.ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim("FullName", $"{user.FirstName} {user.LastName}")
         };
 
-        // Rolları əlavə et
-        var roles = await _context.UserRoles
-            .Where(ur => ur.UserId == user.Id)
+        if (companyId.HasValue && companyId != Guid.Empty)
+        {
+            claims.Add(new Claim("CompanyId", companyId.Value.ToString()));
+        }
+
+        var userRoles = await _context.UserRoles
             .Include(ur => ur.Role)
-            .Select(ur => ur.Role.Code!)
+            .Where(ur => ur.UserId == user.Id && ur.Role.IsActive)
             .ToListAsync();
 
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        foreach (var userRole in userRoles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Code ?? userRole.Role.Name));
+        }
 
-        var identity = new ClaimsIdentity(claims, "AppointmentSystemAuth");
+        var identity = new ClaimsIdentity(claims, "Cookie");
         return new ClaimsPrincipal(identity);
     }
+
+    #endregion
+
+    #region Private Helper Methods
+
+    /// <summary>
+    /// Lockout yoxlaması
+    /// </summary>
+    private (bool Success, string? ErrorMessage, User? User) CheckLockout(User user)
+    {
+        if (user.IsLocked && user.LockoutEnd > DateTimeOffset.UtcNow)
+        {
+            return (false, $"Hesabınız {user.LockoutEnd:dd.MM.yyyy HH:mm} tarixinədək kilidlənib", null);
+        }
+        return (true, null, user);
+    }
+
+    /// <summary>
+    /// Şifrə yoxlaması və failed attempts
+    /// </summary>
+    private async Task<(bool Success, string? ErrorMessage, User? User)> ValidatePasswordAsync(User user, string password)
+    {
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        {
+            user.FailedLoginAttempts++;
+            if (user.FailedLoginAttempts >= 5)
+            {
+                user.IsLocked = true;
+                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+            }
+            await _context.SaveChangesAsync();
+
+            return (false, "Şifrə yanlışdır", null);
+        }
+        return (true, null, user);
+    }
+
+    /// <summary>
+    /// Uğurlu giriş məlumatlarını yenilə
+    /// </summary>
+    private async Task UpdateSuccessfulLoginAsync(User user)
+    {
+        user.LastLoginDate = DateTimeOffset.UtcNow;
+        user.FailedLoginAttempts = 0;
+        user.IsLocked = false;
+        user.LockoutEnd = null;
+        await _context.SaveChangesAsync();
+    }
+
+    #endregion
 }

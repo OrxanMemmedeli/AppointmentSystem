@@ -14,4 +14,5 @@ public class CompanyCardViewModel
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
     public string? MapCoordinates { get; set; }
+    public string? MapUrl { get; set; }
 }

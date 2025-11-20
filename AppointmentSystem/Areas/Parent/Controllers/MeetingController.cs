@@ -1,33 +1,39 @@
+﻿using AppointmentSystem.Data;
+using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AppointmentSystem.Services;
-using AppointmentSystem.Models.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AppointmentSystem.Controllers;
+namespace AppointmentSystem.Areas.Parent.Controllers;
 
-/// <summary>
-/// Valideyn paneli
-/// </summary>
+[Area("Parent")]
 [Authorize(Policy = "ParentOnly")]
-public class ParentController : Controller
+public class MeetingController : Controller
 {
     private readonly IMeetingService _meetingService;
-    private readonly ILogger<ParentController> _logger;
+    private readonly AppDbContext _context;
+    private readonly ILogger<MeetingController> _logger;
 
-    public ParentController(
+    public MeetingController(
         IMeetingService meetingService,
-        ILogger<ParentController> logger)
+        AppDbContext context,
+        ILogger<MeetingController> logger)
     {
         _meetingService = meetingService;
+        _context = context;
         _logger = logger;
     }
 
     private Guid GetParentId()
     {
-        // Real implementation-da Parent entity-dən UserId ilə tapılmalıdır
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Guid.Empty;
+
+        var parent = _context.Parents.FirstOrDefault(p => p.UserId == userId);
+        return parent?.Id ?? Guid.Empty;
     }
 
     private Guid GetCompanyId()
@@ -37,7 +43,7 @@ public class ParentController : Controller
     }
 
     /// <summary>
-    /// Valideyn ana səhifəsi
+    /// Görüşlər siyahısı
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Index()
@@ -46,6 +52,9 @@ public class ParentController : Controller
         {
             var parentId = GetParentId();
             var companyId = GetCompanyId();
+
+            if (parentId == Guid.Empty)
+                return RedirectToAction("Logout", "Auth");
 
             var meetings = await _meetingService.GetParentMeetingsAsync(parentId, companyId);
             return View(meetings);
@@ -61,12 +70,43 @@ public class ParentController : Controller
     /// Yeni görüş yaratma səhifəsi
     /// </summary>
     [HttpGet]
-    public IActionResult CreateMeeting()
+    public async Task<IActionResult> Create()
     {
-        return View(new CreateMeetingViewModel
+        try
         {
-            MeetingDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1))
-        });
+            var parentId = GetParentId();
+            var companyId = GetCompanyId();
+
+            if (parentId == Guid.Empty)
+                return RedirectToAction("Logout", "Auth");
+
+            // Övladlarını tap
+            var children = await _context.StudentParents
+                .Include(sp => sp.Student).ThenInclude(s => s.Class)
+                .Where(sp => sp.ParentId == parentId)
+                .Select(sp => sp.Student)
+                .ToListAsync();
+
+            // Müəllimləri tap
+            var teachers = await _context.Teachers
+                .Where(t => t.CompanyId == companyId && t.IsActive)
+                .ToListAsync();
+
+            ViewBag.Children = children;
+            ViewBag.Teachers = teachers;
+
+            var model = new CreateMeetingViewModel
+            {
+                MeetingDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1))
+            };
+
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Görüş yaratma səhifəsi yüklənərkən xəta baş verdi");
+            return View("Error");
+        }
     }
 
     /// <summary>
@@ -74,10 +114,29 @@ public class ParentController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateMeeting(CreateMeetingViewModel model)
+    public async Task<IActionResult> Create(CreateMeetingViewModel model)
     {
         if (!ModelState.IsValid)
+        {
+            // Reload data
+            var parentId = GetParentId();
+            var companyId = GetCompanyId();
+
+            var children = await _context.StudentParents
+                .Include(sp => sp.Student).ThenInclude(s => s.Class)
+                .Where(sp => sp.ParentId == parentId)
+                .Select(sp => sp.Student)
+                .ToListAsync();
+
+            var teachers = await _context.Teachers
+                .Where(t => t.CompanyId == companyId && t.IsActive)
+                .ToListAsync();
+
+            ViewBag.Children = children;
+            ViewBag.Teachers = teachers;
+
             return View(model);
+        }
 
         try
         {
@@ -91,7 +150,7 @@ public class ParentController : Controller
             }
 
             TempData["SuccessMessage"] = "Görüş uğurla yaradıldı. Müəllimin təsdiqi gözlənilir.";
-            return RedirectToAction(nameof(MeetingDetails), new { id = meetingId });
+            return RedirectToAction(nameof(Details), new { id = meetingId });
         }
         catch (Exception ex)
         {
@@ -105,12 +164,12 @@ public class ParentController : Controller
     /// Görüş detalları
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> MeetingDetails(Guid id)
+    public async Task<IActionResult> Details(Guid id)
     {
         try
         {
             var meeting = await _meetingService.GetMeetingDetailsAsync(id);
-            
+
             if (meeting == null)
                 return NotFound();
 
@@ -128,7 +187,7 @@ public class ParentController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CancelMeeting(CancelMeetingViewModel model)
+    public async Task<IActionResult> Cancel(CancelMeetingViewModel model)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

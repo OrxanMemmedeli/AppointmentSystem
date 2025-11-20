@@ -8,7 +8,7 @@ public static class SeedData
 {
     public static async Task InitializeAsync(AppDbContext context)
     {
-        await context.Database.MigrateAsync();
+        //await context.Database.MigrateAsync();
 
         // 1. Roles
         if (!await context.Roles.AnyAsync())

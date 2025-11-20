@@ -1,0 +1,169 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    var stats = ViewBag.Stats;
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-0">Xoş gəlmisiniz, @User.Identity?.Name!</h2>
+        <p class="text-muted">Sistem statistikası və son məlumatlar</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <!-- Companies -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Şirkətlər</h6>
+                    <h2 class="mb-0">@stats.TotalCompanies</h2>
+                </div>
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teachers -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Müəllimlər</h6>
+                    <h2 class="mb-0">@stats.TotalTeachers</h2>
+                </div>
+                <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-person-badge text-success" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Şagirdlər</h6>
+                    <h2 class="mb-0">@stats.TotalStudents</h2>
+                </div>
+                <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-mortarboard text-info" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parents -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Valideynlər</h6>
+                    <h2 class="mb-0">@stats.TotalParents</h2>
+                </div>
+                <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-people text-warning" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today Meetings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Bu Günkü Görüşlər</h6>
+                    <h2 class="mb-0">@stats.TodayMeetings</h2>
+                </div>
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-calendar-event text-primary" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Meetings -->
+    <div class="col-md-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Gözləyən Görüşlər</h6>
+                    <h2 class="mb-0">@stats.PendingMeetings</h2>
+                </div>
+                <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4">
+    <!-- Recent Activity -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-activity"></i> Son Fəaliyyətlər</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarix</th>
+                                <th>İstifadəçi</th>
+                                <th>Fəaliyyət</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>20.11.2024 10:30</td>
+                                <td>Aynur Məmmədova</td>
+                                <td>Yeni görüş yaratdı</td>
+                                <td><span class="badge bg-success">Tamamlandı</span></td>
+                            </tr>
+                            <tr>
+                                <td>20.11.2024 09:15</td>
+                                <td>Rəşad Həsənov</td>
+                                <td>Görüşü təsdiqlə di</td>
+                                <td><span class="badge bg-primary">Təsdiqləndi</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Sürətli Əməliyyatlar</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-area="Admin" asp-controller="Company" asp-action="Create" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> Yeni Şirkət
+                    </a>
+                    <a asp-area="Admin" asp-controller="User" asp-action="Create" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus"></i> Yeni İstifadəçi
+                    </a>
+                    <a asp-area="Admin" asp-controller="Report" asp-action="Index" class="btn btn-outline-info">
+                        <i class="bi bi-file-earmark-text"></i> Hesabat Al
+                    </a>
+                    <a asp-area="Admin" asp-controller="Settings" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-gear"></i> Tənzimləmələr
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

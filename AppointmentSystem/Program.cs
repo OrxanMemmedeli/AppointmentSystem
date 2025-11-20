@@ -38,9 +38,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.LoginPath = "/Auth/SelectCompany"; // ✅ İlk səhifə Company seçimi
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Home/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
@@ -58,6 +58,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<AppointmentSystem.Services.IAuthenticationService, AppointmentSystem.Services.AuthenticationService>();
 
 
@@ -74,14 +75,21 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRequestLocalization(); // Localization middleware
+
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ✅ Area Routing (ÖNCƏLİKLİ!)
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
+// ✅ Default Routing (Company seçimi ilə başlasın)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=SelectCompany}/{id?}");
 
 // Seed Data (İlk işə salınanda)
 using (var scope = app.Services.CreateScope())
@@ -89,6 +97,5 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await SeedData.InitializeAsync(context);
 }
-
 
 app.Run();

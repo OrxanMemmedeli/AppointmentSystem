@@ -1,5 +1,5 @@
-using AppointmentSystem.Services;
 using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +29,7 @@ public class AuthController : Controller
     #region Company Selection
 
     /// <summary>
-    /// Şirkət seçimi səhifəsi
+    /// Şirkət seçimi səhifəsi - SİSTEMİN İLK SƏHİFƏSİ
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> SelectCompany(string? returnUrl = null)
@@ -73,6 +73,10 @@ public class AuthController : Controller
             return View(model);
         }
 
+        // FIN və Initials normalize et (əlavə təhlükəsizlik)
+        model.FinCode = model.FinCode.ToUpperInvariant().Trim();
+        model.Initials = model.Initials.ToUpperInvariant().Trim();
+
         var (success, errorMessage, user) = await _authService.AuthenticateParentAsync(model);
 
         if (!success || user == null)
@@ -83,7 +87,6 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Create claims and sign in
         var principal = await _authService.CreateClaimsPrincipalAsync(user, model.CompanyId);
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
@@ -91,12 +94,13 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                AllowRefresh = true
             });
 
         _logger.LogInformation("Valideyn girişi: {UserName}", user.UserName);
 
-        return RedirectToLocal(model.ReturnUrl ?? Url.Action("Index", "Parent"));
+        return RedirectToLocal(model.ReturnUrl ?? Url.Action("Index", "Dashboard", new { area = "Parent" }));
     }
 
     #endregion
@@ -143,7 +147,6 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Create claims and sign in
         var principal = await _authService.CreateClaimsPrincipalAsync(user, model.CompanyId);
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
@@ -151,12 +154,13 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = model.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8)
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8),
+                AllowRefresh = true
             });
 
         _logger.LogInformation("Müəllim girişi: {UserName}", user.UserName);
 
-        return RedirectToLocal(model.ReturnUrl ?? Url.Action("Index", "Teacher"));
+        return RedirectToLocal(model.ReturnUrl ?? Url.Action("Index", "Dashboard", new { area = "Teacher" }));
     }
 
     #endregion
@@ -191,7 +195,6 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Create claims and sign in (CompanyId = Guid.Empty for SuperAdmin)
         var principal = await _authService.CreateClaimsPrincipalAsync(user, Guid.Empty);
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
@@ -199,7 +202,8 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = model.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8)
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8),
+                AllowRefresh = true
             });
 
         _logger.LogInformation("Admin girişi: {UserName}", user.UserName);
@@ -219,8 +223,10 @@ public class AuthController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        HttpContext.Session.Clear();
         _logger.LogInformation("İstifadəçi çıxış etdi");
-        return RedirectToAction("Index", "Home");
+
+        return RedirectToAction(nameof(SelectCompany));
     }
 
     #endregion
@@ -231,8 +237,8 @@ public class AuthController : Controller
     {
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
-        
-        return RedirectToAction("Index", "Home");
+
+        return RedirectToAction(nameof(SelectCompany));
     }
 
     #endregion

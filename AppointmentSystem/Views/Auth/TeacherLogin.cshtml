@@ -3,162 +3,76 @@
 @{
     ViewData["Title"] = "Müəllim Girişi";
     var company = ViewData["Company"] as Company;
+    Layout = "_Layout";
 }
 
-@section Styles {
-    <style>
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .company-header {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .company-logo-circle {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            border: 4px solid white;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .form-floating-custom .form-control {
-            height: 60px;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-            .form-floating-custom .form-control:focus {
-                border-color: #11998e;
-                box-shadow: 0 0 0 0.2rem rgba(17, 153, 142, 0.25);
-            }
-
-        .btn-login {
-            height: 60px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            border: none;
-            transition: all 0.3s ease;
-        }
-
-            .btn-login:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 25px rgba(17, 153, 142, 0.4);
-            }
-
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #6c757d;
-        }
-    </style>
-}
-
-<div class="login-container">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="login-card">
-                    <!-- Company Header -->
-                    @if (company != null)
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <!-- Company Info -->
+            @if (company != null)
+            {
+                <div class="text-center mb-4">
+                    @if (!string.IsNullOrEmpty(company.LogoPath))
                     {
-                        <div class="company-header">
-                            <div class="company-logo-circle">
-                                <img src="@(company.LogoPath ?? "/images/default-logo.png")"
-                                     class="w-100 h-100"
-                                     style="object-fit: cover;"
-                                     alt="@company.Name" />
-                            </div>
-                            <h4 class="mb-0">@company.Name</h4>
-                        </div>
+                        <img src="@company.LogoPath" alt="@company.Name"
+                             style="max-width: 100px; height: 100px; object-fit: contain;" class="mb-3" />
                     }
+                    <h4>@company.Name</h4>
+                    <p class="text-muted">Müəllim Girişi</p>
+                </div>
+            }
 
-                    <!-- Login Form -->
-                    <div class="p-4 p-md-5">
-                        <div class="text-center mb-4">
-                            <h3 class="fw-bold">
-                                <i class="bi bi-person-badge-fill text-success"></i> Müəllim Girişi
-                            </h3>
-                            <p class="text-muted">Email və şifrənizlə daxil olun</p>
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">
+                        <i class="bi bi-person-badge text-success"></i> Müəllim Girişi
+                    </h3>
+
+                    <form asp-action="TeacherLogin" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="CompanyId" />
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="bi bi-envelope"></i> Email
+                            </label>
+                            <input asp-for="Email" type="email" class="form-control form-control-lg"
+                                   placeholder="email@example.com" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
-                        <form asp-action="TeacherLogin" method="post">
-                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">
+                                <i class="bi bi-lock"></i> Şifrə
+                            </label>
+                            <input asp-for="Password" type="password" class="form-control form-control-lg"
+                                   placeholder="••••••••" required />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
 
-                            <input type="hidden" asp-for="CompanyId" />
-                            <input type="hidden" asp-for="ReturnUrl" />
+                        <div class="mb-4 form-check">
+                            <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">
+                                Məni xatırla
+                            </label>
+                        </div>
 
-                            <!-- Email -->
-                            <div class="form-floating-custom mb-3">
-                                <label asp-for="Email" class="form-label fw-semibold">
-                                    <i class="bi bi-envelope"></i> Email
-                                </label>
-                                <input asp-for="Email"
-                                       type="email"
-                                       class="form-control"
-                                       placeholder="email@example.com" />
-                                <span asp-validation-for="Email" class="text-danger small"></span>
-                            </div>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Daxil ol
+                            </button>
+                        </div>
 
-                            <!-- Password -->
-                            <div class="form-floating-custom mb-3 position-relative">
-                                <label asp-for="Password" class="form-label fw-semibold">
-                                    <i class="bi bi-lock"></i> Şifrə
-                                </label>
-                                <input asp-for="Password"
-                                       type="password"
-                                       id="passwordInput"
-                                       class="form-control"
-                                       placeholder="••••••••" />
-                                <i class="bi bi-eye password-toggle" id="togglePassword"></i>
-                                <span asp-validation-for="Password" class="text-danger small"></span>
-                            </div>
-
-                            <!-- Remember Me -->
-                            <div class="form-check mb-3">
-                                <input asp-for="RememberMe" type="checkbox" class="form-check-input" id="rememberMe" />
-                                <label asp-for="RememberMe" class="form-check-label" for="rememberMe">
-                                    Məni yadda saxla
-                                </label>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success btn-login">
-                                    <i class="bi bi-box-arrow-in-right"></i> Daxil Ol
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Footer -->
-                    <div class="text-center p-3 bg-light border-top">
-                        <a asp-action="SelectCompany" class="text-decoration-none me-3">
-                            <i class="bi bi-arrow-left-circle"></i> Şirkət seçiminə qayıt
-                        </a>
-                    </div>
+                        <div class="text-center">
+                            <a asp-action="SelectCompany" class="text-muted">
+                                <i class="bi bi-arrow-left"></i> Geri qayıt
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -167,16 +81,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        // Password toggle
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('passwordInput');
-
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('bi-eye');
-            this.classList.toggle('bi-eye-slash');
-        });
-    </script>
 }

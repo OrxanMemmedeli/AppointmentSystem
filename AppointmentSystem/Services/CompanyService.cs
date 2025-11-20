@@ -5,16 +5,6 @@ using Microsoft.EntityFrameworkCore;
 namespace AppointmentSystem.Services;
 
 /// <summary>
-/// Company service interface
-/// </summary>
-public interface ICompanyService
-{
-    Task<List<CompanyCardViewModel>> GetAllActiveCompaniesAsync();
-    Task<CompanyCardViewModel?> GetCompanyByIdAsync(Guid companyId);
-    Task<bool> CompanyExistsAsync(Guid companyId);
-}
-
-/// <summary>
 /// Company service implementation
 /// </summary>
 public class CompanyService : ICompanyService
@@ -41,7 +31,8 @@ public class CompanyService : ICompanyService
                 Address = c.Address,
                 PhoneNumber = c.PhoneNumber,
                 Email = c.Email,
-                MapCoordinates = c.MapCoordinates
+                MapCoordinates = c.MapCoordinates,
+                MapUrl = c.MapUrl
             })
             .AsNoTracking()
             .ToListAsync();
@@ -61,7 +52,8 @@ public class CompanyService : ICompanyService
                 Address = c.Address,
                 PhoneNumber = c.PhoneNumber,
                 Email = c.Email,
-                MapCoordinates = c.MapCoordinates
+                MapCoordinates = c.MapCoordinates,
+                MapUrl = c.MapUrl
             })
             .AsNoTracking()
             .FirstOrDefaultAsync();
