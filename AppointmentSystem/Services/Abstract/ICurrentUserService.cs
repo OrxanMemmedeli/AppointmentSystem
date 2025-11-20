@@ -1,4 +1,4 @@
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Abstract;
 
 /// <summary>
 /// Cari istifadəçi məlumatlarını əldə etmək üçün interface

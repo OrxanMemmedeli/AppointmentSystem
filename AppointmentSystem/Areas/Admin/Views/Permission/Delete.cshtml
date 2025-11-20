@@ -1,0 +1,177 @@
+﻿@model PermissionViewModel
+@{
+    ViewData["Title"] = "İcazə Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> İcazə Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-shield-exclamation"></i> Xəbərdarlıq!
+                        </h5>
+                        <p class="mb-0">
+                            Bu icazəni silmək istədiyinizdən əminsiniz? Bu icazəyə malik olan bütün
+                            rol və istifadəçilər öz səlahiyyətlərini itirəcək.
+                        </p>
+                    </div>
+
+                    <!-- İcazə Məlumatları -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-key text-primary"></i>
+                                <strong>@Model.Name</strong>
+                            </h5>
+
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Kod:</div>
+                                <div class="col-8">
+                                    @if (!string.IsNullOrEmpty(Model.Code))
+                                    {
+                                        <code>@Model.Code</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Təsvir:</div>
+                                <div class="col-8">@(Model.Description ?? "Təsvir yoxdur")</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Tip:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-@(Model.Type switch
+                                          {
+                                              PermissionType.Action => "primary",
+                                              PermissionType.Menu => "info",
+                                              PermissionType.Feature => "success",
+                                              _ => "secondary"
+                                          })">
+                                        @Model.Type
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">HTTP Metodu:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-secondary">@Model.HttpMethod</span>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.ResourcePath))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Resource Path:</div>
+                                    <div class="col-8">
+                                        <code class="small">@Model.ResourcePath</code>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.AreaName))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Area:</div>
+                                    <div class="col-8">@Model.AreaName</div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.ControllerName))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Controller:</div>
+                                    <div class="col-8">@Model.ControllerName</div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.ActionName))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Action:</div>
+                                    <div class="col-8">@Model.ActionName</div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-4 text-muted">Status:</div>
+                                <div class="col-8">
+                                    @if (Model.RequiresAuthentication)
+                                    {
+                                        <span class="badge bg-warning text-dark me-1">
+                                            <i class="bi bi-lock"></i> Auth tələb
+                                        </span>
+                                    }
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                        @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Təsir Zonası -->
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-info-circle"></i> Bu əməliyyatın nəticələri:</h6>
+                        <ul class="mb-0 small">
+                            <li>Bu icazəyə malik olan bütün <strong>rollar</strong> bu səlahiyyəti itirəcək</li>
+                            <li>Bu icazəyə bilavasitə malik olan <strong>istifadəçilər</strong> giriş hüququnu itirəcək</li>
+                            <li>Əlaqəli menyu elementləri icazəsiz qalacaq</li>
+                            <li>Silinmə soft delete-dir və lazım olduqda geri qaytarıla bilər</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                <i class="bi bi-x-circle"></i> Ləğv Et
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                <i class="bi bi-trash"></i> Bəli, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativ Əməliyyatlar -->
+            <div class="card mt-3 border-primary">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-lightbulb"></i> Alternativ Həllər
+                    </h6>
+                    <p class="small text-muted mb-2">
+                        İcazəni silməkdənsə aşağıdakı əməliyyatları da edə bilərsiniz:
+                    </p>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0">
+                            <strong>Deaktiv edin:</strong> İcazə sistemdə qalır, amma istifadə olunmur
+                        </div>
+                        <div class="list-group-item px-0">
+                            <strong>Rol təyinlərini silin:</strong> Yalnız konkret rollardan icazəni götürün
+                        </div>
+                        <div class="list-group-item px-0">
+                            <strong>Yenilənmiş icazə yaradın:</strong> Köhnəsini saxlayaraq yenisini əlavə edin
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

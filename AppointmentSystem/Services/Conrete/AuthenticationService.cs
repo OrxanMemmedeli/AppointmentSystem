@@ -1,10 +1,11 @@
 using AppointmentSystem.Data;
 using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Conrete;
 
 public class AuthenticationService : IAuthenticationService
 {

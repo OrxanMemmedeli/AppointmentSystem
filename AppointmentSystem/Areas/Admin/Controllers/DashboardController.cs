@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AppointmentSystem.Data;
 using Microsoft.EntityFrameworkCore;
+using AppointmentSystem.Models.Enums;
 
 namespace AppointmentSystem.Areas.Admin.Controllers;
 
@@ -37,7 +38,7 @@ public class DashboardController : Controller
                 TodayMeetings = await _context.Meetings
                     .CountAsync(m => m.MeetingDate == DateOnly.FromDateTime(DateTime.Today)),
                 PendingMeetings = await _context.Meetings
-                    .CountAsync(m => m.Status == Models.Enums.MeetingStatus.Pending)
+                    .CountAsync(m => m.Status == MeetingStatus.Pending)
             };
 
             ViewBag.Stats = stats;

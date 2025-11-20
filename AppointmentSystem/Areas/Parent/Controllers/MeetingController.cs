@@ -1,6 +1,6 @@
 ﻿using AppointmentSystem.Data;
 using AppointmentSystem.Models.ViewModels;
-using AppointmentSystem.Services;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

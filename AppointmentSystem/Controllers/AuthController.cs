@@ -1,5 +1,5 @@
 using AppointmentSystem.Models.ViewModels;
-using AppointmentSystem.Services;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +12,12 @@ namespace AppointmentSystem.Controllers;
 /// </summary>
 public class AuthController : Controller
 {
-    private readonly AS.IAuthenticationService _authService;
+    private readonly AS.Abstract.IAuthenticationService _authService;
     private readonly ICompanyService _companyService;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
-        AS.IAuthenticationService authService,
+        AS.Abstract.IAuthenticationService authService,
         ICompanyService companyService,
         ILogger<AuthController> logger)
     {

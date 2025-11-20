@@ -2,8 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using AppointmentSystem.Data;
+using AppointmentSystem.Services.Abstract;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Conrete;
 
 /// <summary>
 /// Cari istifadəçi məlumatları servisi

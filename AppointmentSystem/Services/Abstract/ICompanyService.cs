@@ -1,6 +1,6 @@
 using AppointmentSystem.Models.ViewModels;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Abstract;
 
 /// <summary>
 /// Company service interface

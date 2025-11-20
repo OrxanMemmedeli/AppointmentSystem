@@ -1,7 +1,7 @@
 ﻿using AppointmentSystem.Data;
 using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Models.ViewModels;
-using AppointmentSystem.Services;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

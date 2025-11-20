@@ -3,7 +3,7 @@ using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Models.ViewModels;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Abstract;
 
 /// <summary>
 /// Görüş (Meeting) idarəetmə servisi

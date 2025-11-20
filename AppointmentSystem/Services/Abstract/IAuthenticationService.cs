@@ -2,7 +2,7 @@ using AppointmentSystem.Models.ViewModels;
 using System.Security.Claims;
 using AppointmentSystem.Models.Entities;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Abstract;
 
 /// <summary>
 /// Authentication service interface

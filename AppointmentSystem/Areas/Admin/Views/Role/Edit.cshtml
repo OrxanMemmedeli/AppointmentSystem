@@ -1,0 +1,193 @@
+﻿@model RoleViewModel
+@{
+    ViewData["Title"] = "Rol Redaktəsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Rol Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">
+                                Rol Adı <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" class="form-control form-control-lg"
+                                   placeholder="Administrator" autofocus />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Code" class="form-label">
+                                Rol Kodu
+                            </label>
+                            @{
+                                var readOnlyAttrForCode = Model.IsSystemRole ? "readonly" : string.Empty;
+                            }
+
+                            @if (string.IsNullOrEmpty(readOnlyAttrForCode))
+                            {
+                                <input asp-for="Code" class="form-control text-uppercase"
+                                       placeholder="ADMIN" maxlength="50" />
+                            }
+                            else
+                            {
+                                <input asp-for="Code" class="form-control text-uppercase"
+                                       placeholder="ADMIN" maxlength="50" readonly />
+                            }
+
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                            @if (Model.IsSystemRole)
+                            {
+                                <small class="form-text text-warning">
+                                    <i class="bi bi-lock"></i> Sistem rolunun kodu dəyişdirilə bilməz
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    Yalnız böyük hərflər və alt xətt
+                                </small>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Təsvir</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Bu rolun məqsədi və vəzifələri..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Priority" class="form-label">
+                                        Prioritet <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Priority" type="number" class="form-control"
+                                           min="0" max="100" />
+                                    <span asp-validation-for="Priority" class="text-danger"></span>
+                                    <small class="form-text text-muted">
+                                        0-100 arası
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    @{
+                                        var disabledAttrForCode = Model.IsSystemRole ? "disabled" : string.Empty;
+                                    }
+
+                                    @if (string.IsNullOrEmpty(readOnlyAttrForCode))
+                                    {
+                                        <input asp-for="IsSystemRole" class="form-check-input"
+                                               type="checkbox" role="switch" />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="IsSystemRole" class="form-check-input"
+                                               type="checkbox" role="switch"
+                                               disabled />
+                                    }
+                                    <label asp-for="IsSystemRole" class="form-check-label">
+                                        <i class="bi bi-gear"></i> Sistem Rolu
+                                    </label>
+                                    @if (Model.IsSystemRole)
+                                    {
+                                        <input type="hidden" asp-for="IsSystemRole" value="true" />
+                                        <div class="form-text text-warning">
+                                            Bu parametr dəyişdirilə bilməz
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsActive" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="bi bi-check-circle"></i> Aktiv
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.IsSystemRole)
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Diqqət:</strong> Bu sistem rolu olduğu üçün bəzi parametrlər dəyişdirilə bilməz.
+                            </div>
+                        }
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistika Kartı -->
+            <div class="card mt-3 border-primary">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-graph-up"></i> Rol Statistikası
+                    </h6>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <h3 class="mb-0 text-primary">
+                                    <i class="bi bi-people"></i>
+                                </h3>
+                                <small class="text-muted">İstifadəçilər</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <h3 class="mb-0 text-success">
+                                    <i class="bi bi-key"></i>
+                                </h3>
+                                <small class="text-muted">İcazələr</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
+            if (codeInput && !codeInput.hasAttribute('readonly')) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
+                });
+            }
+        });
+    </script>
+}

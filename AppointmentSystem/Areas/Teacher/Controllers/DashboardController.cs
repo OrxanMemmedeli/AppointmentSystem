@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using AppointmentSystem.Data;
 using AppointmentSystem.Models.Enums;
-using AppointmentSystem.Services;
 using Microsoft.EntityFrameworkCore;
+using AppointmentSystem.Services.Abstract;
 
 namespace AppointmentSystem.Areas.Teacher.Controllers;
 

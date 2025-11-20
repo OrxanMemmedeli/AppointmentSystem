@@ -1,8 +1,9 @@
 using AppointmentSystem.Data;
 using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Conrete;
 
 /// <summary>
 /// Company service implementation

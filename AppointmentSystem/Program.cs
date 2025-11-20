@@ -1,5 +1,6 @@
 ﻿using AppointmentSystem.Data;
-using AppointmentSystem.Services;
+using AppointmentSystem.Services.Abstract;
+using AppointmentSystem.Services.Conrete;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -59,7 +60,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
-builder.Services.AddScoped<AppointmentSystem.Services.IAuthenticationService, AppointmentSystem.Services.AuthenticationService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 
 var app = builder.Build();

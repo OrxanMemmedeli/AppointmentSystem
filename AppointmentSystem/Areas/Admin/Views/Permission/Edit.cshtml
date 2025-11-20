@@ -1,0 +1,181 @@
+﻿@model PermissionViewModel
+@{
+    ViewData["Title"] = "İcazə Redaktəsi";
+    var httpMethods = ViewData["HttpMethods"] as List<string>;
+    var permissionTypes = ViewData["PermissionTypes"] as List<SelectListItem>;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> İcazə Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <!-- Sol sütun -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        İcazə Adı <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Name" class="form-control" autofocus />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Code" class="form-label">Kod</label>
+                                    <input asp-for="Code" class="form-control text-uppercase"
+                                           placeholder="USER_CREATE" />
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                    <small class="text-muted">Böyük hərflər və alt xətt</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Type" class="form-label">
+                                        İcazə Tipi <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Type" asp-items="permissionTypes" class="form-select">
+                                    </select>
+                                    <span asp-validation-for="Type" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="HttpMethod" class="form-label">
+                                        HTTP Metodu <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="HttpMethod" class="form-select">
+                                        @foreach (var method in httpMethods)
+                                        {
+                                            <option value="@method" selected="@(method == Model.HttpMethod)">
+                                                @method
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="HttpMethod" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Sağ sütun -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ResourcePath" class="form-label">Resource Path</label>
+                                    <input asp-for="ResourcePath" class="form-control"
+                                           placeholder="/admin/users/create" />
+                                    <span asp-validation-for="ResourcePath" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="AreaName" class="form-label">Area</label>
+                                    <input asp-for="AreaName" class="form-control" placeholder="Admin" />
+                                    <span asp-validation-for="AreaName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ControllerName" class="form-label">Controller</label>
+                                    <input asp-for="ControllerName" class="form-control" placeholder="Users" />
+                                    <span asp-validation-for="ControllerName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ActionName" class="form-label">Action</label>
+                                    <input asp-for="ActionName" class="form-control" placeholder="Create" />
+                                    <span asp-validation-for="ActionName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Təsvir</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="RequiresAuthentication" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="RequiresAuthentication" class="form-check-label">
+                                        <i class="bi bi-lock"></i> Autentifikasiya tələb olunur
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsActive" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="bi bi-check-circle"></i> Aktiv
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Məlumat Kartı -->
+            <div class="card mt-3 border-info">
+                <div class="card-body">
+                    <h6 class="text-info mb-3">
+                        <i class="bi bi-lightbulb"></i> İcazə Tipləri
+                    </h6>
+                    <div class="row small">
+                        <div class="col-md-4 mb-2">
+                            <div class="border rounded p-2">
+                                <strong class="text-primary">Action</strong>
+                                <p class="mb-0 text-muted">Controller action-ları üçün</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="border rounded p-2">
+                                <strong class="text-info">Menu</strong>
+                                <p class="mb-0 text-muted">Menyu elementləri üçün</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="border rounded p-2">
+                                <strong class="text-success">Feature</strong>
+                                <p class="mb-0 text-muted">Sistem xüsusiyyətləri üçün</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
+                });
+            }
+        });
+    </script>
+}

@@ -3,9 +3,10 @@ using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services;
+namespace AppointmentSystem.Services.Conrete;
 
 /// <summary>
 /// MeetingService implementation

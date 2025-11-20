@@ -1,0 +1,157 @@
+﻿@model List<RoleListViewModel>
+@{
+    ViewData["Title"] = "Rol İdarəetməsi";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-shield-lock"></i> Rol İdarəetməsi</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Yeni Rol
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-end mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" id="tableViewBtn">
+                        <i class="bi bi-table"></i> Cədvəl
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="cardViewBtn">
+                        <i class="bi bi-grid-3x3"></i> Kartlar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card View Container (gizli) -->
+            <div id="cardView" class="d-none">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var role in Model)
+                    {
+                        <div class="col">
+                            <partial name="_RoleCard" model="role" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Table View Container -->
+            <div id="tableView">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Rol Adı</th>
+                                <th>Kod</th>
+                                <th>Təsvir</th>
+                                <th>Prioritet</th>
+                                <th>İstifadəçi</th>
+                                <th>İcazələr</th>
+                                <th>Status</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var role in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@role.Name</strong>
+                                        @if (role.IsSystemRole)
+                                        {
+                                            <span class="badge bg-info ms-1">Sistem</span>
+                                        }
+                                    </td>
+                                    <td><code>@role.Code</code></td>
+                                    <td>@(role.Description ?? "-")</td>
+                                    <td><span class="badge bg-secondary">@role.Priority</span></td>
+                                    <td>@role.UserCount</td>
+                                    <td>@role.PermissionCount</td>
+                                    <td>
+                                        @if (role.IsActive)
+                                        {
+                                            <span class="badge bg-success">Aktiv</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Deaktiv</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Edit" asp-route-id="@role.Id"
+                                               class="btn btn-outline-primary" title="Redaktə et">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+
+                                            @if (!role.IsSystemRole)
+                                            {
+                                                <form asp-action="ToggleStatus" asp-route-id="@role.Id"
+                                                      method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-outline-warning"
+                                                            title="@(role.IsActive ? "Deaktiv et" : "Aktiv et")">
+                                                        <i class="bi bi-@(role.IsActive ? "pause" : "play")-circle"></i>
+                                                    </button>
+                                                </form>
+
+                                                <a asp-action="Delete" asp-route-id="@role.Id"
+                                                   class="btn btn-outline-danger" title="Sil">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Hələ rol yaradılmayıb</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // View toggle
+        document.getElementById('tableViewBtn').addEventListener('click', function() {
+            document.getElementById('tableView').classList.remove('d-none');
+            document.getElementById('cardView').classList.add('d-none');
+            this.classList.add('active');
+            document.getElementById('cardViewBtn').classList.remove('active');
+        });
+
+        document.getElementById('cardViewBtn').addEventListener('click', function() {
+            document.getElementById('cardView').classList.remove('d-none');
+            document.getElementById('tableView').classList.add('d-none');
+            this.classList.add('active');
+            document.getElementById('tableViewBtn').classList.remove('active');
+        });
+    </script>
+}

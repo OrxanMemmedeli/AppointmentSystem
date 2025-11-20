@@ -1,0 +1,139 @@
+﻿@model RoleViewModel
+@{
+    ViewData["Title"] = "Rol Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Rol Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsSystemRole)
+                    {
+                        <!-- Sistem Rolu Silinə Bilməz -->
+                        <div class="alert alert-danger">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-shield-lock"></i> Sistem Rolu Qorunur
+                            </h5>
+                            <p class="mb-0">
+                                Bu sistem rolu olduğu üçün silinə bilməz. Sistem rolları kritik funksiyalara cavabdehdir
+                                və onların silinməsi sistemin stabilliyini poza bilər.
+                            </p>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><strong>@Model.Name</strong></h6>
+                                <p class="mb-2"><strong>Kod:</strong> <code>@Model.Code</code></p>
+                                <p class="mb-2"><strong>Təsvir:</strong> @(Model.Description ?? "Təsvir yoxdur")</p>
+                                <p class="mb-0">
+                                    <span class="badge bg-info">Sistem Rolu</span>
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                        @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Geri Qayıt
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Normal Rol Silinmə Prosesi -->
+                        <div class="alert alert-warning">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle"></i> Diqqət!
+                            </h5>
+                            <p class="mb-0">
+                                Bu rolu silmək istədiyinizdən əminsiniz? Bu əməliyyat geri qaytarıla bilməz.
+                            </p>
+                        </div>
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    <i class="bi bi-shield-lock"></i> <strong>@Model.Name</strong>
+                                </h5>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Kod:</div>
+                                    <div class="col-8"><code>@Model.Code</code></div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Təsvir:</div>
+                                    <div class="col-8">@(Model.Description ?? "Təsvir yoxdur")</div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Prioritet:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-secondary">@Model.Priority</span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-4 text-muted">Status:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                            @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Əlavə Məlumat</h6>
+                            <ul class="mb-0 small">
+                                <li>Rol silinəndə bu rola malik bütün istifadəçilər öz icazələrini itirəcək</li>
+                                <li>Rola bağlı bütün icazə əlaqələri də silinəcək</li>
+                                <li>Bu əməliyyat yalnız soft delete-dir və geri qaytarıla bilər (admin müdaxiləsi ilə)</li>
+                            </ul>
+                        </div>
+
+                        <form asp-action="Delete" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="Id" />
+
+                            <div class="d-flex justify-content-between gap-2">
+                                <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                    <i class="bi bi-x-circle"></i> Ləğv Et
+                                </a>
+                                <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                    <i class="bi bi-trash"></i> Bəli, Sil
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @if (!Model.IsSystemRole)
+            {
+                <!-- Xəbərdarlıq Kartı -->
+                <div class="card border-warning mt-3">
+                    <div class="card-body">
+                        <h6 class="text-warning">
+                            <i class="bi bi-shield-exclamation"></i> Təhlükəsizlik Xəbərdarlığı
+                        </h6>
+                        <p class="small mb-0 text-muted">
+                            Əgər bu rolda aktiv istifadəçilər varsa, onların icazələri dərhal silinəcək.
+                            Sistemdə istifadə olunan rolları silməzdən əvvəl bütün istifadəçilərin
+                            alternativ rollara malik olduğundan əmin olun.
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

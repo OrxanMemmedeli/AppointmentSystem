@@ -1,0 +1,5 @@
+﻿* Menu Controller ve HTML kodlarini yaz. 
+* Identity ucun qalan hisseleri yaz. 
+* Layout-Menuda Idendity ucun saheleri elave et.
+
+* Service-ler merkezi olaraq inject edilsin. 
