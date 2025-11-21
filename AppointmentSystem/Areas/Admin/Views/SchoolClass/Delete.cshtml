@@ -1,0 +1,124 @@
+﻿@model SchoolClassViewModel
+@{
+    ViewData["Title"] = "Sinif Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Sinif Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-shield-exclamation"></i> Xəbərdarlıq!
+                        </h5>
+                        <p class="mb-0">
+                            Bu sinfi silmək istədiyinizdən əminsiniz? Bu əməliyyat geri qaytarıla bilməz
+                            və sinfə aid bütün məlumatlar (şagirdlər, müəllim təyinləri) əlçatan olmayacaq.
+                        </p>
+                    </div>
+
+                    <!-- Sinif Məlumatları -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-grid-3x3 text-primary"></i>
+                                <strong>@Model.Name</strong>
+                            </h5>
+
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Səviyyə:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-primary">@Model.Level-ci sinif</span>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Section))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Şöbə:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-info">@Model.Section</span>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Açıqlama:</div>
+                                    <div class="col-8">@Model.Description</div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-4 text-muted">Status:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                        @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Təsir Zonası -->
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-info-circle"></i> Bu əməliyyatın nəticələri:</h6>
+                        <ul class="mb-0 small">
+                            <li>Sinif sistemdən silinəcək (soft delete)</li>
+                            <li>Sinfə aid olan <strong>bütün şagirdlər</strong> əlçatan olmayacaq</li>
+                            <li>Sinfə aid olan <strong>bütün müəllim təyinləri</strong> silinəcək</li>
+                            <li>Sinfə aid olan <strong>dərs cədvəlləri</strong> silinəcək</li>
+                            <li>Sinfə aid olan <strong>qiymətlər və davamiyyət</strong> qeydləri silinəcək</li>
+                            <li>Bu əməliyyat yalnız admin müdaxiləsi ilə geri qaytarıla bilər</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Index" asp-route-companyId="@Model.CompanyId"
+                               class="btn btn-secondary btn-lg flex-fill">
+                                <i class="bi bi-x-circle"></i> Ləğv Et
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                <i class="bi bi-trash"></i> Bəli, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativ Əməliyyatlar -->
+            <div class="card mt-3 border-primary">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-lightbulb"></i> Alternativ Həllər
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                Silmək əvəzinə @(Model.IsActive ? "Deaktiv" : "Aktiv") Et
+                            </button>
+                        </form>
+
+                        <a asp-action="Edit" asp-route-id="@Model.Id"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Sinfi Redaktə Et
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

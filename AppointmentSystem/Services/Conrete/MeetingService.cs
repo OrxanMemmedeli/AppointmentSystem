@@ -2,7 +2,6 @@
 using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Models.ViewModels;
-using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,7 +23,7 @@ public class MeetingService : IMeetingService
 
     #region Create Meeting
 
-    public async Task<Meeting> CreateMeetingAsync(Guid teacherId, Guid parentId, Guid studentId, DateOnly date, TimeSpan startTime, string? note)
+    public async Task<Meeting> CreateMeetingAsync(Guid teacherId, Guid parentId, Guid studentId, DateTime date, TimeSpan startTime, string? note)
     {
         var teacher = await _context.Teachers
             .Include(t => t.Company)
@@ -58,8 +57,8 @@ public class MeetingService : IMeetingService
             StartTime = startTime,
             EndTime = endTime,
             Status = MeetingStatus.Pending,
-            ParentNote = note,
-            CreatedDate = DateTimeOffset.UtcNow,
+            ParentNotes = note,
+            CreatedDate = DateTime.Now,
             CreatedById = _currentUserService.UserId,
             IsActive = true,
             IsDeleted = false
@@ -102,10 +101,10 @@ public class MeetingService : IMeetingService
         if (meeting == null) return false;
 
         meeting.Status = MeetingStatus.Approved;
-        meeting.TeacherResponse = teacherResponse;
-        meeting.ApprovedDate = DateTimeOffset.UtcNow;
+        meeting.TeacherNotes = teacherResponse;
+        meeting.ApprovedDate = DateTime.Now;
         meeting.ApprovedById = _currentUserService.UserId;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = _currentUserService.UserId;
 
         await _context.SaveChangesAsync();
@@ -119,9 +118,9 @@ public class MeetingService : IMeetingService
 
         meeting.Status = MeetingStatus.Approved;
         meeting.TeacherNotes = teacherNotes;
-        meeting.ApprovedDate = DateTimeOffset.UtcNow;
+        meeting.ApprovedDate = DateTime.Now;
         meeting.ApprovedById = approvedById;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = approvedById;
 
         await _context.SaveChangesAsync();
@@ -135,8 +134,8 @@ public class MeetingService : IMeetingService
 
         meeting.Status = MeetingStatus.Declined;
         meeting.DeclineReason = declineReason;
-        meeting.TeacherResponse = teacherResponse;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.TeacherNotes = teacherResponse;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = _currentUserService.UserId;
 
         await _context.SaveChangesAsync();
@@ -151,7 +150,7 @@ public class MeetingService : IMeetingService
         meeting.Status = MeetingStatus.Declined;
         meeting.DeclineReason = declineReason;
         meeting.TeacherNotes = teacherNotes;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = declinedById;
 
         await _context.SaveChangesAsync();
@@ -164,7 +163,7 @@ public class MeetingService : IMeetingService
         if (meeting == null) return false;
 
         meeting.Status = MeetingStatus.Cancelled;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = _currentUserService.UserId;
 
         await _context.SaveChangesAsync();
@@ -178,7 +177,7 @@ public class MeetingService : IMeetingService
 
         meeting.Status = MeetingStatus.Cancelled;
         meeting.CancellationReason = cancellationReason;
-        meeting.ModifiedDate = DateTimeOffset.UtcNow;
+        meeting.ModifiedDate = DateTime.Now;
         meeting.ModifiedById = _currentUserService.UserId;
 
         await _context.SaveChangesAsync();
@@ -199,7 +198,7 @@ public class MeetingService : IMeetingService
             .FirstOrDefaultAsync(m => m.Id == meetingId);
     }
 
-    public async Task<List<TimeSpan>> GetAvailableTimeSlotsAsync(Guid teacherId, DateOnly date)
+    public async Task<List<TimeSpan>> GetAvailableTimeSlotsAsync(Guid teacherId, DateTime date)
     {
         var teacher = await _context.Teachers
             .Include(t => t.Company)
@@ -261,7 +260,7 @@ public class MeetingService : IMeetingService
             .ToListAsync();
     }
 
-    public async Task<List<Meeting>> GetMeetingsByTeacherAsync(Guid teacherId, DateOnly? date = null, MeetingStatus? status = null)
+    public async Task<List<Meeting>> GetMeetingsByTeacherAsync(Guid teacherId, DateTime? date = null, MeetingStatus? status = null)
     {
         var query = _context.Meetings
             .Include(m => m.Parent)
@@ -284,7 +283,7 @@ public class MeetingService : IMeetingService
             .ToListAsync();
     }
 
-    public async Task<List<TeacherMeetingViewModel>> GetTeacherMeetingsAsync(Guid teacherId, DateOnly? date = null)
+    public async Task<List<TeacherMeetingViewModel>> GetTeacherMeetingsAsync(Guid teacherId, DateTime? date = null)
     {
         var query = _context.Meetings
             .Include(m => m.Parent)
@@ -312,7 +311,7 @@ public class MeetingService : IMeetingService
             StudentName = $"{m.Student.FirstName} {m.Student.LastName}",
             ParentName = $"{m.Parent.FirstName} {m.Parent.LastName}",
             ClassName = m.Student.Class?.Name ?? "N/A",
-            ParentNote = m.ParentNote,
+            ParentNote = m.ParentNotes,
             TeacherNotes = m.TeacherNotes
         }).ToList();
     }
@@ -336,8 +335,8 @@ public class MeetingService : IMeetingService
             Status = m.Status,
             TeacherName = $"{m.Teacher.FirstName} {m.Teacher.LastName}",
             StudentName = $"{m.Student.FirstName} {m.Student.LastName}",
-            ParentNote = m.ParentNote,
-            TeacherResponse = m.TeacherResponse,
+            ParentNote = m.ParentNotes,
+            TeacherResponse = m.TeacherNotes,
             DeclineReason = m.DeclineReason
         }).ToList();
     }

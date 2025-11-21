@@ -21,7 +21,7 @@ public class Meeting : AuditableEntity
     public Guid StudentId { get; set; }
 
     /// <summary>Görüş tarixi</summary>
-    public DateOnly MeetingDate { get; set; }
+    public DateTime MeetingDate { get; set; }
 
     /// <summary>Başlanğıc vaxtı</summary>
     public TimeSpan StartTime { get; set; }
@@ -32,20 +32,14 @@ public class Meeting : AuditableEntity
     /// <summary>Status</summary>
     public MeetingStatus Status { get; set; } = MeetingStatus.Pending;
 
-    /// <summary>Valideyn qeydi</summary>
-    public string? ParentNote { get; set; }
-
     /// <summary>Valideyn qeydləri</summary>
     public string? ParentNotes { get; set; }
-
-    /// <summary>Müəllim cavabı</summary>
-    public string? TeacherResponse { get; set; }
 
     /// <summary>Müəllim qeydləri</summary>
     public string? TeacherNotes { get; set; }
 
     /// <summary>Təsdiq tarixi</summary>
-    public DateTimeOffset? ApprovedDate { get; set; }
+    public DateTime? ApprovedDate { get; set; }
 
     /// <summary>Təsdiq edən istifadəçi ID</summary>
     public Guid? ApprovedById { get; set; }

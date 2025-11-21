@@ -29,9 +29,6 @@ public class SchoolClass : AuditableEntity
     /// <summary>Sinif şagirdləri</summary>
     public virtual ICollection<Student> Students { get; set; } = new HashSet<Student>();
 
-    /// <summary>Sinif müəllimləri</summary>
-    public virtual ICollection<ClassTeacher> ClassTeachers { get; set; } = new HashSet<ClassTeacher>();
-
     /// <summary>Müəllim-Sinif əlaqələri</summary>
     public virtual ICollection<TeacherClass> TeacherClasses { get; set; } = new HashSet<TeacherClass>();
     #endregion

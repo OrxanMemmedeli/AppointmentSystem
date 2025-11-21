@@ -97,7 +97,7 @@ public class MeetingController : Controller
 
             var model = new CreateMeetingViewModel
             {
-                MeetingDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1))
+                MeetingDate = DateTime.Today.AddDays(1)
             };
 
             return View(model);
@@ -213,7 +213,7 @@ public class MeetingController : Controller
     /// Müsait vaxt slotlarını al (AJAX)
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetAvailableTimeSlots(Guid teacherId, DateOnly date)
+    public async Task<IActionResult> GetAvailableTimeSlots(Guid teacherId, DateTime date)
     {
         try
         {

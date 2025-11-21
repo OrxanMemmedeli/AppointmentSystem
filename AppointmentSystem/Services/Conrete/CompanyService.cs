@@ -1,6 +1,7 @@
 ﻿using AppointmentSystem.Areas.Admin.Models.ViewModels;
 using AppointmentSystem.Data;
 using AppointmentSystem.Models.Entities;
+using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +39,7 @@ public class CompanyService : ICompanyService
                 Name = c.Name,
                 Code = c.Code,
                 Email = c.Email,
-                Phone = c.Phone,
+                Phone = c.PhoneNumber,
                 Address = c.Address,
                 LogoPath = c.LogoPath,
                 IsActive = c.IsActive,
@@ -64,7 +65,7 @@ public class CompanyService : ICompanyService
                 Name = c.Name,
                 Code = c.Code,
                 Email = c.Email,
-                Phone = c.Phone,
+                Phone = c.PhoneNumber,
                 LogoPath = c.LogoPath,
                 IsActive = c.IsActive,
                 CreatedDate = c.CreatedDate
@@ -85,7 +86,6 @@ public class CompanyService : ICompanyService
                 Name = c.Name,
                 Code = c.Code,
                 Email = c.Email,
-                Phone = c.Phone,
                 PhoneNumber = c.PhoneNumber,
                 Address = c.Address,
                 Website = c.Website,
@@ -132,7 +132,6 @@ public class CompanyService : ICompanyService
                 Name = model.Name.Trim(),
                 Code = model.Code.ToUpperInvariant().Trim(),
                 Email = model.Email?.Trim().ToLowerInvariant(),
-                Phone = model.Phone?.Trim(),
                 PhoneNumber = model.PhoneNumber?.Trim(),
                 Address = model.Address?.Trim(),
                 Website = model.Website?.Trim(),
@@ -147,7 +146,7 @@ public class CompanyService : ICompanyService
                 LogoPath = "images/default-company-logo.jpg",
                 BackgroundImagePath = "images/default-company-background-logo.jpg",
                 IsActive = model.IsActive,
-                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedById = currentUserId
             };
 
@@ -220,7 +219,6 @@ public class CompanyService : ICompanyService
             company.Name = model.Name.Trim();
             company.Code = model.Code.ToUpperInvariant().Trim();
             company.Email = model.Email?.Trim().ToLowerInvariant();
-            company.Phone = model.Phone?.Trim();
             company.PhoneNumber = model.PhoneNumber?.Trim();
             company.Address = model.Address?.Trim();
             company.Website = model.Website?.Trim();
@@ -233,7 +231,7 @@ public class CompanyService : ICompanyService
             company.DefaultEndTime = model.DefaultEndTime;
             company.WorkingDays = model.WorkingDays;
             company.IsActive = model.IsActive;
-            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
             // Yeni logo yüklənməsi
@@ -287,7 +285,7 @@ public class CompanyService : ICompanyService
             }
 
             company.IsActive = !company.IsActive;
-            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -337,7 +335,7 @@ public class CompanyService : ICompanyService
 
             company.IsDeleted = true;
             company.IsActive = false;
-            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -601,7 +599,7 @@ public class CompanyService : ICompanyService
             // Əgər şirkətdə IsVerified field-i varsa (yoxdursa bu metod sadəcə log yazsın)
             // Hazırda Company entity-də IsVerified yoxdur, ona görə sadəcə log yazırıq
 
-            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -617,5 +615,30 @@ public class CompanyService : ICompanyService
             _logger.LogError(ex, "Şirkət təsdiq edilərkən xəta: ID {CompanyId}", id);
             return (false, "Şirkət təsdiq edilərkən xəta baş verdi");
         }
+    }
+
+    /// <summary>
+    /// ✅ YENİ METOD - Aktiv şirkətlərin kart məlumatlarını gətirir
+    /// </summary>
+    public async Task<List<CompanyCardViewModel>> GetCompanyCardsAsync()
+    {
+        return await _context.Companies
+            .AsNoTracking()
+            .Where(c => !c.IsDeleted && c.IsActive && c.IsVerified)
+            .Select(c => new CompanyCardViewModel
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                LogoPath = c.LogoPath,
+                BackgroundImagePath = c.BackgroundImagePath,
+                Address = c.Address,
+                PhoneNumber = c.PhoneNumber,
+                Email = c.Email,
+                MapCoordinates = c.MapCoordinates,
+                MapUrl = c.MapUrl
+            })
+            .OrderBy(c => c.Name)
+            .ToListAsync();
     }
 }

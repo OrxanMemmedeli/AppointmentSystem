@@ -115,7 +115,7 @@ else
         <!-- Upcoming Meetings -->
         <div class="tab-pane fade show active" id="upcoming">
             @{
-                var upcomingMeetings = Model.Where(m => m.MeetingDate >= DateOnly.FromDateTime(DateTime.Today))
+                var upcomingMeetings = Model.Where(m => m.MeetingDate >= DateTime.Today)
                 .OrderBy(m => m.MeetingDate).ThenBy(m => m.StartTime).ToList();
             }
             @if (!upcomingMeetings.Any())
@@ -179,7 +179,7 @@ else
         <!-- Past Meetings -->
         <div class="tab-pane fade" id="past">
             @{
-                var pastMeetings = Model.Where(m => m.MeetingDate < DateOnly.FromDateTime(DateTime.Today))
+                var pastMeetings = Model.Where(m => m.MeetingDate < DateTime.Today)
                 .OrderByDescending(m => m.MeetingDate).ThenByDescending(m => m.StartTime).ToList();
             }
             @if (!pastMeetings.Any())

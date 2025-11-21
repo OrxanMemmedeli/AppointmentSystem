@@ -19,9 +19,6 @@ public class Parent : AuditableEntity
     /// <summary>Email</summary>
     public string? Email { get; set; }
 
-    /// <summary>Telefon</summary>
-    public string? Phone { get; set; }
-
     /// <summary>Telefon nömrəsi</summary>
     public string? PhoneNumber { get; set; }
 

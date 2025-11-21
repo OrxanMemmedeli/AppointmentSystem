@@ -29,7 +29,7 @@ public class User : AuditableEntity
     public string? ImagePath { get; set; }
 
     /// <summary>Son giriş tarixi</summary>
-    public DateTimeOffset? LastLoginDate { get; set; }
+    public DateTime? LastLoginDate { get; set; }
 
     /// <summary>Email təsdiqlənib</summary>
     public bool IsEmailConfirmed { get; set; } = false;
@@ -41,7 +41,7 @@ public class User : AuditableEntity
     public int FailedLoginAttempts { get; set; } = 0;
 
     /// <summary>Kilidlənmə bitmə tarixi</summary>
-    public DateTimeOffset? LockoutEnd { get; set; }
+    public DateTime? LockoutEnd { get; set; }
 
     #region Navigation Properties
     /// <summary>İstifadəçi növü ID</summary>

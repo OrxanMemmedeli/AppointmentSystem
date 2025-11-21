@@ -16,7 +16,6 @@ public class ParentConfiguration : AuditableEntityConfiguration<Parent>
         builder.Property(e => e.LastName).IsRequired().HasMaxLength(100);
         builder.Property(e => e.FinCode).IsRequired().HasMaxLength(7).IsFixedLength();
         builder.Property(e => e.PhoneNumber).HasMaxLength(20);
-        builder.Property(e => e.Phone).HasMaxLength(20);
         builder.Property(e => e.Email).HasMaxLength(100);
         builder.Property(e => e.ImagePath).HasMaxLength(500);
 

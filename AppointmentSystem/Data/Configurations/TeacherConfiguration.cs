@@ -15,7 +15,6 @@ public class TeacherConfiguration : AuditableEntityConfiguration<Teacher>
         builder.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
         builder.Property(e => e.LastName).IsRequired().HasMaxLength(100);
         builder.Property(e => e.Email).IsRequired().HasMaxLength(256);
-        builder.Property(e => e.Phone).HasMaxLength(20);
         builder.Property(e => e.PhoneNumber).HasMaxLength(20);
         builder.Property(e => e.ImagePath).HasMaxLength(500);
         builder.Property(e => e.Specialization).HasMaxLength(200);

@@ -14,5 +14,5 @@ public class RoleListViewModel
     public bool IsActive { get; set; }
     public int UserCount { get; set; }
     public int PermissionCount { get; set; }
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

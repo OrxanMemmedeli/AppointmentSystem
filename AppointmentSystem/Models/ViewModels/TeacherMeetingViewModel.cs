@@ -5,7 +5,7 @@ namespace AppointmentSystem.Models.ViewModels;
 public class TeacherMeetingViewModel
 {
     public Guid Id { get; set; }
-    public DateOnly MeetingDate { get; set; }
+    public DateTime MeetingDate { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public MeetingStatus Status { get; set; }

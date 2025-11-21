@@ -35,7 +35,7 @@ public class AuthController : Controller
     public async Task<IActionResult> SelectCompany(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        var companies = await _companyService.GetAllActiveCompaniesAsync();
+        var companies = await _companyService.GetCompanyCardsAsync();
         return View(companies);
     }
 
@@ -94,7 +94,7 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                ExpiresUtc = DateTime.Now.AddHours(8),
                 AllowRefresh = true
             });
 
@@ -154,7 +154,7 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = model.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8),
+                ExpiresUtc = DateTime.Now.AddHours(model.RememberMe ? 24 : 8),
                 AllowRefresh = true
             });
 
@@ -202,7 +202,7 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = model.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(model.RememberMe ? 24 : 8),
+                ExpiresUtc = DateTime.Now.AddHours(model.RememberMe ? 24 : 8),
                 AllowRefresh = true
             });
 

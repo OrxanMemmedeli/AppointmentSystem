@@ -15,8 +15,8 @@ public abstract class BaseEntity : Entity
     public bool IsDeleted { get; set; } = false;
 
     /// <summary>Yaradılma vaxtı (UTC)</summary>
-    public DateTimeOffset CreatedDate { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime CreatedDate { get; set; } = DateTime.Now;
 
     /// <summary>Dəyişdirilmə vaxtı (UTC)</summary>
-    public DateTimeOffset? ModifiedDate { get; set; }
+    public DateTime? ModifiedDate { get; set; }
 }

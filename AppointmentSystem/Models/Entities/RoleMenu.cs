@@ -8,7 +8,7 @@ public class RoleMenu : AuditableEntity
     public Guid RoleId { get; set; }
     public Guid MenuId { get; set; }
     public bool HasAccess { get; set; } = true; // Giriş icazəsi
-    public DateTimeOffset? ExpiryDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
 
 
     #region Navigation Properties

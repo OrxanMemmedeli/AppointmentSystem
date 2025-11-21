@@ -1,0 +1,204 @@
+﻿@model StudentViewModel
+@{
+    ViewData["Title"] = "Şagird Redaktəsi";
+    var companies = ViewData["Companies"] as List<SelectListItem>;
+    var classes = ViewData["Classes"] as List<SelectListItem>;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Şagird Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Cari Şəkil -->
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="alert alert-info mb-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center">
+                                        <img src="@Model.ImagePath" alt="@Model.FullName"
+                                             class="img-thumbnail" style="max-width: 150px;" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <strong>Cari Profil Şəkli</strong><br />
+                                        <form asp-action="DeleteImage" asp-route-id="@Model.Id"
+                                              method="post" class="d-inline mt-2">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Şəkli silmək istədiyinizdən əminsiniz?')">
+                                                <i class="bi bi-trash"></i> Şəkli sil
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Şəxsi Məlumatlar -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-person"></i> Şəxsi Məlumatlar
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label">
+                                        Ad <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="FirstName" class="form-control"
+                                           placeholder="Məsələn: Əli" autofocus />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label">
+                                        Soyad <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="LastName" class="form-control"
+                                           placeholder="Məsələn: Məmmədov" />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FinCode" class="form-label">
+                                        FIN Kod <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="FinCode" class="form-control text-uppercase"
+                                           placeholder="ABC1234" maxlength="7" />
+                                    <span asp-validation-for="FinCode" class="text-danger"></span>
+                                    <small class="text-muted">7 simvol: böyük hərflər və rəqəmlər</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DateOfBirth" class="form-label">
+                                        Doğum Tarixi <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Təhsil Məlumatları -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-building"></i> Təhsil Məlumatları
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CompanyId" class="form-label">
+                                        Şirkət/Məktəb <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="CompanyId" asp-items="companies" class="form-select" id="companySelect">
+                                        <option value="">Seçin</option>
+                                    </select>
+                                    <span asp-validation-for="CompanyId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ClassId" class="form-label">
+                                        Sinif <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="ClassId" asp-items="classes" class="form-select">
+                                        <option value="">Əvvəlcə şirkət seçin</option>
+                                    </select>
+                                    <span asp-validation-for="ClassId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Yeni Şəkil -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-image"></i> Yeni Profil Şəkli Yüklə
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label">Yeni Şəkil</label>
+                            <input asp-for="ImageFile" type="file" class="form-control"
+                                   accept="image/*" />
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                            <small class="text-muted">
+                                Maksimum 5MB, yalnız şəkil faylları (JPG, PNG, GIF)
+                            </small>
+                        </div>
+
+                        <!-- Qeydlər -->
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Qeydlər</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"
+                                      placeholder="Əlavə məlumatlar..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input"
+                                   type="checkbox" role="switch" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                <i class="bi bi-check-circle"></i> Aktiv
+                            </label>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // FIN kod inputunu uppercase et
+            const finCodeInput = document.getElementById('@Html.IdFor(m => m.FinCode)');
+            if (finCodeInput) {
+                finCodeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                });
+            }
+
+            // Şirkət dəyişəndə sinfləri yenilə
+            const companySelect = document.getElementById('companySelect');
+            if (companySelect) {
+                companySelect.addEventListener('change', function() {
+                    const companyId = this.value;
+                    const studentId = '@Model.Id';
+                    if (companyId) {
+                        window.location.href = '@Url.Action("Edit")?id=' + studentId + '&companyId=' + companyId;
+                    }
+                });
+            }
+        });
+    </script>
+}

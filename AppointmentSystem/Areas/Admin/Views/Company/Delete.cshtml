@@ -128,11 +128,11 @@
             details.Append("</div>");
         }
 
-        if (!string.IsNullOrEmpty(Model.Phone))
+        if (!string.IsNullOrEmpty(Model.PhoneNumber))
         {
             details.Append("<div class='row mb-2'>");
             details.Append("<div class='col-4 text-muted'>Telefon:</div>");
-            details.Append($"<div class='col-8'>{Model.Phone}</div>");
+            details.Append($"<div class='col-8'>{Model.PhoneNumber}</div>");
             details.Append("</div>");
         }
 

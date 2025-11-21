@@ -40,7 +40,7 @@ public class MeetingController : Controller
     /// Təqvim görünüşü
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> Index(DateOnly? date)
+    public async Task<IActionResult> Index(DateTime? date)
     {
         try
         {
@@ -48,7 +48,7 @@ public class MeetingController : Controller
             if (teacherId == Guid.Empty)
                 return RedirectToAction("Logout", "Auth");
 
-            var selectedDate = date ?? DateOnly.FromDateTime(DateTime.Today);
+            var selectedDate = date ?? DateTime.Today;
             var meetings = await _meetingService.GetTeacherMeetingsAsync(teacherId, selectedDate);
 
             var viewModel = new TeacherCalendarViewModel
@@ -179,7 +179,7 @@ public class MeetingController : Controller
     /// Təqvim məlumatları (AJAX)
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetCalendarData(DateOnly startDate, DateOnly endDate)
+    public async Task<IActionResult> GetCalendarData(DateTime startDate, DateTime endDate)
     {
         try
         {

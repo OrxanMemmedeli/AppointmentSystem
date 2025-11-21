@@ -16,9 +16,6 @@ public class Company : AuditableEntity
     /// <summary>Ünvan</summary>
     public string? Address { get; set; }
 
-    /// <summary>Telefon</summary>
-    public string? Phone { get; set; }
-
     /// <summary>Telefon nömrəsi</summary>
     public string? PhoneNumber { get; set; }
 

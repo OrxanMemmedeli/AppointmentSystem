@@ -334,7 +334,7 @@ public class MenuService : IMenuService
                 IsVisible = model.IsVisible,
                 Type = model.Type,
                 IsActive = model.IsActive,
-                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedById = currentUserId
             };
 
@@ -433,7 +433,7 @@ public class MenuService : IMenuService
             menu.IsVisible = model.IsVisible;
             menu.Type = model.Type;
             menu.IsActive = model.IsActive;
-            menu.ModifiedDate = DateTimeOffset.UtcNow;
+            menu.ModifiedDate = DateTime.Now;
             menu.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -481,7 +481,7 @@ public class MenuService : IMenuService
             }
 
             menu.IsActive = !menu.IsActive;
-            menu.ModifiedDate = DateTimeOffset.UtcNow;
+            menu.ModifiedDate = DateTime.Now;
             menu.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -524,7 +524,7 @@ public class MenuService : IMenuService
 
             menu.IsDeleted = true;
             menu.IsActive = false;
-            menu.ModifiedDate = DateTimeOffset.UtcNow;
+            menu.ModifiedDate = DateTime.Now;
             menu.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -557,7 +557,7 @@ public class MenuService : IMenuService
                 if (menu != null)
                 {
                     menu.OrderIndex = orderIndex;
-                    menu.ModifiedDate = DateTimeOffset.UtcNow;
+                    menu.ModifiedDate = DateTime.Now;
                     menu.ModifiedById = currentUserId;
                 }
             }

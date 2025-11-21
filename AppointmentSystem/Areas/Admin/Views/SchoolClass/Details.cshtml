@@ -1,0 +1,252 @@
+﻿@model SchoolClassDetailsViewModel
+@{
+    ViewData["Title"] = "Sinif Detayları";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-grid-3x3"></i> Sinif Detayları
+                        </h4>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-pencil"></i> Redaktə
+                            </a>
+                            <a asp-action="Index" asp-route-companyId="@Model.CompanyId"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Sinif Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h2 class="mb-3">
+                                <span class="badge bg-primary fs-4">@Model.Name</span>
+                            </h2>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success mb-3">Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger mb-3">Deaktiv</span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="text-muted mt-3">@Model.Description</p>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted mb-3">Statistika</h6>
+                                    <div class="d-flex justify-content-around">
+                                        <div class="text-center">
+                                            <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
+                                            <h4 class="mb-0">@Model.StudentCount</h4>
+                                            <small class="text-muted">Şagird</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <i class="bi bi-person-badge text-success" style="font-size: 2rem;"></i>
+                                            <h4 class="mb-0">@Model.TeacherCount</h4>
+                                            <small class="text-muted">Müəllim</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Əsas Məlumatlar -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-building"></i> Şirkət:
+                                    </td>
+                                    <td><strong>@Model.CompanyName</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-bar-chart-steps"></i> Səviyyə:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@Model.Level-ci sinif</span>
+                                    </td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.Section))
+                                {
+                                    <tr>
+                                        <td class="text-muted">
+                                            <i class="bi bi-collection"></i> Şöbə:
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">@Model.Section</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-calendar-plus"></i> Yaradılma:
+                                    </td>
+                                    <td>@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-people"></i> Şagird sayı:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@Model.StudentCount nəfər</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-person-badge"></i> Müəllim sayı:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">@Model.TeacherCount nəfər</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Şagirdlər -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-people"></i> Şagirdlər (@Model.StudentCount)
+                    </h5>
+
+                    @if (Model.Students.Any())
+                    {
+                        <div class="row mb-4">
+                            @foreach (var student in Model.Students.Take(10))
+                            {
+                                <div class="col-md-6 mb-2">
+                                    <div class="card">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@student.FullName</strong>
+                                                    @if (!string.IsNullOrEmpty(student.FullName))
+                                                    {
+                                                        <br />
+                                            
+                                                        <small class="text-muted">@student.FullName</small>
+                                                    }
+                                                </div>
+                                                <span class="badge bg-@(student.IsActive ? "success" : "secondary")">
+                                                    @(student.IsActive ? "Aktiv" : "Deaktiv")
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.StudentCount > 10)
+                        {
+                            <div class="alert alert-info">
+                                <small>
+                                    <i class="bi bi-info-circle"></i>
+                                    Yalnız ilk 10 şagird göstərilir.
+                                    Hamısını görmək üçün Şagird moduluna keçin.
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-inbox"></i> Bu sinfə hələ şagird əlavə edilməyib
+                        </div>
+                    }
+
+                    <!-- Müəllimlər -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">
+                        <i class="bi bi-person-badge"></i> Müəllimlər (@Model.TeacherCount)
+                    </h5>
+
+                    @if (Model.Teachers.Any())
+                    {
+                        <div class="row mb-4">
+                            @foreach (var teacher in Model.Teachers)
+                            {
+                                <div class="col-md-6 mb-2">
+                                    <div class="card">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@teacher.FullName</strong>
+                                                    @if (!string.IsNullOrEmpty(teacher.Email))
+                                                    {
+                                                        <br />
+                                            
+                                                        <small class="text-muted">@teacher.Email</small>
+                                                    }
+                                                </div>
+                                                <span class="badge bg-@(teacher.IsActive ? "success" : "secondary")">
+                                                    @(teacher.IsActive ? "Aktiv" : "Deaktiv")
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-inbox"></i> Bu sinfə hələ müəllim təyin edilməyib
+                        </div>
+                    }
+
+                    <!-- Əməliyyatlar -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" asp-route-companyId="@Model.CompanyId"
+                           class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Geri
+                        </a>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Redaktə Et
+                            </a>
+                            <form asp-action="ToggleStatus" asp-route-id="@Model.Id"
+                                  method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                    @(Model.IsActive ? "Deaktiv Et" : "Aktiv Et")
+                                </button>
+                            </form>
+                            <a asp-action="Delete" asp-route-id="@Model.Id"
+                               class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

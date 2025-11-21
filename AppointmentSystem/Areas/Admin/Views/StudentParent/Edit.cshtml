@@ -1,0 +1,132 @@
+﻿@model StudentParentViewModel
+@{
+    ViewData["Title"] = "Şagird-Valideyn Əlaqəsi Redaktəsi";
+    var students = ViewData["Students"] as List<SelectListItem>;
+    var parents = ViewData["Parents"] as List<SelectListItem>;
+    var parentTypes = ViewData["ParentTypes"] as List<SelectListItem>;
+    var relationTypes = ViewData["RelationTypes"] as List<SelectListItem>;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Əlaqəni Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Şagird və Valideyn Seçimi -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-people"></i> Əsas Məlumatlar
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="StudentId" class="form-label">
+                                        Şagird <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="StudentId" asp-items="students" class="form-select">
+                                        <option value="">Şagird seçin</option>
+                                    </select>
+                                    <span asp-validation-for="StudentId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ParentId" class="form-label">
+                                        Valideyn <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="ParentId" asp-items="parents" class="form-select">
+                                        <option value="">Valideyn seçin</option>
+                                    </select>
+                                    <span asp-validation-for="ParentId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Qohumluq Məlumatları -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-heart"></i> Qohumluq Məlumatları
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="RelationType" class="form-label">
+                                        Qohumluq Növü <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="RelationType" asp-items="relationTypes" class="form-select">
+                                        <option value="">Seçin</option>
+                                    </select>
+                                    <span asp-validation-for="RelationType" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ParentTypeId" class="form-label">
+                                        Valideyn Növü <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="ParentTypeId" asp-items="parentTypes" class="form-select">
+                                        <option value="">Seçin</option>
+                                    </select>
+                                    <span asp-validation-for="ParentTypeId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Əlavə Parametrlər -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsPrimaryContact" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsPrimaryContact" class="form-check-label">
+                                        <i class="bi bi-star"></i> Əsas valideyn (Primary Contact)
+                                    </label>
+                                    <br />
+                                    <small class="text-muted">
+                                        Əsas valideyn bildirişləri birinci alır
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsActive" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="bi bi-check-circle"></i> Aktiv
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

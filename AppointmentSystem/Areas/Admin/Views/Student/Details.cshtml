@@ -1,0 +1,260 @@
+﻿@model StudentDetailsViewModel
+@{
+    ViewData["Title"] = "Şagird Detayları";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-person"></i> Şagird Detayları
+                        </h4>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-pencil"></i> Redaktə
+                            </a>
+                            <a asp-action="Index"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Şagird Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <img src="@Model.ImagePath" alt="@Model.FullName"
+                                     class="img-fluid rounded-circle shadow" style="max-width: 200px;" />
+                            }
+                            else
+                            {
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                                     style="width: 150px; height: 150px; font-size: 3rem;">
+                                    @Model.FirstName.Substring(0, 1).ToUpper()@Model.LastName.Substring(0, 1).ToUpper()
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="mb-3">@Model.FullName</h2>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success mb-3">Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger mb-3">Deaktiv</span>
+                            }
+
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-calendar text-primary" style="font-size: 2rem;"></i>
+                                            <h4 class="mb-0">@Model.Age</h4>
+                                            <small class="text-muted">Yaş</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-person-hearts text-warning" style="font-size: 2rem;"></i>
+                                            <h4 class="mb-0">@Model.ParentCount</h4>
+                                            <small class="text-muted">Valideyn</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-grid-3x3 text-success" style="font-size: 2rem;"></i>
+                                            <small class="text-muted">Sinif</small>
+                                            <h6 class="mb-0">@Model.ClassName</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Əsas Məlumatlar -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-credit-card"></i> FIN Kod:
+                                    </td>
+                                    <td><code class="fs-6">@Model.FinCode</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-calendar-event"></i> Doğum Tarixi:
+                                    </td>
+                                    <td>@Model.DateOfBirth.ToString("dd.MM.yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-hourglass"></i> Yaş:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@Model.Age yaş</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-building"></i> Şirkət:
+                                    </td>
+                                    <td>@Model.CompanyName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-grid-3x3"></i> Sinif:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@Model.ClassName</span>
+                                        <small class="text-muted">
+                                            (@Model.ClassLevel-ci sinif @(!string.IsNullOrEmpty(Model.ClassSection) ? Model.ClassSection : ""))
+                                        </small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-calendar-plus"></i> Qeydiyyat:
+                                    </td>
+                                    <td>@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="alert alert-secondary">
+                            <h6><i class="bi bi-journal-text"></i> Qeydlər:</h6>
+                            <p class="mb-0">@Model.Notes</p>
+                        </div>
+                    }
+
+                    <!-- Valideynlər -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">
+                        <i class="bi bi-person-hearts"></i> Valideynlər (@Model.ParentCount)
+                        <a asp-controller="StudentParent" asp-action="Create"
+                           asp-route-studentId="@Model.Id"
+                           class="btn btn-sm btn-outline-primary float-end">
+                            <i class="bi bi-plus-circle"></i> Valideyn Əlavə Et
+                        </a>
+                    </h5>
+
+                    @if (Model.Parents.Any())
+                    {
+                        <div class="row mb-4">
+                            @foreach (var parent in Model.Parents)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card @(parent.IsPrimaryContact ? "border-warning" : "")">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-person"></i> @parent.ParentName
+                                                        @if (parent.IsPrimaryContact)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-2">
+                                                                <i class="bi bi-star-fill"></i> Əsas
+                                                            </span>
+                                                        }
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-credit-card"></i> @parent.ParentFinCode
+                                                    </small>
+                                                    <br />
+                                                    @if (!string.IsNullOrEmpty(parent.ParentPhone))
+                                                    {
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-telephone"></i>
+                                                            <a href="tel:@parent.ParentPhone">@parent.ParentPhone</a>
+                                                        </small>
+                                                        <br />
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(parent.ParentEmail))
+                                                    {
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-envelope"></i>
+                                                            <a href="mailto:@parent.ParentEmail">@parent.ParentEmail</a>
+                                                        </small>
+                                                        <br />
+                                                    }
+                                                    <span class="badge bg-info mt-2">@parent.RelationType</span>
+                                                </div>
+                                                <div>
+                                                    <a asp-controller="Parent" asp-action="Details"
+                                                       asp-route-id="@parent.ParentId"
+                                                       class="btn btn-sm btn-outline-info">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Bu şagirdə hələ valideyn əlavə edilməyib
+                            <a asp-controller="StudentParent" asp-action="Create"
+                               asp-route-studentId="@Model.Id"
+                               class="alert-link ms-2">
+                                <i class="bi bi-plus-circle"></i> İndi əlavə et
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Əməliyyatlar -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Geri
+                        </a>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Redaktə Et
+                            </a>
+                            <form asp-action="ToggleStatus" asp-route-id="@Model.Id"
+                                  method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                    @(Model.IsActive ? "Deaktiv Et" : "Aktiv Et")
+                                </button>
+                            </form>
+                            <a asp-action="Delete" asp-route-id="@Model.Id"
+                               class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

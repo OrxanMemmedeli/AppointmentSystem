@@ -64,7 +64,7 @@ public static class SeedData
                 Id = Guid.NewGuid(),
                 UserId = adminUserId,
                 RoleId = superAdminRole.Id,
-                AssignedDate = DateTimeOffset.UtcNow
+                AssignedDate = DateTime.Now
             });
             await context.SaveChangesAsync();
         }
@@ -79,7 +79,7 @@ public static class SeedData
                 Name = "Demo Təhsil Mərkəzi",
                 Code = "DEMO001",
                 Address = "Nəsimi rayonu, Bakı, Azərbaycan",
-                Phone = "+994123456789",
+                PhoneNumber = "+994123456789",
                 Email = "info@demomekteb.az",
                 Description = "Demo məqsədilə yaradılmış təhsil mərkəzi",
                 DefaultMeetingDuration = 30,

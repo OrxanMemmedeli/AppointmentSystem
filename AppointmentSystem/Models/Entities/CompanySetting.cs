@@ -18,13 +18,13 @@ public class CompanySetting : AuditableEntity
     public string SettingValue { get; set; } = string.Empty;
 
     /// <summary>Başlanğıc tarixi (bu tarixdən etibarən aktiv)</summary>
-    public DateOnly? EffectiveFrom { get; set; }
+    public DateTime? EffectiveFrom { get; set; }
 
     /// <summary>Bitmə tarixi (bu tarixədək aktiv)</summary>
-    public DateOnly? EffectiveTo { get; set; }
+    public DateTime? EffectiveTo { get; set; }
 
     /// <summary>Tətbiq tarixi</summary>
-    public DateOnly? EffectiveDate { get; set; }
+    public DateTime? EffectiveDate { get; set; }
 
     /// <summary>Həftə günü (xüsusi gün üçün)</summary>
     public WeekDay? WeekDay { get; set; }

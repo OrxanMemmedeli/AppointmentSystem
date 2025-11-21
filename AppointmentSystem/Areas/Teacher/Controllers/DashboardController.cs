@@ -38,7 +38,7 @@ public class DashboardController : Controller
                 return RedirectToAction("Logout", "Auth");
             }
 
-            var today = DateOnly.FromDateTime(DateTime.Today);
+            var today = DateTime.Today;
 
             // Statistikalar
             var stats = new

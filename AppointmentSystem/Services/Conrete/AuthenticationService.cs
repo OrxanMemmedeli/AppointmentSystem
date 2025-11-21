@@ -216,7 +216,7 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     private (bool Success, string? ErrorMessage, User? User) CheckLockout(User user)
     {
-        if (user.IsLocked && user.LockoutEnd > DateTimeOffset.UtcNow)
+        if (user.IsLocked && user.LockoutEnd > DateTime.Now)
         {
             return (false, $"Hesabınız {user.LockoutEnd:dd.MM.yyyy HH:mm} tarixinədək kilidlənib", null);
         }
@@ -234,7 +234,7 @@ public class AuthenticationService : IAuthenticationService
             if (user.FailedLoginAttempts >= 5)
             {
                 user.IsLocked = true;
-                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+                user.LockoutEnd = DateTime.Now.AddMinutes(30);
             }
             await _context.SaveChangesAsync();
 
@@ -248,7 +248,7 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     private async Task UpdateSuccessfulLoginAsync(User user)
     {
-        user.LastLoginDate = DateTimeOffset.UtcNow;
+        user.LastLoginDate = DateTime.Now;
         user.FailedLoginAttempts = 0;
         user.IsLocked = false;
         user.LockoutEnd = null;

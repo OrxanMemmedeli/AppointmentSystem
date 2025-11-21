@@ -142,7 +142,7 @@ public class PermissionService : IPermissionService
                 Type = model.Type,
                 RequiresAuthentication = model.RequiresAuthentication,
                 IsActive = model.IsActive,
-                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedById = currentUserId
             };
 
@@ -203,7 +203,7 @@ public class PermissionService : IPermissionService
             permission.Type = model.Type;
             permission.RequiresAuthentication = model.RequiresAuthentication;
             permission.IsActive = model.IsActive;
-            permission.ModifiedDate = DateTimeOffset.UtcNow;
+            permission.ModifiedDate = DateTime.Now;
             permission.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -237,7 +237,7 @@ public class PermissionService : IPermissionService
             }
 
             permission.IsActive = !permission.IsActive;
-            permission.ModifiedDate = DateTimeOffset.UtcNow;
+            permission.ModifiedDate = DateTime.Now;
             permission.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -283,7 +283,7 @@ public class PermissionService : IPermissionService
 
             permission.IsDeleted = true;
             permission.IsActive = false;
-            permission.ModifiedDate = DateTimeOffset.UtcNow;
+            permission.ModifiedDate = DateTime.Now;
             permission.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();

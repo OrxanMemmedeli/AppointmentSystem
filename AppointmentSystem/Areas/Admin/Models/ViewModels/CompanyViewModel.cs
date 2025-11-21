@@ -25,11 +25,6 @@ public class CompanyViewModel
     [StringLength(100)]
     public string Email { get; set; } = string.Empty;
 
-    /// <summary>Telefon</summary>
-    [Phone(ErrorMessage = "Telefon formatı düzgün deyil")]
-    [StringLength(20)]
-    public string? Phone { get; set; }
-
     /// <summary>Telefon nömrəsi (əlavə)</summary>
     [Phone(ErrorMessage = "Telefon formatı düzgün deyil")]
     [StringLength(20)]
@@ -111,5 +106,5 @@ public class CompanyListViewModel
     public int TeacherCount { get; set; }
     public int ClassCount { get; set; }
     public int SubjectCount { get; set; }
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

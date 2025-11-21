@@ -1,5 +1,6 @@
 ﻿using AppointmentSystem.Areas.Admin.Models.ViewModels;
 using AppointmentSystem.Models.Entities;
+using AppointmentSystem.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AppointmentSystem.Services.Abstract;
@@ -76,4 +77,9 @@ public interface ICompanyService
 
     /// <summary>Şirkət select list gətirir</summary>
     Task<List<SelectListItem>> GetCompanySelectListAsync();
+
+    /// <summary>
+    /// Aktiv şirkətlərin kart məlumatlarını gətirir (public seçim səhifəsi üçün)
+    /// </summary>
+    Task<List<CompanyCardViewModel>> GetCompanyCardsAsync();
 }

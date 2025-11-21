@@ -11,7 +11,7 @@ namespace AppointmentSystem.Services.Abstract;
 public interface IMeetingService
 {
     // Görüş yaratma
-    Task<Meeting> CreateMeetingAsync(Guid teacherId, Guid parentId, Guid studentId, DateOnly date, TimeSpan startTime, string? note);
+    Task<Meeting> CreateMeetingAsync(Guid teacherId, Guid parentId, Guid studentId, DateTime date, TimeSpan startTime, string? note);
     Task<(bool Success, string? ErrorMessage, Guid? MeetingId)> CreateMeetingAsync(Guid parentId, CreateMeetingViewModel model);
 
     // Görüş idarəetməsi
@@ -24,9 +24,9 @@ public interface IMeetingService
 
     // Sorğular
     Task<Meeting?> GetMeetingDetailsAsync(Guid meetingId);
-    Task<List<TimeSpan>> GetAvailableTimeSlotsAsync(Guid teacherId, DateOnly date);
+    Task<List<TimeSpan>> GetAvailableTimeSlotsAsync(Guid teacherId, DateTime date);
     Task<List<Meeting>> GetMeetingsByParentAsync(Guid parentId, MeetingStatus? status = null);
-    Task<List<Meeting>> GetMeetingsByTeacherAsync(Guid teacherId, DateOnly? date = null, MeetingStatus? status = null);
-    Task<List<TeacherMeetingViewModel>> GetTeacherMeetingsAsync(Guid teacherId, DateOnly? date = null);
+    Task<List<Meeting>> GetMeetingsByTeacherAsync(Guid teacherId, DateTime? date = null, MeetingStatus? status = null);
+    Task<List<TeacherMeetingViewModel>> GetTeacherMeetingsAsync(Guid teacherId, DateTime? date = null);
     Task<List<ParentMeetingViewModel>> GetParentMeetingsAsync(Guid parentId, Guid companyId);
 }

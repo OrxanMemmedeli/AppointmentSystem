@@ -17,7 +17,7 @@ public class Student : AuditableEntity
     public string FinCode { get; set; } = string.Empty;
 
     /// <summary>Doğum tarixi</summary>
-    public DateOnly DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     /// <summary>Şəkil</summary>
     public string? ImagePath { get; set; }

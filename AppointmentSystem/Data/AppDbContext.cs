@@ -43,7 +43,6 @@ public class AppDbContext : DbContext
     public DbSet<StudentParent> StudentParents => Set<StudentParent>();
     public DbSet<TeacherSubject> TeacherSubjects => Set<TeacherSubject>();
     public DbSet<CompanySubject> CompanySubjects => Set<CompanySubject>();
-    public DbSet<ClassTeacher> ClassTeachers => Set<ClassTeacher>();
     public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
     public DbSet<TeacherClass> TeacherClasses => Set<TeacherClass>();
     public DbSet<InstitutionUser> InstitutionUsers => Set<InstitutionUser>();
@@ -90,7 +89,7 @@ public class AppDbContext : DbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedDate = DateTimeOffset.UtcNow;
+                    entry.Entity.CreatedDate = DateTime.Now;
                     entry.Entity.IsActive = true;
                     entry.Entity.IsDeleted = false;
                     
@@ -101,7 +100,7 @@ public class AppDbContext : DbContext
                     break;
 
                 case EntityState.Modified:
-                    entry.Entity.ModifiedDate = DateTimeOffset.UtcNow;
+                    entry.Entity.ModifiedDate = DateTime.Now;
                     
                     if (entry.Entity is AuditableEntity modifiedAuditableEntity)
                     {
@@ -114,7 +113,7 @@ public class AppDbContext : DbContext
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.IsActive = false;
-                    entry.Entity.ModifiedDate = DateTimeOffset.UtcNow;
+                    entry.Entity.ModifiedDate = DateTime.Now;
                     break;
             }
         }

@@ -1,0 +1,96 @@
+﻿@model StudentParentViewModel
+@{
+    ViewData["Title"] = "Əlaqə Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Əlaqə Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-shield-exclamation"></i> Xəbərdarlıq!
+                        </h5>
+                        <p class="mb-0">
+                            Bu şagird-valideyn əlaqəsini silmək istədiyinizdən əminsiniz?
+                            Bu əməliyyat geri qaytarıla bilməz.
+                        </p>
+                    </div>
+
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-3">Əlaqə Məlumatları:</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-5 text-muted">
+                                    <i class="bi bi-person"></i> Şagird:
+                                </div>
+                                <div class="col-7">
+                                    <strong>ID: @Model.StudentId</strong>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-5 text-muted">
+                                    <i class="bi bi-people"></i> Valideyn:
+                                </div>
+                                <div class="col-7">
+                                    <strong>ID: @Model.ParentId</strong>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-5 text-muted">
+                                    <i class="bi bi-heart"></i> Qohumluq:
+                                </div>
+                                <div class="col-7">
+                                    <span class="badge bg-info">@Model.RelationType.ToString()</span>
+                                </div>
+                            </div>
+
+                            @if (Model.IsPrimaryContact)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-star-fill"></i> Əsas Valideyn
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-5 text-muted">Status:</div>
+                                <div class="col-7">
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                        @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                <i class="bi bi-x-circle"></i> Ləğv Et
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                <i class="bi bi-trash"></i> Bəli, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

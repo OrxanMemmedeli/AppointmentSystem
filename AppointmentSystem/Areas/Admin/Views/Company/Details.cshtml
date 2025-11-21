@@ -100,9 +100,9 @@
                                         <i class="bi bi-telephone"></i> Telefon:
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(Model.Phone))
+                                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
                                         {
-                                            <a href="tel:@Model.Phone">@Model.Phone</a>
+                                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
                                         }
                                         else
                                         {
@@ -110,15 +110,6 @@
                                         }
                                     </td>
                                 </tr>
-                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
-                                {
-                                    <tr>
-                                        <td class="text-muted">
-                                            <i class="bi bi-telephone-plus"></i> Əlavə Telefon:
-                                        </td>
-                                        <td><a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a></td>
-                                    </tr>
-                                }
                             </table>
                         </div>
                         <div class="col-md-6">

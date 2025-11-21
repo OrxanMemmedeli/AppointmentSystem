@@ -21,7 +21,7 @@ public class MenuListViewModel
     public bool IsActive { get; set; }
     public int ChildCount { get; set; }
     public string? ParentName { get; set; }
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
     public string? AreaName { get; set; }
     public string? ControllerName { get; set; }
     public string? ActionName { get; set; }

@@ -1,0 +1,71 @@
+﻿@model ParentTypeViewModel
+@{
+    ViewData["Title"] = "Valideyn Növü Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Valideyn Növü Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-shield-exclamation"></i> Xəbərdarlıq!
+                        </h5>
+                        <p class="mb-0">
+                            Bu valideyn növünü silmək istədiyinizdən əminsiniz?
+                        </p>
+                    </div>
+
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <strong>@Model.Name</strong>
+                            </h5>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Növ:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-primary">@Model.Type.ToString()</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Açıqlama:</div>
+                                    <div class="col-8">@Model.Description</div>
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-4 text-muted">Status:</div>
+                                <div class="col-8">
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                        @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                <i class="bi bi-x-circle"></i> Ləğv Et
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                <i class="bi bi-trash"></i> Bəli, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,261 @@
+﻿@model List<StudentParentListViewModel>
+@{
+    ViewData["Title"] = "Şagird-Valideyn Əlaqələri";
+    var filterStudentId = ViewData["FilterStudentId"] as Guid?;
+    var filterParentId = ViewData["FilterParentId"] as Guid?;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-diagram-2"></i> Şagird-Valideyn Əlaqələri</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Yeni Əlaqə
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistika -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Ümumi Əlaqə</h6>
+                            <h3 class="mb-0">@Model.Count</h3>
+                        </div>
+                        <i class="bi bi-diagram-2 text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Aktiv</h6>
+                            <h3 class="mb-0">@Model.Count(sp => sp.IsActive)</h3>
+                        </div>
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Əsas Valideyn</h6>
+                            <h3 class="mb-0">@Model.Count(sp => sp.IsPrimaryContact)</h3>
+                        </div>
+                        <i class="bi bi-star text-info" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" class="form-control" id="searchInput"
+                           placeholder="Şagird və ya valideyn adı ilə axtar...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterRelationType">
+                        <option value="">Bütün Qohumluq Növləri</option>
+                        <option value="Father">Ata</option>
+                        <option value="Mother">Ana</option>
+                        <option value="Grandfather">Baba</option>
+                        <option value="Grandmother">Nənə</option>
+                        <option value="Brother">Qardaş</option>
+                        <option value="Sister">Bacı</option>
+                        <option value="Other">Digər</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterStatus">
+                        <option value="">Bütün Statuslar</option>
+                        <option value="active">Aktiv</option>
+                        <option value="inactive">Deaktiv</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
+                        <i class="bi bi-x-circle"></i> Təmizlə
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="relationshipTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Şagird</th>
+                            <th>Sinif</th>
+                            <th>Valideyn</th>
+                            <th>FIN</th>
+                            <th>Qohumluq</th>
+                            <th>Növ</th>
+                            <th>Əsas</th>
+                            <th>Status</th>
+                            <th style="width: 150px;">Əməliyyatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rel in Model)
+                        {
+                            <tr data-relation="@rel.RelationType.ToString()"
+                                data-status="@(rel.IsActive ? "active" : "inactive")">
+                                <td>
+                                    <strong>@rel.StudentName</strong>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(rel.StudentClassName))
+                                    {
+                                        <span class="badge bg-primary">@rel.StudentClassName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@rel.ParentName</strong>
+                                </td>
+                                <td>
+                                    <code>@rel.ParentFinCode</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@rel.RelationTypeDisplay</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@rel.ParentTypeName</small>
+                                </td>
+                                <td>
+                                    @if (rel.IsPrimaryContact)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-star-fill"></i> Əsas
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="SetPrimaryContact" asp-route-id="@rel.Id"
+                                              method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                    title="Əsas valideyn et">
+                                                <i class="bi bi-star"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                                <td>
+                                    @if (rel.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktiv</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Deaktiv</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Edit" asp-route-id="@rel.Id"
+                                           class="btn btn-outline-primary" title="Redaktə et">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <a asp-action="Delete" asp-route-id="@rel.Id"
+                                           class="btn btn-outline-danger" title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Hələ şagird-valideyn əlaqəsi yaradılmayıb</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> İlk Əlaqəni Yarat
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterRelationType = document.getElementById('filterRelationType');
+            const filterStatus = document.getElementById('filterStatus');
+            const clearFilters = document.getElementById('clearFilters');
+            const tableRows = document.querySelectorAll('#relationshipTable tbody tr');
+
+            function applyFilters() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const relationType = filterRelationType.value;
+                const statusValue = filterStatus.value;
+
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const relation = row.dataset.relation;
+                    const status = row.dataset.status;
+
+                    let show = true;
+
+                    if (searchTerm && !text.includes(searchTerm)) show = false;
+                    if (relationType && relation !== relationType) show = false;
+                    if (statusValue && status !== statusValue) show = false;
+
+                    row.style.display = show ? '' : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            filterRelationType.addEventListener('change', applyFilters);
+            filterStatus.addEventListener('change', applyFilters);
+
+            clearFilters.addEventListener('click', function() {
+                searchInput.value = '';
+                filterRelationType.value = '';
+                filterStatus.value = '';
+                applyFilters();
+            });
+        });
+    </script>
+}

@@ -15,7 +15,6 @@ public class CompanyConfiguration : AuditableEntityConfiguration<Company>
         builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
         builder.Property(e => e.Code).IsRequired().HasMaxLength(50);
         builder.Property(e => e.Address).HasMaxLength(500);
-        builder.Property(e => e.Phone).HasMaxLength(20);
         builder.Property(e => e.PhoneNumber).HasMaxLength(20);
         builder.Property(e => e.Email).HasMaxLength(256);
         builder.Property(e => e.Website).HasMaxLength(200);

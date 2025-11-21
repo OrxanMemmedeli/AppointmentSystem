@@ -16,9 +16,6 @@ public class Teacher : AuditableEntity
     /// <summary>Email</summary>
     public string Email { get; set; } = string.Empty;
 
-    /// <summary>Telefon</summary>
-    public string? Phone { get; set; }
-
     /// <summary>Telefon nömrəsi</summary>
     public string? PhoneNumber { get; set; }
 
@@ -46,9 +43,6 @@ public class Teacher : AuditableEntity
 
     /// <summary>Müəllimin fənləri</summary>
     public virtual ICollection<TeacherSubject> TeacherSubjects { get; set; } = new HashSet<TeacherSubject>();
-
-    /// <summary>Müəllimin sinifləri</summary>
-    public virtual ICollection<ClassTeacher> ClassTeachers { get; set; } = new HashSet<ClassTeacher>();
 
     /// <summary>Müəllim-Sinif əlaqələri</summary>
     public virtual ICollection<TeacherClass> TeacherClasses { get; set; } = new HashSet<TeacherClass>();

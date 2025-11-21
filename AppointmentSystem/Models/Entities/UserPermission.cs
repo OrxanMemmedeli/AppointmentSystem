@@ -8,7 +8,7 @@ public class UserPermission : AuditableEntity
     public Guid UserId { get; set; }
     public Guid PermissionId { get; set; }
     public bool IsGranted { get; set; } = true; // İcazə verilmiş/qadağan
-    public DateTimeOffset? ExpiryDate { get; set; } // İcazənin bitmə tarixi
+    public DateTime? ExpiryDate { get; set; } // İcazənin bitmə tarixi
     public string? Reason { get; set; } // Xüsusi icazə səbəbi
 
     #region Navigation Properties

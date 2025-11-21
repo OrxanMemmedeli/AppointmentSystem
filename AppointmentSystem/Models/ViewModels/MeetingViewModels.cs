@@ -16,7 +16,7 @@ public class CreateMeetingViewModel
 
     [Required(ErrorMessage = "Tarix seçilməlidir")]
     [DataType(DataType.Date)]
-    public DateOnly MeetingDate { get; set; }
+    public DateTime MeetingDate { get; set; }
 
     [Required(ErrorMessage = "Vaxt seçilməlidir")]
     [DataType(DataType.Time)]
@@ -37,7 +37,7 @@ public class CreateMeetingViewModel
 public class MeetingDetailsViewModel
 {
     public Guid Id { get; set; }
-    public DateOnly MeetingDate { get; set; }
+    public DateTime MeetingDate { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public MeetingStatus Status { get; set; }
@@ -70,8 +70,8 @@ public class MeetingDetailsViewModel
     public string? CancellationReason { get; set; }
 
     // Timestamps
-    public DateTimeOffset CreatedDate { get; set; }
-    public DateTimeOffset? ApprovedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime? ApprovedDate { get; set; }
 }
 
 /// <summary>
@@ -80,7 +80,7 @@ public class MeetingDetailsViewModel
 public class MeetingListViewModel
 {
     public Guid Id { get; set; }
-    public DateOnly MeetingDate { get; set; }
+    public DateTime MeetingDate { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public MeetingStatus Status { get; set; }
@@ -99,7 +99,7 @@ public class TeacherCalendarViewModel
 {
     public Guid TeacherId { get; set; }
     public string TeacherName { get; set; } = string.Empty;
-    public DateOnly SelectedDate { get; set; }
+    public DateTime SelectedDate { get; set; }
     public List<TimeSlotViewModel> TimeSlots { get; set; } = new();
     public List<TeacherMeetingViewModel> Meetings { get; set; } = new();
 }
@@ -157,5 +157,5 @@ public class AvailableTimeSlotsQueryViewModel
 
     [Required]
     [DataType(DataType.Date)]
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
 }

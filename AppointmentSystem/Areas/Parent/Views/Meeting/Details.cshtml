@@ -85,24 +85,24 @@
                 </div>
 
                 <!-- Parent Note -->
-                @if (!string.IsNullOrEmpty(Model.ParentNote))
+                @if (!string.IsNullOrEmpty(Model.ParentNotes))
                 {
                     <div class="alert alert-info border-0">
                         <h6 class="alert-heading">
                             <i class="bi bi-chat-left-text"></i> Mənim qeydim
                         </h6>
-                        <p class="mb-0">@Model.ParentNote</p>
+                        <p class="mb-0">@Model.ParentNotes</p>
                     </div>
                 }
 
                 <!-- Teacher Response -->
-                @if (!string.IsNullOrEmpty(Model.TeacherResponse))
+                @if (!string.IsNullOrEmpty(Model.TeacherNotes))
                 {
                     <div class="alert alert-success border-0">
                         <h6 class="alert-heading">
                             <i class="bi bi-chat-right-text"></i> Müəllimin cavabı
                         </h6>
-                        <p class="mb-0">@Model.TeacherResponse</p>
+                        <p class="mb-0">@Model.TeacherNotes</p>
                     </div>
                 }
 

@@ -115,7 +115,7 @@ public class RoleService : IRoleService
                 Priority = model.Priority,
                 IsSystemRole = model.IsSystemRole,
                 IsActive = model.IsActive,
-                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedById = currentUserId
             };
 
@@ -176,7 +176,7 @@ public class RoleService : IRoleService
             role.Description = model.Description?.Trim();
             role.Priority = model.Priority;
             role.IsActive = model.IsActive;
-            role.ModifiedDate = DateTimeOffset.UtcNow;
+            role.ModifiedDate = DateTime.Now;
             role.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -215,7 +215,7 @@ public class RoleService : IRoleService
             }
 
             role.IsActive = !role.IsActive;
-            role.ModifiedDate = DateTimeOffset.UtcNow;
+            role.ModifiedDate = DateTime.Now;
             role.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();
@@ -263,7 +263,7 @@ public class RoleService : IRoleService
 
             role.IsDeleted = true;
             role.IsActive = false;
-            role.ModifiedDate = DateTimeOffset.UtcNow;
+            role.ModifiedDate = DateTime.Now;
             role.ModifiedById = currentUserId;
 
             await _context.SaveChangesAsync();

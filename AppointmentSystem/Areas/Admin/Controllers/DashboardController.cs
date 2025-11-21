@@ -36,7 +36,7 @@ public class DashboardController : Controller
                 TotalParents = await _context.Parents.CountAsync(p => p.IsActive),
                 TotalStudents = await _context.Students.CountAsync(s => s.IsActive),
                 TodayMeetings = await _context.Meetings
-                    .CountAsync(m => m.MeetingDate == DateOnly.FromDateTime(DateTime.Today)),
+                    .CountAsync(m => m.MeetingDate == DateTime.Today),
                 PendingMeetings = await _context.Meetings
                     .CountAsync(m => m.Status == MeetingStatus.Pending)
             };
