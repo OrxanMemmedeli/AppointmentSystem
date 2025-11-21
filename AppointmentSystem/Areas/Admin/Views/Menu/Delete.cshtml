@@ -1,0 +1,272 @@
+﻿@model MenuViewModel
+@{
+    ViewData["Title"] = "Menyu Silinməsi";
+    var childCount = (int)(ViewData["ChildCount"] ?? 0);
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Menyu Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (childCount > 0)
+                    {
+                        <!-- Child-ları olan menyu silinə bilməz -->
+                        <div class="alert alert-danger">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-shield-exclamation"></i> Menyu Silinə Bilməz
+                            </h5>
+                            <p class="mb-0">
+                                Bu menyunun <strong>@childCount</strong> alt menyusu var.
+                                Menyunu silmək üçün əvvəlcə bütün alt menyuları silməlisiniz və ya
+                                başqa bir parent-ə köçürməlisiniz.
+                            </p>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    <i class="bi bi-list-nested text-primary"></i>
+                                    <strong>@Model.Name</strong>
+                                </h5>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Kod:</div>
+                                    <div class="col-8">
+                                        @if (!string.IsNullOrEmpty(Model.Code))
+                                        {
+                                            <code>@Model.Code</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Səviyyə:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-info">Level @Model.Level</span>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Alt Menyular:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-danger">@childCount</span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-4 text-muted">Status:</div>
+                                    <div class="col-8">
+                                        @if (Model.IsVisible)
+                                        {
+                                            <span class="badge bg-success me-1">Görünən</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary me-1">Gizli</span>
+                                        }
+                                        <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                            @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-lightbulb"></i> Alternativ Həllər:</h6>
+                            <ul class="mb-0 small">
+                                <li>Alt menyuları başqa bir parent-ə köçürün</li>
+                                <li>Alt menyuları əvvəlcə silın</li>
+                                <li>Menyunu silmək əvəzinə deaktiv edin</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Geri Qayıt
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Normal silinmə prosesi -->
+                        <div class="alert alert-danger">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle"></i> Diqqət!
+                            </h5>
+                            <p class="mb-0">
+                                Bu menyunu silmək istədiyinizdən əminsiniz? Bu əməliyyat geri qaytarıla bilməz.
+                            </p>
+                        </div>
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.IconSVG))
+                                    {
+                                        <i class="@Model.IconSVG text-primary"></i>
+                                    }
+                                    <strong>@Model.Name</strong>
+                                </h5>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Kod:</div>
+                                    <div class="col-8">
+                                        @if (!string.IsNullOrEmpty(Model.Code))
+                                        {
+                                            <code>@Model.Code</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(Model.Description))
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">Təsvir:</div>
+                                        <div class="col-8">@Model.Description</div>
+                                    </div>
+                                }
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Tip:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-@(Model.Type switch
+                                        {
+                                            MenuType.Link => "primary",
+                                            MenuType.Group => "info",
+                                            MenuType.Separator => "secondary",
+                                            _ => "dark"
+                                        })">
+                                            @Model.Type
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Səviyyə:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-info">Level @Model.Level</span>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Sıralama:</div>
+                                    <div class="col-8">
+                                        <span class="badge bg-dark">@Model.OrderIndex</span>
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(Model.Url))
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">URL:</div>
+                                        <div class="col-8">
+                                            <code class="small">@Model.Url</code>
+                                        </div>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrEmpty(Model.ControllerName))
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">Route:</div>
+                                        <div class="col-8">
+                                            <code class="small">
+                                                @Model.AreaName/@Model.ControllerName/@Model.ActionName
+                                            </code>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="row">
+                                    <div class="col-4 text-muted">Status:</div>
+                                    <div class="col-8">
+                                        @if (Model.IsVisible)
+                                        {
+                                            <span class="badge bg-success me-1">
+                                                <i class="bi bi-eye"></i> Görünən
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary me-1">
+                                                <i class="bi bi-eye-slash"></i> Gizli
+                                            </span>
+                                        }
+                                        <span class="badge bg-@(Model.IsActive ? "success" : "danger")">
+                                            @(Model.IsActive ? "Aktiv" : "Deaktiv")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Nə Baş Verəcək?</h6>
+                            <ul class="mb-0 small">
+                                <li>Menyu sistemdən tamamilə silinəcək (soft delete)</li>
+                                <li>Bu menyuya olan bütün icazə təyinləri silinəcək</li>
+                                <li>İstifadəçilər bu menyuya artıq giriş edə bilməyəcək</li>
+                                <li>Əməliyyat geri qaytarıla bilər (admin müdaxiləsi ilə)</li>
+                            </ul>
+                        </div>
+
+                        <form asp-action="Delete" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="Id" />
+
+                            <div class="d-flex justify-content-between gap-2">
+                                <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                    <i class="bi bi-x-circle"></i> Ləğv Et
+                                </a>
+                                <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                    <i class="bi bi-trash"></i> Bəli, Sil
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @if (childCount == 0)
+            {
+                <!-- Alternativ Əməliyyatlar Kartı -->
+                <div class="card mt-3 border-primary">
+                    <div class="card-body">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-lightbulb"></i> Alternativ Əməliyyatlar
+                        </h6>
+                        <div class="d-grid gap-2">
+                            <form asp-controller="Menu" asp-action="ToggleStatus"
+                                  asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-warning w-100">
+                                    <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                    Silmək əvəzinə @(Model.IsActive ? "Deaktiv" : "Aktiv") Et
+                                </button>
+                            </form>
+
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Menyunu Redaktə Et
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

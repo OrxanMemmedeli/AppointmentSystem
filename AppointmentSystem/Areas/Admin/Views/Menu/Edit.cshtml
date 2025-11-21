@@ -1,0 +1,253 @@
+﻿@model MenuViewModel
+@{
+    ViewData["Title"] = "Menyu Redaktəsi";
+    var parentMenus = ViewData["ParentMenus"] as List<SelectListItem>;
+    var menuTypes = ViewData["MenuTypes"] as List<SelectListItem>;
+    var icons = ViewData["Icons"] as List<string>;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Menyu Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Cari Level məlumatı -->
+                        <div class="alert alert-info mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Cari Səviyyə:</strong>
+                                    <span class="badge bg-primary">Level @Model.Level</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>ID:</strong>
+                                    <code class="text-dark">@Model.Id</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Sol sütun -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        Menyu Adı <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Name" class="form-control"
+                                           placeholder="Dashboard" autofocus />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Code" class="form-label">Sistem Kodu</label>
+                                    <input asp-for="Code" class="form-control text-uppercase"
+                                           placeholder="MENU_DASHBOARD" />
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                    <small class="text-muted">Böyük hərflər və alt xətt</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ParentId" class="form-label">Parent Menyu</label>
+                                    <select asp-for="ParentId" asp-items="parentMenus" class="form-select">
+                                    </select>
+                                    <span asp-validation-for="ParentId" class="text-danger"></span>
+                                    <small class="text-warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Diqqət: Parent dəyişikliyi səviyyəni dəyişəcək
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Type" class="form-label">
+                                        Menyu Tipi <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Type" asp-items="menuTypes" class="form-select">
+                                    </select>
+                                    <span asp-validation-for="Type" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="OrderIndex" class="form-label">
+                                        Sıralama İndeksi <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="OrderIndex" type="number" class="form-control"
+                                           min="0" max="9999" />
+                                    <span asp-validation-for="OrderIndex" class="text-danger"></span>
+                                    <small class="text-muted">Kiçik rəqəm = yuxarıda görsənir</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="IconSVG" class="form-label">İkon</label>
+                                    <select asp-for="IconSVG" class="form-select" id="iconSelect">
+                                        <option value="">İkon seçin</option>
+                                        @foreach (var icon in icons)
+                                        {
+                                            <option value="@icon" selected="@(icon == Model.IconSVG)">
+                                                @icon
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="IconSVG" class="text-danger"></span>
+                                    <div class="mt-2" id="iconPreview">
+                                        @if (!string.IsNullOrEmpty(Model.IconSVG))
+                                        {
+                                            <i class="@Model.IconSVG" style="font-size: 2rem;"></i>
+                                            <span class="ms-2">@Model.IconSVG</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sağ sütun -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Url" class="form-label">URL</label>
+                                    <input asp-for="Url" class="form-control"
+                                           placeholder="/admin/dashboard" />
+                                    <span asp-validation-for="Url" class="text-danger"></span>
+                                    <small class="text-muted">
+                                        Birbaşa URL və ya Area/Controller/Action istifadə edin
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="AreaName" class="form-label">Area</label>
+                                    <input asp-for="AreaName" class="form-control"
+                                           placeholder="Admin" />
+                                    <span asp-validation-for="AreaName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ControllerName" class="form-label">Controller</label>
+                                    <input asp-for="ControllerName" class="form-control"
+                                           placeholder="Dashboard" />
+                                    <span asp-validation-for="ControllerName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ActionName" class="form-label">Action</label>
+                                    <input asp-for="ActionName" class="form-control"
+                                           placeholder="Index" />
+                                    <span asp-validation-for="ActionName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Description" class="form-label">Təsvir</label>
+                                    <textarea asp-for="Description" class="form-control" rows="3"
+                                              placeholder="Bu menyu haqqında qısa məlumat..."></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsVisible" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsVisible" class="form-check-label">
+                                        <i class="bi bi-eye"></i> Görünən
+                                    </label>
+                                    <div class="form-text">Gizli menyular interfeysdə göstərilməz</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input asp-for="IsActive" class="form-check-input"
+                                           type="checkbox" role="switch" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="bi bi-check-circle"></i> Aktiv
+                                    </label>
+                                    <div class="form-text">Deaktiv menyular işləməz</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Xəbərdarlıq Kartı -->
+            <div class="card mt-3 border-warning">
+                <div class="card-body">
+                    <h6 class="text-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Əməliyyat Xəbərdarlıqları
+                    </h6>
+                    <ul class="small mb-0">
+                        <li><strong>Parent dəyişikliyi:</strong> Menyunun və bütün alt menyularının səviyyəsi avtomatik yenilənəcək</li>
+                        <li><strong>Deaktiv etmə:</strong> Bu menyunu deaktiv etsəniz, istifadəçilər ona giriş edə bilməyəcək</li>
+                        <li><strong>Gizli etmə:</strong> Menyu gizli olsa belə, URL vasitəsilə giriş mümkündür</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kod inputunu uppercase et
+            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
+                });
+            }
+
+            // İkon preview
+            const iconSelect = document.getElementById('iconSelect');
+            const iconPreview = document.getElementById('iconPreview');
+
+            iconSelect.addEventListener('change', function() {
+                if (this.value) {
+                    iconPreview.innerHTML = `<i class="${this.value}" style="font-size: 2rem;"></i> <span class="ms-2">${this.value}</span>`;
+                } else {
+                    iconPreview.innerHTML = '';
+                }
+            });
+
+            // URL və Route məlumat yoxlaması
+            const urlInput = document.getElementById('@Html.IdFor(m => m.Url)');
+            const areaInput = document.getElementById('@Html.IdFor(m => m.AreaName)');
+            const controllerInput = document.getElementById('@Html.IdFor(m => m.ControllerName)');
+            const actionInput = document.getElementById('@Html.IdFor(m => m.ActionName)');
+
+            function checkRouteInfo() {
+                if (urlInput.value) {
+                    // URL varsa, route inputlarını disable et
+                    areaInput.disabled = true;
+                    controllerInput.disabled = true;
+                    actionInput.disabled = true;
+                } else {
+                    areaInput.disabled = false;
+                    controllerInput.disabled = false;
+                    actionInput.disabled = false;
+                }
+            }
+
+            urlInput.addEventListener('input', checkRouteInfo);
+            checkRouteInfo(); // İlkin yoxlama
+        });
+    </script>
+}

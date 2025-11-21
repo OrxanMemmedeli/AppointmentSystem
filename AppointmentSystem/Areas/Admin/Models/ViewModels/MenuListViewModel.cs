@@ -22,4 +22,7 @@ public class MenuListViewModel
     public int ChildCount { get; set; }
     public string? ParentName { get; set; }
     public DateTimeOffset CreatedDate { get; set; }
+    public string? AreaName { get; set; }
+    public string? ControllerName { get; set; }
+    public string? ActionName { get; set; }
 }

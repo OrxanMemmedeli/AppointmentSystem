@@ -46,7 +46,10 @@ public class MenuService : IMenuService
                 IsActive = m.IsActive,
                 ChildCount = m.Children.Count(c => !c.IsDeleted),
                 ParentName = m.Parent != null ? m.Parent.Name : null,
-                CreatedDate = m.CreatedDate
+                CreatedDate = m.CreatedDate,
+                AreaName = m.AreaName,           
+                ControllerName = m.ControllerName, 
+                ActionName = m.ActionName,         
             })
             .OrderBy(m => m.Level)
             .ThenBy(m => m.OrderIndex)
