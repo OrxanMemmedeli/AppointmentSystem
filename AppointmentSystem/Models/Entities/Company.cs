@@ -56,7 +56,10 @@ public class Company : AuditableEntity
     public TimeSpan DefaultEndTime { get; set; } = new TimeSpan(17, 0, 0);
 
     /// <summary>İş günləri (JSON)</summary>
-    public string? WorkingDays { get; set; }
+    public string? WorkingDays { get; set; }    
+    
+    /// <summary>Admin tərəfindən təsdiq edilib</summary>
+    public bool IsVerified { get; set; } = false;
 
     #region Navigation Properties
     /// <summary>Şirkətdəki siniflər</summary>

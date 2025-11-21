@@ -1,0 +1,250 @@
+﻿@model CompanyViewModel
+@{
+    ViewData["Title"] = "Şirkət Detayları";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-building"></i> Şirkət Detayları
+                        </h4>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-pencil"></i> Redaktə
+                            </a>
+                            <a asp-action="Index" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Şəkillər -->
+                    @if (!string.IsNullOrEmpty(Model.BackgroundImagePath))
+                    {
+                        <div class="mb-4">
+                            <img src="@Model.BackgroundImagePath" alt="Background"
+                                 class="img-fluid rounded" style="max-height: 300px; width: 100%; object-fit: cover;" />
+                        </div>
+                    }
+
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.LogoPath))
+                            {
+                                <img src="@Model.LogoPath" alt="@Model.Name"
+                                     class="img-fluid rounded shadow" style="max-width: 200px;" />
+                            }
+                            else
+                            {
+                                <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center mx-auto"
+                                     style="width: 150px; height: 150px; font-size: 4rem;">
+                                    @Model.Name.Substring(0, 1).ToUpper()
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="mb-3">@Model.Name</h2>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success mb-3">Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger mb-3">Deaktiv</span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="text-muted">@Model.Description</p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Əsas Məlumatlar -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-code-square"></i> Kod:
+                                    </td>
+                                    <td><code class="fs-6">@Model.Code</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-envelope"></i> Email:
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.Email))
+                                        {
+                                            <a href="mailto:@Model.Email">@Model.Email</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-telephone"></i> Telefon:
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.Phone))
+                                        {
+                                            <a href="tel:@Model.Phone">@Model.Phone</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                {
+                                    <tr>
+                                        <td class="text-muted">
+                                            <i class="bi bi-telephone-plus"></i> Əlavə Telefon:
+                                        </td>
+                                        <td><a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a></td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                @if (!string.IsNullOrEmpty(Model.Website))
+                                {
+                                    <tr>
+                                        <td class="text-muted" style="width: 150px;">
+                                            <i class="bi bi-globe"></i> Website:
+                                        </td>
+                                        <td>
+                                            <a href="@Model.Website" target="_blank">@Model.Website</a>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Address))
+                                {
+                                    <tr>
+                                        <td class="text-muted">
+                                            <i class="bi bi-geo-alt"></i> Ünvan:
+                                        </td>
+                                        <td>@Model.Address</td>
+                                    </tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.MapCoordinates))
+                                {
+                                    <tr>
+                                        <td class="text-muted">
+                                            <i class="bi bi-compass"></i> Koordinatlar:
+                                        </td>
+                                        <td>@Model.MapCoordinates</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- İş Saatları -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-clock"></i> İş Saatları və Parametrlər
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-sunrise text-primary" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Başlanğıc</h6>
+                                    <strong>@Model.DefaultStartTime.ToString(@"hh\:mm")</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-sunset text-warning" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Bitmə</h6>
+                                    <strong>@Model.DefaultEndTime.ToString(@"hh\:mm")</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-event text-success" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Görüş Müddəti</h6>
+                                    <strong>@Model.DefaultMeetingDuration dəq</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-pause-circle text-info" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Fasilə</h6>
+                                    <strong>@Model.DefaultBreakDuration dəq</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Xəritə -->
+                    @if (!string.IsNullOrEmpty(Model.MapUrl))
+                    {
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-map"></i> Yer Məlumatı
+                        </h5>
+
+                        <div class="mb-4">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="@Model.MapUrl"
+                                        style="border:0;"
+                                        allowfullscreen=""
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Əməliyyatlar -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Geri
+                        </a>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Redaktə Et
+                            </a>
+                            <form asp-action="ToggleStatus" asp-route-id="@Model.Id"
+                                  method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                    @(Model.IsActive ? "Deaktiv Et" : "Aktiv Et")
+                                </button>
+                            </form>
+                            <a asp-action="Delete" asp-route-id="@Model.Id"
+                               class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

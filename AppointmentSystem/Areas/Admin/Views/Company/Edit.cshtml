@@ -1,0 +1,300 @@
+﻿@model CompanyViewModel
+@{
+    ViewData["Title"] = "Şirkət Redaktəsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Şirkət/Məktəb Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Cari Logo və Background -->
+                        @if (!string.IsNullOrEmpty(Model.LogoPath) || !string.IsNullOrEmpty(Model.BackgroundImagePath))
+                        {
+                            <div class="alert alert-info mb-4">
+                                <h6 class="mb-3">Cari Şəkillər:</h6>
+                                <div class="row">
+                                    @if (!string.IsNullOrEmpty(Model.LogoPath))
+                                    {
+                                        <div class="col-md-6">
+                                            <strong>Logo:</strong><br />
+                                            <img src="@Model.LogoPath" alt="Logo"
+                                                 class="img-thumbnail mt-2" style="max-width: 150px;" />
+                                            <br />
+                                            <form asp-action="DeleteLogo" asp-route-id="@Model.Id"
+                                                  method="post" class="d-inline mt-2">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Logonu silmək istədiyinizdən əminsiniz?')">
+                                                    <i class="bi bi-trash"></i> Logonu sil
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.BackgroundImagePath))
+                                    {
+                                        <div class="col-md-6">
+                                            <strong>Arxa fon:</strong><br />
+                                            <img src="@Model.BackgroundImagePath" alt="Background"
+                                                 class="img-thumbnail mt-2" style="max-width: 150px;" />
+                                            <br />
+                                            <form asp-action="DeleteBackgroundImage" asp-route-id="@Model.Id"
+                                                  method="post" class="d-inline mt-2">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Arxa fonu silmək istədiyinizdən əminsiniz?')">
+                                                    <i class="bi bi-trash"></i> Arxa fonu sil
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Əsas Məlumatlar -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        Şirkət/Məktəb Adı <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Name" class="form-control"
+                                           placeholder="Məsələn: Təhsil Mərkəzi" autofocus />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Code" class="form-label">
+                                        Kod <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Code" class="form-control text-uppercase"
+                                           placeholder="TM001" />
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                    <small class="text-muted">Unikal sistem kodu</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">
+                                        Email <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Email" type="email" class="form-control"
+                                           placeholder="info@mekteb.az" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Website" class="form-label">Web Sayt</label>
+                                    <input asp-for="Website" type="url" class="form-control"
+                                           placeholder="https://mekteb.az" />
+                                    <span asp-validation-for="Website" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Phone" class="form-label">Telefon</label>
+                                    <input asp-for="Phone" type="tel" class="form-control"
+                                           placeholder="+994 XX XXX XX XX" />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label">
+                                        Əlavə Telefon
+                                    </label>
+                                    <input asp-for="PhoneNumber" type="tel" class="form-control"
+                                           placeholder="+994 XX XXX XX XX" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ünvan -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-geo-alt"></i> Ünvan Məlumatları
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Ünvan</label>
+                            <textarea asp-for="Address" class="form-control" rows="2"
+                                      placeholder="Tam ünvan"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="MapUrl" class="form-label">
+                                        Xəritə URL (Google Maps)
+                                    </label>
+                                    <input asp-for="MapUrl" type="url" class="form-control"
+                                           placeholder="https://maps.google.com/..." />
+                                    <span asp-validation-for="MapUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="MapCoordinates" class="form-label">
+                                        Koordinatlar
+                                    </label>
+                                    <input asp-for="MapCoordinates" class="form-control"
+                                           placeholder="40.4093, 49.8671" />
+                                    <span asp-validation-for="MapCoordinates" class="text-danger"></span>
+                                    <small class="text-muted">Enlik, Uzunluq</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Yeni Şəkillər -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-image"></i> Yeni Şəkillər Yüklə
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LogoFile" class="form-label">Yeni Logo</label>
+                                    <input asp-for="LogoFile" type="file" class="form-control"
+                                           accept="image/*" />
+                                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                                    <small class="text-muted">Maksimum 5MB (JPG, PNG, GIF)</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="BackgroundImageFile" class="form-label">
+                                        Yeni Arxa fon şəkli
+                                    </label>
+                                    <input asp-for="BackgroundImageFile" type="file" class="form-control"
+                                           accept="image/*" />
+                                    <span asp-validation-for="BackgroundImageFile" class="text-danger"></span>
+                                    <small class="text-muted">Maksimum 10MB (JPG, PNG, GIF)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- İş Saatları -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-clock"></i> İş Saatları və Parametrlər
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="DefaultStartTime" class="form-label">
+                                        İş Başlanğıc Saatı
+                                    </label>
+                                    <input asp-for="DefaultStartTime" type="time" class="form-control" />
+                                    <span asp-validation-for="DefaultStartTime" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="DefaultEndTime" class="form-label">
+                                        İş Bitmə Saatı
+                                    </label>
+                                    <input asp-for="DefaultEndTime" type="time" class="form-control" />
+                                    <span asp-validation-for="DefaultEndTime" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="DefaultMeetingDuration" class="form-label">
+                                        Görüş Müddəti (dəq)
+                                    </label>
+                                    <input asp-for="DefaultMeetingDuration" type="number"
+                                           class="form-control" min="5" max="480" />
+                                    <span asp-validation-for="DefaultMeetingDuration" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="DefaultBreakDuration" class="form-label">
+                                        Fasilə (dəq)
+                                    </label>
+                                    <input asp-for="DefaultBreakDuration" type="number"
+                                           class="form-control" min="0" max="120" />
+                                    <span asp-validation-for="DefaultBreakDuration" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Təsvir -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Təsvir</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Şirkət/məktəb haqqında qısa məlumat..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input"
+                                   type="checkbox" role="switch" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                <i class="bi bi-check-circle"></i> Aktiv
+                            </label>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kod inputunu uppercase et
+            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                });
+            }
+        });
+    </script>
+}

@@ -6,3 +6,37 @@
 
 ------------------------------------------------------ Hazir ------------------------------------------------------
 * Service-ler merkezi olaraq inject edilsin. 
+
+
+
+
+------------------------------------------------------ Struktur ------------------------------------------------------
+
+Modul Planı (Prioritet üzrə):1️⃣ Əsas Strukturlar (Foundation)
+
+✅ Company - Şirkət/Məktəb
+✅ CompanySettings - Şirkət parametrləri
+✅ SchoolClass - Sinif
+✅ Subject - Fənn
+2️⃣ İnsan Resursları (People)
+
+✅ Teacher - Müəllim
+✅ Student - Şagird
+✅ Parent - Valideyn
+3️⃣ Əlaqələr (Relations)
+
+✅ TeacherSubject - Müəllim-Fənn əlaqəsi
+✅ StudentParent - Şagird-Valideyn əlaqəsi
+✅ ClassTeacher - Sinif-Müəllim
+4️⃣ Akademik (Academic)
+
+✅ AcademicYear - Dərs ili
+✅ Semester - Semestr
+✅ Lesson - Dərs
+✅ Schedule - Cədvəl
+5️⃣ Tədris Prosesi (Education Process)
+
+✅ Grade - Qiymət
+✅ Attendance - Davamiyyət
+✅ Behavior - Davranış
+✅ HomeworkAssignment - Ev tapşırığı

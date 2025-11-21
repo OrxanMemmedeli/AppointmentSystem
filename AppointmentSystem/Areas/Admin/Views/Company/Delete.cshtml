@@ -1,0 +1,162 @@
+﻿@model CompanyViewModel
+@{
+    ViewData["Title"] = "Şirkət Silinməsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Şirkət Silinməsi Təsdiqi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-shield-exclamation"></i> Xəbərdarlıq!
+                        </h5>
+                        <p class="mb-0">
+                            Bu şirkəti silmək istədiyinizdən əminsiniz? Bu əməliyyat geri qaytarıla bilməz
+                            və şirkətə aid bütün məlumatlar (şagirdlər, müəllimlər, siniflər) əlçatan olmayacaq.
+                        </p>
+                    </div>
+
+                    <!-- Şirkət Məlumatları -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                @if (!string.IsNullOrEmpty(Model.LogoPath))
+                                {
+                                    <div class="col-md-3 text-center">
+                                        <img src="@Model.LogoPath" alt="@Model.Name"
+                                             class="img-fluid rounded" style="max-width: 150px;" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h5 class="card-title mb-3">
+                                            <strong>@Model.Name</strong>
+                                        </h5>
+                                        @Html.Raw(RenderCompanyDetails())
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-12">
+                                        <h5 class="card-title mb-3">
+                                            <i class="bi bi-building text-primary"></i>
+                                            <strong>@Model.Name</strong>
+                                        </h5>
+                                        @Html.Raw(RenderCompanyDetails())
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Təsir Zonası -->
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-info-circle"></i> Bu əməliyyatın nəticələri:</h6>
+                        <ul class="mb-0 small">
+                            <li>Şirkət sistemdən silinəcək (soft delete)</li>
+                            <li>Şirkətə aid olan <strong>bütün şagirdlər</strong> əlçatan olmayacaq</li>
+                            <li>Şirkətə aid olan <strong>bütün müəllimlər</strong> əlçatan olmayacaq</li>
+                            <li>Şirkətə aid olan <strong>bütün siniflər</strong> əlçatan olmayacaq</li>
+                            <li>Şirkətə aid olan <strong>bütün fənlər</strong> əlçatan olmayacaq</li>
+                            <li>Şirkət parametrləri və görüşlər də silinəcək</li>
+                            <li>Bu əməliyyat yalnız admin müdaxiləsi ilə geri qaytarıla bilər</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg flex-fill">
+                                <i class="bi bi-x-circle"></i> Ləğv Et
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg flex-fill">
+                                <i class="bi bi-trash"></i> Bəli, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativ Əməliyyatlar -->
+            <div class="card mt-3 border-primary">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-lightbulb"></i> Alternativ Həllər
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                Silmək əvəzinə @(Model.IsActive ? "Deaktiv" : "Aktiv") Et
+                            </button>
+                        </form>
+
+                        <a asp-action="Edit" asp-route-id="@Model.Id"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Şirkəti Redaktə Et
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string RenderCompanyDetails()
+    {
+        var details = new System.Text.StringBuilder();
+
+        details.Append("<div class='row mb-2'>");
+        details.Append("<div class='col-4 text-muted'>Kod:</div>");
+        details.Append($"<div class='col-8'><code>{Model.Code}</code></div>");
+        details.Append("</div>");
+
+        if (!string.IsNullOrEmpty(Model.Email))
+        {
+            details.Append("<div class='row mb-2'>");
+            details.Append("<div class='col-4 text-muted'>Email:</div>");
+            details.Append($"<div class='col-8'>{Model.Email}</div>");
+            details.Append("</div>");
+        }
+
+        if (!string.IsNullOrEmpty(Model.Phone))
+        {
+            details.Append("<div class='row mb-2'>");
+            details.Append("<div class='col-4 text-muted'>Telefon:</div>");
+            details.Append($"<div class='col-8'>{Model.Phone}</div>");
+            details.Append("</div>");
+        }
+
+        if (!string.IsNullOrEmpty(Model.Address))
+        {
+            details.Append("<div class='row mb-2'>");
+            details.Append("<div class='col-4 text-muted'>Ünvan:</div>");
+            details.Append($"<div class='col-8'>{Model.Address}</div>");
+            details.Append("</div>");
+        }
+
+        if (!string.IsNullOrEmpty(Model.Website))
+        {
+            details.Append("<div class='row mb-2'>");
+            details.Append("<div class='col-4 text-muted'>Website:</div>");
+            details.Append($"<div class='col-8'><a href='{Model.Website}' target='_blank'>{Model.Website}</a></div>");
+            details.Append("</div>");
+        }
+
+        details.Append("<div class='row'>");
+        details.Append("<div class='col-4 text-muted'>Status:</div>");
+        details.Append($"<div class='col-8'><span class='badge bg-{(Model.IsActive ? "success" : "danger")}'>{(Model.IsActive ? "Aktiv" : "Deaktiv")}</span></div>");
+        details.Append("</div>");
+
+        return details.ToString();
+    }
+}

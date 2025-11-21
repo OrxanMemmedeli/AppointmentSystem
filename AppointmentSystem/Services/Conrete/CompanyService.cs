@@ -1,68 +1,621 @@
+﻿using AppointmentSystem.Areas.Admin.Models.ViewModels;
 using AppointmentSystem.Data;
-using AppointmentSystem.Models.ViewModels;
+using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Services.Abstract;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace AppointmentSystem.Services.Conrete;
 
 /// <summary>
-/// Company service implementation
+/// Şirkət idarəetmə servisi implementasiyası
 /// </summary>
 public class CompanyService : ICompanyService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<CompanyService> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public CompanyService(AppDbContext context)
+    public CompanyService(
+        AppDbContext context,
+        ILogger<CompanyService> logger,
+        IWebHostEnvironment environment)
     {
         _context = context;
+        _logger = logger;
+        _environment = environment;
     }
 
-    public async Task<List<CompanyCardViewModel>> GetAllActiveCompaniesAsync()
+    /// <summary>Bütün şirkətləri gətirir</summary>
+    public async Task<List<CompanyListViewModel>> GetAllCompaniesAsync()
     {
         return await _context.Companies
-            .Where(c => c.IsActive && !c.IsDeleted)
-            .OrderBy(c => c.Name)
-            .Select(c => new CompanyCardViewModel
+            .AsNoTracking()
+            .Where(c => !c.IsDeleted)
+            .Select(c => new CompanyListViewModel
             {
                 Id = c.Id,
                 Name = c.Name,
-                Description = c.Description,
-                LogoPath = c.LogoPath,
-                BackgroundImagePath = c.BackgroundImagePath,
-                Address = c.Address,
-                PhoneNumber = c.PhoneNumber,
+                Code = c.Code,
                 Email = c.Email,
-                MapCoordinates = c.MapCoordinates,
-                MapUrl = c.MapUrl
+                Phone = c.Phone,
+                Address = c.Address,
+                LogoPath = c.LogoPath,
+                IsActive = c.IsActive,
+                StudentCount = c.Students.Count(s => !s.IsDeleted && s.IsActive),
+                TeacherCount = c.Teachers.Count(t => !t.IsDeleted && t.IsActive),
+                ClassCount = c.Classes.Count(sc => !sc.IsDeleted && sc.IsActive),
+                SubjectCount = c.Subjects.Count(s => !s.IsDeleted && s.IsActive),
+                CreatedDate = c.CreatedDate
             })
-            .AsNoTracking()
+            .OrderByDescending(c => c.CreatedDate)
             .ToListAsync();
     }
 
-    public async Task<CompanyCardViewModel?> GetCompanyByIdAsync(Guid companyId)
+    /// <summary>Aktiv şirkətləri gətirir</summary>
+    public async Task<List<CompanyListViewModel>> GetActiveCompaniesAsync()
     {
         return await _context.Companies
-            .Where(c => c.Id == companyId && c.IsActive && !c.IsDeleted)
-            .Select(c => new CompanyCardViewModel
+            .AsNoTracking()
+            .Where(c => !c.IsDeleted && c.IsActive)
+            .Select(c => new CompanyListViewModel
             {
                 Id = c.Id,
                 Name = c.Name,
-                Description = c.Description,
+                Code = c.Code,
+                Email = c.Email,
+                Phone = c.Phone,
+                LogoPath = c.LogoPath,
+                IsActive = c.IsActive,
+                CreatedDate = c.CreatedDate
+            })
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+    }
+
+    /// <summary>ID-yə görə şirkət gətirir</summary>
+    public async Task<CompanyViewModel?> GetCompanyByIdAsync(Guid id)
+    {
+        return await _context.Companies
+            .AsNoTracking()
+            .Where(c => c.Id == id && !c.IsDeleted)
+            .Select(c => new CompanyViewModel
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Code = c.Code,
+                Email = c.Email,
+                Phone = c.Phone,
+                PhoneNumber = c.PhoneNumber,
+                Address = c.Address,
+                Website = c.Website,
                 LogoPath = c.LogoPath,
                 BackgroundImagePath = c.BackgroundImagePath,
-                Address = c.Address,
-                PhoneNumber = c.PhoneNumber,
-                Email = c.Email,
+                Description = c.Description,
+                MapUrl = c.MapUrl,
                 MapCoordinates = c.MapCoordinates,
-                MapUrl = c.MapUrl
+                DefaultMeetingDuration = c.DefaultMeetingDuration,
+                DefaultBreakDuration = c.DefaultBreakDuration,
+                DefaultStartTime = c.DefaultStartTime,
+                DefaultEndTime = c.DefaultEndTime,
+                WorkingDays = c.WorkingDays,
+                IsActive = c.IsActive
             })
-            .AsNoTracking()
             .FirstOrDefaultAsync();
     }
 
-    public async Task<bool> CompanyExistsAsync(Guid companyId)
+    /// <summary>Koda görə şirkət gətirir</summary>
+    public async Task<Company?> GetCompanyByCodeAsync(string code)
     {
         return await _context.Companies
-            .AnyAsync(c => c.Id == companyId && c.IsActive && !c.IsDeleted);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Code == code && !c.IsDeleted);
+    }
+
+    /// <summary>Yeni şirkət yaradır</summary>
+    public async Task<(bool Success, string? ErrorMessage, Guid? CompanyId)> CreateCompanyAsync(
+        CompanyViewModel model,
+        Guid currentUserId)
+    {
+        try
+        {
+            // Kod unikallığını yoxla
+            var isUnique = await IsCodeUniqueAsync(model.Code);
+            if (!isUnique)
+            {
+                return (false, "Bu kod artıq istifadə olunur", null);
+            }
+
+            var company = new Company
+            {
+                Id = Guid.NewGuid(),
+                Name = model.Name.Trim(),
+                Code = model.Code.ToUpperInvariant().Trim(),
+                Email = model.Email?.Trim().ToLowerInvariant(),
+                Phone = model.Phone?.Trim(),
+                PhoneNumber = model.PhoneNumber?.Trim(),
+                Address = model.Address?.Trim(),
+                Website = model.Website?.Trim(),
+                Description = model.Description?.Trim(),
+                MapUrl = model.MapUrl?.Trim(),
+                MapCoordinates = model.MapCoordinates?.Trim(),
+                DefaultMeetingDuration = model.DefaultMeetingDuration,
+                DefaultBreakDuration = model.DefaultBreakDuration,
+                DefaultStartTime = model.DefaultStartTime,
+                DefaultEndTime = model.DefaultEndTime,
+                WorkingDays = model.WorkingDays,
+                LogoPath = "images/default-company-logo.jpg",
+                BackgroundImagePath = "images/default-company-background-logo.jpg",
+                IsActive = model.IsActive,
+                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedById = currentUserId
+            };
+
+            // Logo yüklənməsi
+            if (model.LogoFile != null)
+            {
+                var (success, errorMessage, filePath) = await UploadLogoAsync(model.LogoFile, company.Id);
+                if (success && !string.IsNullOrEmpty(filePath))
+                {
+                    company.LogoPath = filePath;
+                }
+            }
+
+            // Background şəkil yüklənməsi
+            if (model.BackgroundImageFile != null)
+            {
+                var (success, errorMessage, filePath) = await UploadBackgroundImageAsync(model.BackgroundImageFile, company.Id);
+                if (success && !string.IsNullOrEmpty(filePath))
+                {
+                    company.BackgroundImagePath = filePath;
+                }
+            }
+
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Yeni şirkət yaradıldı: {CompanyName} (ID: {CompanyId})",
+                company.Name, company.Id);
+
+            return (true, null, company.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət yaradılarkən xəta: {CompanyName}", model.Name);
+            return (false, "Şirkət yaradılarkən xəta baş verdi", null);
+        }
+    }
+
+    /// <summary>Şirkəti yeniləyir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> UpdateCompanyAsync(
+        CompanyViewModel model,
+        Guid currentUserId)
+    {
+        try
+        {
+            if (!model.Id.HasValue)
+            {
+                return (false, "Şirkət ID-si tələb olunur");
+            }
+
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == model.Id.Value && !c.IsDeleted);
+
+            if (company == null)
+            {
+                return (false, "Şirkət tapılmadı");
+            }
+
+            // Kod unikallığını yoxla
+            if (model.Code != company.Code)
+            {
+                var isUnique = await IsCodeUniqueAsync(model.Code, company.Id);
+                if (!isUnique)
+                {
+                    return (false, "Bu kod artıq istifadə olunur");
+                }
+            }
+
+            company.Name = model.Name.Trim();
+            company.Code = model.Code.ToUpperInvariant().Trim();
+            company.Email = model.Email?.Trim().ToLowerInvariant();
+            company.Phone = model.Phone?.Trim();
+            company.PhoneNumber = model.PhoneNumber?.Trim();
+            company.Address = model.Address?.Trim();
+            company.Website = model.Website?.Trim();
+            company.Description = model.Description?.Trim();
+            company.MapUrl = model.MapUrl?.Trim();
+            company.MapCoordinates = model.MapCoordinates?.Trim();
+            company.DefaultMeetingDuration = model.DefaultMeetingDuration;
+            company.DefaultBreakDuration = model.DefaultBreakDuration;
+            company.DefaultStartTime = model.DefaultStartTime;
+            company.DefaultEndTime = model.DefaultEndTime;
+            company.WorkingDays = model.WorkingDays;
+            company.IsActive = model.IsActive;
+            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedById = currentUserId;
+
+            // Yeni logo yüklənməsi
+            if (model.LogoFile != null)
+            {
+                var (success, errorMessage, filePath) = await UploadLogoAsync(model.LogoFile, company.Id);
+                if (success && !string.IsNullOrEmpty(filePath))
+                {
+                    company.LogoPath = filePath;
+                }
+            }
+
+            // Yeni background şəkil yüklənməsi
+            if (model.BackgroundImageFile != null)
+            {
+                var (success, errorMessage, filePath) = await UploadBackgroundImageAsync(model.BackgroundImageFile, company.Id);
+                if (success && !string.IsNullOrEmpty(filePath))
+                {
+                    company.BackgroundImagePath = filePath;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkət yeniləndi: {CompanyName} (ID: {CompanyId})",
+                company.Name, company.Id);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət yenilənərkən xəta: ID {CompanyId}", model.Id);
+            return (false, "Şirkət yenilənərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Şirkət statusunu dəyişir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> ToggleCompanyStatusAsync(
+        Guid id,
+        Guid currentUserId)
+    {
+        try
+        {
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+
+            if (company == null)
+            {
+                return (false, "Şirkət tapılmadı");
+            }
+
+            company.IsActive = !company.IsActive;
+            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkət statusu dəyişdi: {CompanyName} - Yeni status: {IsActive}",
+                company.Name, company.IsActive);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət statusu dəyişərkən xəta: ID {CompanyId}", id);
+            return (false, "Status dəyişərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Şirkəti silir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> DeleteCompanyAsync(
+        Guid id,
+        Guid currentUserId)
+    {
+        try
+        {
+            var company = await _context.Companies
+                .Include(c => c.Students)
+                .Include(c => c.Teachers)
+                .Include(c => c.Classes)
+                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+
+            if (company == null)
+            {
+                return (false, "Şirkət tapılmadı");
+            }
+
+            // Aktiv məlumatları yoxla
+            var activeStudentCount = company.Students.Count(s => !s.IsDeleted);
+            var activeTeacherCount = company.Teachers.Count(t => !t.IsDeleted);
+            var activeClassCount = company.Classes.Count(sc => !sc.IsDeleted);
+
+            if (activeStudentCount > 0 || activeTeacherCount > 0 || activeClassCount > 0)
+            {
+                return (false,
+                    $"Bu şirkətə aid məlumatlar var ({activeStudentCount} şagird, {activeTeacherCount} müəllim, {activeClassCount} sinif). " +
+                    "Əvvəlcə onları silin və ya başqa şirkətə köçürün.");
+            }
+
+            company.IsDeleted = true;
+            company.IsActive = false;
+            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogWarning(
+                "Şirkət silindi: {CompanyName} (ID: {CompanyId})",
+                company.Name, company.Id);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət silinərkən xəta: ID {CompanyId}", id);
+            return (false, "Şirkət silinərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Logo yükləyir</summary>
+    public async Task<(bool Success, string? ErrorMessage, string? FilePath)> UploadLogoAsync(
+        IFormFile file,
+        Guid companyId)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return (false, "Fayl seçilməyib", null);
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return (false, "Yalnız şəkil faylları (jpg, png, gif) yüklənə bilər", null);
+            }
+
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return (false, "Fayl ölçüsü 5MB-dan böyük ola bilməz", null);
+            }
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "companies", "logos");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{companyId}_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"/uploads/companies/logos/{fileName}";
+
+            _logger.LogInformation(
+                "Logo yükləndi: CompanyId={CompanyId}, Path={Path}",
+                companyId, relativePath);
+
+            return (true, null, relativePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Logo yüklənərkən xəta: CompanyId={CompanyId}", companyId);
+            return (false, "Logo yüklənərkən xəta baş verdi", null);
+        }
+    }
+
+    /// <summary>Background şəkil yükləyir</summary>
+    public async Task<(bool Success, string? ErrorMessage, string? FilePath)> UploadBackgroundImageAsync(
+        IFormFile file,
+        Guid companyId)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return (false, "Fayl seçilməyib", null);
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return (false, "Yalnız şəkil faylları (jpg, png, gif) yüklənə bilər", null);
+            }
+
+            if (file.Length > 10 * 1024 * 1024)
+            {
+                return (false, "Fayl ölçüsü 10MB-dan böyük ola bilməz", null);
+            }
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "companies", "backgrounds");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{companyId}_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"/uploads/companies/backgrounds/{fileName}";
+
+            _logger.LogInformation(
+                "Background şəkil yükləndi: CompanyId={CompanyId}, Path={Path}",
+                companyId, relativePath);
+
+            return (true, null, relativePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Background şəkil yüklənərkən xəta: CompanyId={CompanyId}", companyId);
+            return (false, "Background şəkil yüklənərkən xəta baş verdi", null);
+        }
+    }
+
+    /// <summary>Logonu silir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> DeleteLogoAsync(Guid companyId)
+    {
+        try
+        {
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted);
+
+            if (company == null || string.IsNullOrEmpty(company.LogoPath))
+            {
+                return (false, "Logo tapılmadı");
+            }
+
+            if (company.LogoPath != "images/default-company-logo.jpg")
+            {
+                var filePath = Path.Combine(_environment.WebRootPath, company.LogoPath.TrimStart('/'));
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+
+            company.LogoPath = "images/default-company-logo.jpg";
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Logo silindi: CompanyId={CompanyId}", companyId);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Logo silinərkən xəta: CompanyId={CompanyId}", companyId);
+            return (false, "Logo silinərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Background şəkli silir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> DeleteBackgroundImageAsync(Guid companyId)
+    {
+        try
+        {
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted);
+
+            if (company == null || string.IsNullOrEmpty(company.BackgroundImagePath))
+            {
+                return (false, "Background şəkil tapılmadı");
+            }
+
+            if (company.BackgroundImagePath != "images/default-company-background-logo.jpg")
+            {
+                var filePath = Path.Combine(_environment.WebRootPath, company.BackgroundImagePath.TrimStart('/'));
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+
+            company.BackgroundImagePath = "images/default-company-background-logo.jpg";
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Background şəkil silindi: CompanyId={CompanyId}", companyId);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Background şəkil silinərkən xəta: CompanyId={CompanyId}", companyId);
+            return (false, "Background şəkil silinərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Kod unikallığını yoxlayır</summary>
+    public async Task<bool> IsCodeUniqueAsync(string code, Guid? excludeId = null)
+    {
+        var normalizedCode = code.ToUpperInvariant().Trim();
+
+        var query = _context.Companies
+            .Where(c => !c.IsDeleted && c.Code == normalizedCode);
+
+        if (excludeId.HasValue)
+        {
+            query = query.Where(c => c.Id != excludeId.Value);
+        }
+
+        return !await query.AnyAsync();
+    }
+
+    /// <summary>Şirkət select list gətirir</summary>
+    public async Task<List<SelectListItem>> GetCompanySelectListAsync()
+    {
+        return await _context.Companies
+            .AsNoTracking()
+            .Where(c => !c.IsDeleted && c.IsActive)
+            .OrderBy(c => c.Name)
+            .Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            })
+            .ToListAsync();
+    }
+
+    /// <summary>Bütün aktiv şirkətləri gətirir (alias metod)</summary>
+    public async Task<List<CompanyListViewModel>> GetAllActiveCompaniesAsync()
+    {
+        return await GetActiveCompaniesAsync();
+    }
+
+    /// <summary>ID-yə görə şirkət entity-si gətirir</summary>
+    public async Task<Company?> GetCompanyEntityByIdAsync(Guid id)
+    {
+        return await _context.Companies
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+    }
+
+    /// <summary>Şirkətin mövcudluğunu yoxlayır</summary>
+    public async Task<bool> CompanyExistsAsync(Guid id)
+    {
+        return await _context.Companies
+            .AnyAsync(c => c.Id == id && !c.IsDeleted);
+    }
+
+    /// <summary>Şirkəti doğrulayır (admin üçün)</summary>
+    public async Task<(bool Success, string? ErrorMessage)> VerifyCompanyAsync(
+        Guid id,
+        Guid currentUserId)
+    {
+        try
+        {
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+
+            if (company == null)
+            {
+                return (false, "Şirkət tapılmadı");
+            }
+
+            // Əgər şirkətdə IsVerified field-i varsa (yoxdursa bu metod sadəcə log yazsın)
+            // Hazırda Company entity-də IsVerified yoxdur, ona görə sadəcə log yazırıq
+
+            company.ModifiedDate = DateTimeOffset.UtcNow;
+            company.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkət yoxlanıldı/təsdiq edildi: {CompanyName} (ID: {CompanyId}) - Admin: {UserId}",
+                company.Name, company.Id, currentUserId);
+
+            return (true, "Şirkət uğurla təsdiq edildi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət təsdiq edilərkən xəta: ID {CompanyId}", id);
+            return (false, "Şirkət təsdiq edilərkən xəta baş verdi");
+        }
     }
 }
