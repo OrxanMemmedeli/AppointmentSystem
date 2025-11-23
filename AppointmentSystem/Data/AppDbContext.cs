@@ -45,7 +45,6 @@ public class AppDbContext : DbContext
     public DbSet<CompanySubject> CompanySubjects => Set<CompanySubject>();
     public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
     public DbSet<TeacherClass> TeacherClasses => Set<TeacherClass>();
-    public DbSet<InstitutionUser> InstitutionUsers => Set<InstitutionUser>();
     #endregion
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

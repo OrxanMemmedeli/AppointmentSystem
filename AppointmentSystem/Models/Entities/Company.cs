@@ -79,9 +79,6 @@ public class Company : AuditableEntity
 
     /// <summary>Şirkət görüşləri</summary>
     public virtual ICollection<Meeting> Meetings { get; set; } = new HashSet<Meeting>();
-
-    /// <summary>Müəssisə istifadəçiləri</summary>
-    public virtual ICollection<InstitutionUser> InstitutionUsers { get; set; } = new HashSet<InstitutionUser>();
     public virtual ICollection<CompanySubject> CompanySubjects { get; set; } = new HashSet<CompanySubject>();
     #endregion
 }

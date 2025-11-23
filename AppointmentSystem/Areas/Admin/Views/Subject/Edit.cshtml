@@ -1,0 +1,108 @@
+﻿@model SubjectViewModel
+@{
+    ViewData["Title"] = "Fənn Redaktəsi";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Fənn Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Əsas Məlumatlar -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        Fənn Adı <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Name" class="form-control"
+                                           placeholder="Məsələn: Riyaziyyat" autofocus />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Code" class="form-label">Kod</label>
+                                    <input asp-for="Code" class="form-control text-uppercase"
+                                           placeholder="MATH" />
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                    <small class="text-muted">Unikal sistem kodu</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Təsvir</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Fənn haqqında qısa məlumat..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input"
+                                   type="checkbox" role="switch" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                <i class="bi bi-check-circle"></i> Aktiv
+                            </label>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Xəbərdarlıq Kartı -->
+            <div class="card mt-3 border-warning">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="bi bi-exclamation-triangle"></i> Diqqət
+                    </h6>
+                    <ul class="small mb-0">
+                        <li>Fənn adını dəyişdirmək bütün əlaqələrə təsir edəcək</li>
+                        <li>Fənni deaktiv etsəniz, yeni təyinatlar edilə bilməyəcək</li>
+                        <li>Mövcud müəllim və şirkət əlaqələri qalacaq</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kod inputunu uppercase et
+            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,439 @@
+﻿@model TeacherViewModel
+@{
+    ViewData["Title"] = "Müəllim Redaktəsi";
+    var users = ViewBag.Users as List<SelectListItem> ?? new List<SelectListItem>();
+    var companies = ViewBag.Companies as List<SelectListItem> ?? new List<SelectListItem>();
+    var teacherSubjects = ViewBag.TeacherSubjects as List<SubjectListViewModel> ?? new List<SubjectListViewModel>();
+    var teacherClasses = ViewBag.TeacherClasses as List<TeacherClassViewModel> ?? new List<TeacherClassViewModel>();
+    var allSubjects = ViewBag.AllSubjects as List<SelectListItem> ?? new List<SelectListItem>();
+    var allClasses = ViewBag.AllClasses as List<SelectListItem> ?? new List<SelectListItem>();
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Əsas Məlumatlar Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Müəllim Redaktə Et</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Cari Şəkil -->
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="alert alert-info mb-4">
+                                <h6 class="mb-3">Cari Profil Şəkli:</h6>
+                                <div class="d-flex align-items-center">
+                                    <img src="@Model.ImagePath" alt="Profil"
+                                         class="rounded-circle me-3" style="width: 100px; height: 100px; object-fit: cover;" />
+                                    <form asp-action="DeleteImage" asp-route-id="@Model.Id"
+                                          method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Şəkli silmək istədiyinizdən əminsiniz?')">
+                                            <i class="bi bi-trash"></i> Şəkli sil
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Əsas Məlumatlar -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label">
+                                        Ad <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="FirstName" class="form-control"
+                                           placeholder="Məsələn: Əli" autofocus />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label">
+                                        Soyad <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="LastName" class="form-control"
+                                           placeholder="Məsələn: Məmmədov" />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">
+                                        Email <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Email" type="email" class="form-control"
+                                           placeholder="ali.mammadov@example.com" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label">Telefon</label>
+                                    <input asp-for="PhoneNumber" type="tel" class="form-control"
+                                           placeholder="+994 XX XXX XX XX" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Şirkət və İstifadəçi -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-link-45deg"></i> Əlaqələr
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CompanyId" class="form-label">
+                                        Şirkət <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="CompanyId" class="form-select" asp-items="companies">
+                                        <option value="">Şirkət seçin...</option>
+                                    </select>
+                                    <span asp-validation-for="CompanyId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserId" class="form-label">
+                                        İstifadəçi <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="UserId" class="form-select" asp-items="users">
+                                        <option value="">İstifadəçi seçin...</option>
+                                    </select>
+                                    <span asp-validation-for="UserId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Əlavə Məlumatlar -->
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-card-text"></i> Əlavə Məlumatlar
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Specialization" class="form-label">İxtisaslaşma</label>
+                            <input asp-for="Specialization" class="form-control"
+                                   placeholder="Məsələn: Riyaziyyat müəllimi" />
+                            <span asp-validation-for="Specialization" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Biography" class="form-label">Bioqrafiya</label>
+                            <textarea asp-for="Biography" class="form-control" rows="3"
+                                      placeholder="Müəllim haqqında qısa məlumat..."></textarea>
+                            <span asp-validation-for="Biography" class="text-danger"></span>
+                        </div>
+
+                        <!-- Yeni Şəkil -->
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label">Yeni Profil Şəkli</label>
+                            <input asp-for="ImageFile" type="file" class="form-control"
+                                   accept="image/*" />
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                            <small class="text-muted">Maksimum 5MB (JPG, PNG, GIF)</small>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input"
+                                   type="checkbox" role="switch" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                <i class="bi bi-check-circle"></i> Aktiv
+                            </label>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Müəllim Fənləri (TeacherSubject) Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book"></i> Müəllimin Fənləri
+                        <span class="badge bg-light text-dark">@teacherSubjects.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Fənn Əlavə Et Formu -->
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-plus-circle"></i> Yeni Fənn Əlavə Et
+                        </h6>
+                        <form asp-action="AssignSubject" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="teacherId" value="@Model.Id" />
+
+                            <div class="col-md-9">
+                                <select name="subjectId" class="form-select" required>
+                                    <option value="">Fənn seçin...</option>
+                                    @foreach (var subject in allSubjects)
+                                    {
+                                        if (!teacherSubjects.Any(ts => ts.Id.ToString() == subject.Value))
+                                        {
+                                            <option value="@subject.Value">@subject.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="bi bi-plus"></i> Əlavə Et
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Mövcud Fənlər -->
+                    @if (teacherSubjects.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Fənn Adı</th>
+                                        <th>Kod</th>
+                                        <th>Status</th>
+                                        <th style="width: 100px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int subjectIndex = 1;
+                                    }
+                                    @foreach (var subject in teacherSubjects)
+                                    {
+                                        <tr>
+                                            <td>@subjectIndex</td>
+                                            <td><strong>@subject.Name</strong></td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(subject.Code))
+                                                {
+                                                    <code>@subject.Code</code>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (subject.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Deaktiv</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <form asp-action="RemoveSubject" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="teacherId" value="@Model.Id" />
+                                                    <input type="hidden" name="subjectId" value="@subject.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Bu fənni çıxarmaq istədiyinizdən əminsiniz?')"
+                                                            title="Çıxar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        subjectIndex++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu müəllimə hələ fənn təyin edilməyib.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Müəllim Sinifləri (TeacherClass) Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-grid-3x3"></i> Müəllimin Sinifləri
+                        <span class="badge bg-light text-dark">@teacherClasses.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Sinif Əlavə Et Formu -->
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-plus-circle"></i> Yeni Sinif Əlavə Et
+                        </h6>
+                        <form asp-action="AssignClass" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="teacherId" value="@Model.Id" />
+
+                            <div class="col-md-5">
+                                <select name="classId" class="form-select" required>
+                                    <option value="">Sinif seçin...</option>
+                                    @foreach (var classItem in allClasses)
+                                    {
+                                        if (!teacherClasses.Any(tc => tc.ClassId.ToString() == classItem.Value))
+                                        {
+                                            <option value="@classItem.Value">@classItem.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="subjectId" class="form-select">
+                                    <option value="">Fənn seçin (opsional)...</option>
+                                    @foreach (var subject in teacherSubjects)
+                                    {
+                                        <option value="@subject.Id">@subject.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-check form-switch pt-2">
+                                    <input name="isClassLeader" class="form-check-input"
+                                           type="checkbox" role="switch" id="isClassLeaderSwitch" />
+                                    <label class="form-check-label" for="isClassLeaderSwitch">
+                                        Rəhbər
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Mövcud Siniflər -->
+                    @if (teacherClasses.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Sinif</th>
+                                        <th>Fənn</th>
+                                        <th>Şagird Sayı</th>
+                                        <th>Sinif Rəhbəri</th>
+                                        <th style="width: 120px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int classIndex = 1;
+                                    }
+                                    @foreach (var teacherClass in teacherClasses)
+                                    {
+                                        <tr>
+                                            <td>@classIndex</td>
+                                            <td><strong>@teacherClass.ClassName</strong></td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(teacherClass.SubjectName))
+                                                {
+                                                    <span class="badge bg-info">@teacherClass.SubjectName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">@teacherClass.StudentCount</span>
+                                            </td>
+                                            <td>
+                                                @if (teacherClass.IsClassLeader)
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-star-fill"></i> Rəhbər
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Müəllim</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <form asp-action="ToggleClassLeader" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="teacherId" value="@Model.Id" />
+                                                        <input type="hidden" name="classId" value="@teacherClass.ClassId" />
+                                                        <button type="submit" class="btn btn-outline-warning"
+                                                                title="Rəhbər statusunu dəyiş">
+                                                            <i class="bi bi-star"></i>
+                                                        </button>
+                                                    </form>
+
+                                                    <form asp-action="RemoveClass" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="teacherId" value="@Model.Id" />
+                                                        <input type="hidden" name="classId" value="@teacherClass.ClassId" />
+                                                        <button type="submit" class="btn btn-outline-danger"
+                                                                onclick="return confirm('Bu sinfi çıxarmaq istədiyinizdən əminsiniz?')"
+                                                                title="Çıxar">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        classIndex++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu müəllimə hələ sinif təyin edilməyib.
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

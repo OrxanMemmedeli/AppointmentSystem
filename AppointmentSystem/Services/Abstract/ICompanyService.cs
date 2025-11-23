@@ -82,4 +82,55 @@ public interface ICompanyService
     /// Aktiv şirkətlərin kart məlumatlarını gətirir (public seçim səhifəsi üçün)
     /// </summary>
     Task<List<CompanyCardViewModel>> GetCompanyCardsAsync();
+
+    #region CompanySubject Management (Junction Table)
+
+    /// <summary>Şirkətin fənlərini gətirir</summary>
+    Task<List<SubjectListViewModel>> GetCompanySubjectsAsync(Guid companyId);
+
+    /// <summary>Şirkətə fənn əlavə edir</summary>
+    Task<(bool Success, string? ErrorMessage)> AssignSubjectToCompanyAsync(
+        Guid companyId,
+        Guid subjectId,
+        Guid currentUserId);
+
+    /// <summary>Şirkətdən fənni çıxarır</summary>
+    Task<(bool Success, string? ErrorMessage)> RemoveSubjectFromCompanyAsync(
+        Guid companyId,
+        Guid subjectId,
+        Guid currentUserId);
+
+    /// <summary>Fənnin şirkətdə olub-olmadığını yoxlayır</summary>
+    Task<bool> IsSubjectAssignedToCompanyAsync(Guid companyId, Guid subjectId);
+
+    #endregion
+
+    #region CompanyUser Management (Junction Table)
+
+    /// <summary>Şirkətin istifadəçilərini (manager-lərini) gətirir</summary>
+    Task<List<CompanyUserListViewModel>> GetCompanyUsersAsync(Guid companyId);
+
+    /// <summary>Şirkətə istifadəçi (manager) əlavə edir</summary>
+    Task<(bool Success, string? ErrorMessage)> AssignUserToCompanyAsync(
+        Guid companyId,
+        Guid userId,
+        bool isManager,
+        Guid currentUserId);
+
+    /// <summary>Şirkətdən istifadəçini çıxarır</summary>
+    Task<(bool Success, string? ErrorMessage)> RemoveUserFromCompanyAsync(
+        Guid companyId,
+        Guid userId,
+        Guid currentUserId);
+
+    /// <summary>İstifadəçinin manager statusunu dəyişir</summary>
+    Task<(bool Success, string? ErrorMessage)> ToggleManagerStatusAsync(
+        Guid companyId,
+        Guid userId,
+        Guid currentUserId);
+
+    /// <summary>İstifadəçinin şirkətdə olub-olmadığını yoxlayır</summary>
+    Task<bool> IsUserAssignedToCompanyAsync(Guid companyId, Guid userId);
+
+    #endregion
 }

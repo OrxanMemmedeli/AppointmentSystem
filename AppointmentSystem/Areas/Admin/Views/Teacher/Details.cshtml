@@ -1,0 +1,390 @@
+﻿@model TeacherDetailsViewModel
+@{
+    ViewData["Title"] = "Müəllim Detayları";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-person-badge"></i> Müəllim Detayları
+                        </h4>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-pencil"></i> Redaktə
+                            </a>
+                            <a asp-action="Index" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Geri
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Profil Şəkli və Əsas Məlumatlar -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <img src="@Model.ImagePath" alt="@Model.FullName"
+                                     class="img-fluid rounded-circle shadow" style="max-width: 200px;" />
+                            }
+                            else
+                            {
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                                     style="width: 150px; height: 150px; font-size: 4rem;">
+                                    @Model.FirstName.Substring(0, 1)@Model.LastName.Substring(0, 1)
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="mb-3">@Model.FullName</h2>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success mb-3">Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger mb-3">Deaktiv</span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Specialization))
+                            {
+                                <p class="text-muted mb-2">
+                                    <i class="bi bi-briefcase"></i> <strong>İxtisaslaşma:</strong> @Model.Specialization
+                                </p>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Biography))
+                            {
+                                <p class="text-muted">@Model.Biography</p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Əsas Məlumatlar -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-info-circle"></i> Əsas Məlumatlar
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-envelope"></i> Email:
+                                    </td>
+                                    <td>
+                                        <a href="mailto:@Model.Email">@Model.Email</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-telephone"></i> Telefon:
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                        {
+                                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-building"></i> Şirkət:
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Company" asp-action="Details"
+                                           asp-route-id="@Model.CompanyId">
+                                            @Model.CompanyName
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 150px;">
+                                        <i class="bi bi-person"></i> İstifadəçi:
+                                    </td>
+                                    <td>@Model.UserName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <i class="bi bi-calendar-plus"></i> Yaradılma:
+                                    </td>
+                                    <td>@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                @if (Model.ModifiedDate.HasValue)
+                                {
+                                    <tr>
+                                        <td class="text-muted">
+                                            <i class="bi bi-calendar-check"></i> Dəyişdirilmə:
+                                        </td>
+                                        <td>@Model.ModifiedDate.Value.ToString("dd.MM.yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Statistika -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-bar-chart"></i> Statistika
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-book text-info" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Fənlər</h6>
+                                    <strong class="fs-4">@Model.SubjectCount</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-grid-3x3 text-warning" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Siniflər</h6>
+                                    <strong class="fs-4">@Model.ClassCount</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-event text-success" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 mb-1">Görüşlər</h6>
+                                    <strong class="fs-4">@Model.MeetingCount</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Müəllimin Fənləri -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-book"></i> Tədris Etdiyi Fənlər
+                        <span class="badge bg-info">@Model.Subjects.Count</span>
+                    </h5>
+
+                    @if (Model.Subjects.Any())
+                    {
+                        <div class="row mb-4">
+                            @foreach (var subject in Model.Subjects)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-info">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-journal-text text-info"></i>
+                                                @subject.Name
+                                            </h6>
+                                            @if (!string.IsNullOrEmpty(subject.Code))
+                                            {
+                                                <p class="card-text text-muted small mb-0">
+                                                    <code>@subject.Code</code>
+                                                </p>
+                                            }
+                                            @if (!string.IsNullOrEmpty(subject.Description))
+                                            {
+                                                <p class="card-text small text-muted">@subject.Description</p>
+                                            }
+                                            @if (subject.IsActive)
+                                            {
+                                                <span class="badge bg-success">Aktiv</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Deaktiv</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Bu müəllimə hələ fənn təyin edilməyib.
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="alert-link">
+                                Fənn əlavə et
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Müəllimin Sinifləri -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-grid-3x3"></i> Tədris Etdiyi Siniflər
+                        <span class="badge bg-warning text-dark">@Model.Classes.Count</span>
+                    </h5>
+
+                    @if (Model.Classes.Any())
+                    {
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sinif</th>
+                                        <th>Fənn</th>
+                                        <th>Şagird Sayı</th>
+                                        <th>Rol</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var teacherClass in Model.Classes)
+                                    {
+                                        <tr>
+                                            <td><strong>@teacherClass.ClassName</strong></td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(teacherClass.SubjectName))
+                                                {
+                                                    <span class="badge bg-info">@teacherClass.SubjectName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-people"></i> @teacherClass.StudentCount
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (teacherClass.IsClassLeader)
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-star-fill"></i> Sinif Rəhbəri
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Müəllim</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (teacherClass.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Deaktiv</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Bu müəllimə hələ sinif təyin edilməyib.
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="alert-link">
+                                Sinif əlavə et
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Son Görüşlər -->
+                    @if (Model.RecentMeetings.Any())
+                    {
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-calendar-event"></i> Son Görüşlər
+                            <span class="badge bg-success">@Model.RecentMeetings.Count</span>
+                        </h5>
+
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tarix</th>
+                                        <th>Saat</th>
+                                        <th>Valideyn</th>
+                                        <th>Şagird</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var meeting in Model.RecentMeetings)
+                                    {
+                                        <tr>
+                                            <td>@meeting.MeetingDate.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                <small>
+                                                    @meeting.StartTime.ToString(@"hh\:mm") -
+                                                    @meeting.EndTime.ToString(@"hh\:mm")
+                                                </small>
+                                            </td>
+                                            <td>@meeting.ParentName</td>
+                                            <td>@meeting.StudentName</td>
+                                            <td>
+                                                @switch (meeting.Status)
+                                                {
+                                                    case AppointmentSystem.Models.Enums.MeetingStatus.Pending:
+                                                        <span class="badge bg-warning text-dark">Gözləyir</span>
+                                                        break;
+                                                    case AppointmentSystem.Models.Enums.MeetingStatus.Approved:
+                                                        <span class="badge bg-info">Təsdiqləndi</span>
+                                                        break;
+                                                    case AppointmentSystem.Models.Enums.MeetingStatus.Completed:
+                                                        <span class="badge bg-success">Tamamlandı</span>
+                                                        break;
+                                                    case AppointmentSystem.Models.Enums.MeetingStatus.Cancelled:
+                                                        <span class="badge bg-danger">Ləğv edildi</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">Naməlum</span>
+                                                        break;
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <!-- Əməliyyatlar -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Geri
+                        </a>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Redaktə Et
+                            </a>
+                            <form asp-action="ToggleStatus" asp-route-id="@Model.Id"
+                                  method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-@(Model.IsActive ? "pause" : "play")-circle"></i>
+                                    @(Model.IsActive ? "Deaktiv Et" : "Aktiv Et")
+                                </button>
+                            </form>
+                            <a asp-action="Delete" asp-route-id="@Model.Id"
+                               class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

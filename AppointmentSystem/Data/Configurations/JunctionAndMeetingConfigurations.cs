@@ -80,23 +80,23 @@ public class TeacherClassConfiguration : AuditableEntityConfiguration<TeacherCla
     }
 }
 
-public class InstitutionUserConfiguration : AuditableEntityConfiguration<InstitutionUser>
+public class CompanyUserConfiguration : AuditableEntityConfiguration<CompanyUser>
 {
-    public override void Configure(EntityTypeBuilder<InstitutionUser> builder)
+    public override void Configure(EntityTypeBuilder<CompanyUser> builder)
     {
         base.Configure(builder);
 
-        builder.ToTable("InstitutionUsers");
+        builder.ToTable("CompanyUsers");
 
         builder.HasIndex(e => new { e.CompanyId, e.UserId }).IsUnique();
 
         builder.HasOne(e => e.Company)
-            .WithMany(c => c.InstitutionUsers)
+            .WithMany(c => c.CompanyUsers)
             .HasForeignKey(e => e.CompanyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.User)
-            .WithMany(u => u.InstitutionUsers)
+            .WithMany(u => u.CompanyUsers)
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }

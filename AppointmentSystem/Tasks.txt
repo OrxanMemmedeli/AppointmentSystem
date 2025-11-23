@@ -40,3 +40,28 @@ Modul Planı (Prioritet üzrə):1️⃣ Əsas Strukturlar (Foundation)
 ✅ Attendance - Davamiyyət
 ✅ Behavior - Davranış
 ✅ HomeworkAssignment - Ev tapşırığı
+
+----------------
+6SubjectCore❌ YoxdurP0URGENT
+7TeacherCore❌ YoxdurP0URGENT
+8MeetingCore❌ YoxdurP1Complex - sonra
+9UserIdentity❌ YoxdurP1Identity system
+10RoleIdentity❌ YoxdurP1Identity system
+11PermissionIdentity❌ YoxdurP1Identity system
+12MenuIdentity❌ YoxdurP2Admin panel navigation
+13UserTypeLookup❌ YoxdurP2Simple lookup
+14CompanySettingConfig❌ YoxdurP2Advanced feature
+15InstitutionUserJunction❌ YoxdurP3Company-dan idarə
+
+🚫 JUNCTION TABLES - AYRICA UI LAZIM DEYİL:
+
+StudentParent → Student və Parent-dən idarə olunur
+CompanySubject → Company və Subject-dən idarə olunur
+CompanyUser → Company-dən idarə olunur (manager assignment)
+TeacherSubject → Teacher və Subject-dən idarə olunur
+TeacherClass → Teacher və SchoolClass-dan idarə olunur
+UserRole → User və Role-dan idarə olunur
+UserPermission → User-dən idarə olunur
+UserMenu → User-dən idarə olunur
+RolePermission → Role-dan idarə olunur
+RoleMenu → Role-dan idarə olunur

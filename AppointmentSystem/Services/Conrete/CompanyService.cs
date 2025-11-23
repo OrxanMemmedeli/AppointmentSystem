@@ -641,4 +641,269 @@ public class CompanyService : ICompanyService
             .OrderBy(c => c.Name)
             .ToListAsync();
     }
+
+
+    #region CompanySubject Management
+
+    /// <summary>Şirkətin fənlərini gətirir</summary>
+    public async Task<List<SubjectListViewModel>> GetCompanySubjectsAsync(Guid companyId)
+    {
+        return await _context.CompanySubjects
+            .AsNoTracking()
+            .Where(cs => cs.CompanyId == companyId && !cs.IsDeleted)
+            .Select(cs => new SubjectListViewModel
+            {
+                Id = cs.SubjectId,
+                Name = cs.Subject.Name,
+                Code = cs.Subject.Code,
+                Description = cs.Subject.Description,
+                IsActive = cs.Subject.IsActive,
+                TeacherCount = cs.Subject.TeacherSubjects.Count(ts => !ts.IsDeleted),
+                CompanyCount = cs.Subject.CompanySubjects.Count(ccs => !ccs.IsDeleted),
+                CreatedDate = cs.Subject.CreatedDate
+            })
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+    }
+
+    /// <summary>Şirkətə fənn əlavə edir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> AssignSubjectToCompanyAsync(
+        Guid companyId,
+        Guid subjectId,
+        Guid currentUserId)
+    {
+        try
+        {
+            // Əlaqənin mövcudluğunu yoxla
+            var exists = await _context.CompanySubjects
+                .AnyAsync(cs => cs.CompanyId == companyId && cs.SubjectId == subjectId && !cs.IsDeleted);
+
+            if (exists)
+            {
+                return (false, "Bu fənn artıq şirkətə əlavə edilib");
+            }
+
+            var companySubject = new CompanySubject
+            {
+                Id = Guid.NewGuid(),
+                CompanyId = companyId,
+                SubjectId = subjectId,
+                IsActive = true,
+                CreatedDate = DateTime.Now,
+                CreatedById = currentUserId
+            };
+
+            _context.CompanySubjects.Add(companySubject);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkətə fənn əlavə edildi: CompanyId={CompanyId}, SubjectId={SubjectId}",
+                companyId, subjectId);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkətə fənn əlavə edilərkən xəta: CompanyId={CompanyId}, SubjectId={SubjectId}",
+                companyId, subjectId);
+            return (false, "Fənn əlavə edilərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Şirkətdən fənni çıxarır</summary>
+    public async Task<(bool Success, string? ErrorMessage)> RemoveSubjectFromCompanyAsync(
+        Guid companyId,
+        Guid subjectId,
+        Guid currentUserId)
+    {
+        try
+        {
+            var companySubject = await _context.CompanySubjects
+                .FirstOrDefaultAsync(cs => cs.CompanyId == companyId && cs.SubjectId == subjectId && !cs.IsDeleted);
+
+            if (companySubject == null)
+            {
+                return (false, "Bu fənn şirkətdə tapılmadı");
+            }
+
+            companySubject.IsDeleted = true;
+            companySubject.ModifiedDate = DateTime.Now;
+            companySubject.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkətdən fənn çıxarıldı: CompanyId={CompanyId}, SubjectId={SubjectId}",
+                companyId, subjectId);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkətdən fənn çıxarılarkən xəta: CompanyId={CompanyId}, SubjectId={SubjectId}",
+                companyId, subjectId);
+            return (false, "Fənn çıxarılarkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Fənnin şirkətdə olub-olmadığını yoxlayır</summary>
+    public async Task<bool> IsSubjectAssignedToCompanyAsync(Guid companyId, Guid subjectId)
+    {
+        return await _context.CompanySubjects
+            .AnyAsync(cs => cs.CompanyId == companyId && cs.SubjectId == subjectId && !cs.IsDeleted);
+    }
+
+    #endregion
+
+    #region CompanyUser Management
+
+    /// <summary>Şirkətin istifadəçilərini gətirir</summary>
+    public async Task<List<CompanyUserListViewModel>> GetCompanyUsersAsync(Guid companyId)
+    {
+        return await _context.CompanyUsers
+            .AsNoTracking()
+            .Where(cu => cu.CompanyId == companyId && !cu.IsDeleted)
+            .Select(cu => new CompanyUserListViewModel
+            {
+                Id = cu.Id,
+                CompanyId = cu.CompanyId,
+                CompanyName = cu.Company.Name,
+                UserId = cu.UserId,
+                UserName = cu.User.UserName,
+                UserFullName = cu.User.FirstName + " " + cu.User.LastName,
+                UserEmail = cu.User.Email,
+                IsManager = cu.IsManager,
+                IsActive = cu.IsActive,
+                CreatedDate = cu.CreatedDate
+            })
+            .OrderBy(cu => cu.UserFullName)
+            .ToListAsync();
+    }
+
+    /// <summary>Şirkətə istifadəçi əlavə edir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> AssignUserToCompanyAsync(
+        Guid companyId,
+        Guid userId,
+        bool isManager,
+        Guid currentUserId)
+    {
+        try
+        {
+            // Əlaqənin mövcudluğunu yoxla
+            var exists = await _context.CompanyUsers
+                .AnyAsync(cu => cu.CompanyId == companyId && cu.UserId == userId && !cu.IsDeleted);
+
+            if (exists)
+            {
+                return (false, "Bu istifadəçi artıq şirkətə əlavə edilib");
+            }
+
+            var companyUser = new CompanyUser
+            {
+                Id = Guid.NewGuid(),
+                CompanyId = companyId,
+                UserId = userId,
+                IsManager = isManager,
+                IsActive = true,
+                CreatedDate = DateTime.Now,
+                CreatedById = currentUserId
+            };
+
+            _context.CompanyUsers.Add(companyUser);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkətə istifadəçi əlavə edildi: CompanyId={CompanyId}, UserId={UserId}, IsManager={IsManager}",
+                companyId, userId, isManager);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkətə istifadəçi əlavə edilərkən xəta: CompanyId={CompanyId}, UserId={UserId}",
+                companyId, userId);
+            return (false, "İstifadəçi əlavə edilərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Şirkətdən istifadəçini çıxarır</summary>
+    public async Task<(bool Success, string? ErrorMessage)> RemoveUserFromCompanyAsync(
+        Guid companyId,
+        Guid userId,
+        Guid currentUserId)
+    {
+        try
+        {
+            var companyUser = await _context.CompanyUsers
+                .FirstOrDefaultAsync(cu => cu.CompanyId == companyId && cu.UserId == userId && !cu.IsDeleted);
+
+            if (companyUser == null)
+            {
+                return (false, "Bu istifadəçi şirkətdə tapılmadı");
+            }
+
+            companyUser.IsDeleted = true;
+            companyUser.ModifiedDate = DateTime.Now;
+            companyUser.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Şirkətdən istifadəçi çıxarıldı: CompanyId={CompanyId}, UserId={UserId}",
+                companyId, userId);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkətdən istifadəçi çıxarılarkən xəta: CompanyId={CompanyId}, UserId={UserId}",
+                companyId, userId);
+            return (false, "İstifadəçi çıxarılarkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>İstifadəçinin manager statusunu dəyişir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> ToggleManagerStatusAsync(
+        Guid companyId,
+        Guid userId,
+        Guid currentUserId)
+    {
+        try
+        {
+            var companyUser = await _context.CompanyUsers
+                .FirstOrDefaultAsync(cu => cu.CompanyId == companyId && cu.UserId == userId && !cu.IsDeleted);
+
+            if (companyUser == null)
+            {
+                return (false, "Bu istifadəçi şirkətdə tapılmadı");
+            }
+
+            companyUser.IsManager = !companyUser.IsManager;
+            companyUser.ModifiedDate = DateTime.Now;
+            companyUser.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "İstifadəçinin manager statusu dəyişdi: CompanyId={CompanyId}, UserId={UserId}, IsManager={IsManager}",
+                companyId, userId, companyUser.IsManager);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Manager statusu dəyişərkən xəta: CompanyId={CompanyId}, UserId={UserId}",
+                companyId, userId);
+            return (false, "Status dəyişərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>İstifadəçinin şirkətdə olub-olmadığını yoxlayır</summary>
+    public async Task<bool> IsUserAssignedToCompanyAsync(Guid companyId, Guid userId)
+    {
+        return await _context.CompanyUsers
+            .AnyAsync(cu => cu.CompanyId == companyId && cu.UserId == userId && !cu.IsDeleted);
+    }
+
+    #endregion
 }

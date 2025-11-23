@@ -14,14 +14,20 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 public class CompanyController : Controller
 {
     private readonly ICompanyService _companyService;
+    private readonly ISubjectService _subjectService;
+    private readonly IUserService _userService;
     private readonly ILogger<CompanyController> _logger;
 
     public CompanyController(
         ICompanyService companyService,
-        ILogger<CompanyController> logger)
+        ILogger<CompanyController> logger,
+        ISubjectService subjectService,
+        IUserService userService)
     {
         _companyService = companyService;
         _logger = logger;
+        _subjectService = subjectService;
+        _userService = userService;
     }
 
     /// <summary>Şirkət siyahısı</summary>
@@ -42,6 +48,11 @@ public class CompanyController : Controller
             TempData["ErrorMessage"] = "Şirkət tapılmadı";
             return RedirectToAction(nameof(Index));
         }
+
+        // Junction table məlumatlarını da yüklə
+        ViewBag.CompanySubjects = await _companyService.GetCompanySubjectsAsync(id);
+        ViewBag.CompanyUsers = await _companyService.GetCompanyUsersAsync(id);
+
 
         return View(company);
     }
@@ -88,6 +99,14 @@ public class CompanyController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        // Junction table məlumatlarını yüklə
+        ViewBag.CompanySubjects = await _companyService.GetCompanySubjectsAsync(id);
+        ViewBag.CompanyUsers = await _companyService.GetCompanyUsersAsync(id);
+
+        // Dropdown üçün bütün fənləri və istifadəçiləri yüklə
+        ViewBag.AllSubjects = await _subjectService.GetSubjectSelectListAsync();
+        ViewBag.AllUsers = await _userService.GetUserSelectListAsync();
+
         return View(company);
     }
 
@@ -98,6 +117,12 @@ public class CompanyController : Controller
     {
         if (!ModelState.IsValid)
         {
+            // Junction table məlumatlarını yenidən yüklə
+            ViewBag.CompanySubjects = await _companyService.GetCompanySubjectsAsync(model.Id.Value);
+            ViewBag.CompanyUsers = await _companyService.GetCompanyUsersAsync(model.Id.Value);
+            ViewBag.AllSubjects = await _subjectService.GetSubjectSelectListAsync();
+            ViewBag.AllUsers = await _userService.GetUserSelectListAsync();
+
             return View(model);
         }
 
@@ -108,6 +133,13 @@ public class CompanyController : Controller
         if (!success)
         {
             ModelState.AddModelError(string.Empty, errorMessage ?? "Şirkət yenilənərkən xəta baş verdi");
+
+            // Junction table məlumatlarını yenidən yüklə
+            ViewBag.CompanySubjects = await _companyService.GetCompanySubjectsAsync(model.Id.Value);
+            ViewBag.CompanyUsers = await _companyService.GetCompanyUsersAsync(model.Id.Value);
+            ViewBag.AllSubjects = await _subjectService.GetSubjectSelectListAsync();
+            ViewBag.AllUsers = await _userService.GetUserSelectListAsync();
+
             return View(model);
         }
 
@@ -177,6 +209,25 @@ public class CompanyController : Controller
         return RedirectToAction(nameof(Edit), new { id });
     }
 
+    /// <summary>Background şəkli silir</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteBackgroundImage(Guid id)
+    {
+        var (success, errorMessage) = await _companyService.DeleteBackgroundImageAsync(id);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "Background şəkil silinərkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "Background şəkil uğurla silindi";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
     /// <summary>Şirkət silmə təsdiq səhifəsi</summary>
     [HttpGet]
     public async Task<IActionResult> Delete(Guid id)
@@ -219,22 +270,134 @@ public class CompanyController : Controller
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
-    /// <summary>Background şəkli silir</summary>
+    #region CompanySubject Management (Junction Table)
+
+    /// <summary>Şirkətin fənlərini gətirir (AJAX)</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetCompanySubjects(Guid companyId)
+    {
+        var subjects = await _companyService.GetCompanySubjectsAsync(companyId);
+        return Json(subjects);
+    }
+
+    /// <summary>Şirkətə fənn əlavə edir</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteBackgroundImage(Guid id)
+    public async Task<IActionResult> AssignSubject(Guid companyId, Guid subjectId)
     {
-        var (success, errorMessage) = await _companyService.DeleteBackgroundImageAsync(id);
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) =
+            await _companyService.AssignSubjectToCompanyAsync(companyId, subjectId, currentUserId);
 
         if (!success)
         {
-            TempData["ErrorMessage"] = errorMessage ?? "Background şəkil silinərkən xəta baş verdi";
+            TempData["ErrorMessage"] = errorMessage ?? "Fənn əlavə edilərkən xəta baş verdi";
         }
         else
         {
-            TempData["SuccessMessage"] = "Background şəkil uğurla silindi";
+            TempData["SuccessMessage"] = "Fənn uğurla əlavə edildi";
         }
 
-        return RedirectToAction(nameof(Edit), new { id });
+        return RedirectToAction(nameof(Edit), new { id = companyId });
     }
+
+    /// <summary>Şirkətdən fənni çıxarır</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveSubject(Guid companyId, Guid subjectId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) =
+            await _companyService.RemoveSubjectFromCompanyAsync(companyId, subjectId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "Fənn çıxarılarkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "Fənn uğurla çıxarıldı";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = companyId });
+    }
+
+    #endregion
+
+    #region CompanyUser Management (Junction Table)
+
+    /// <summary>Şirkətin istifadəçilərini gətirir (AJAX)</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetCompanyUsers(Guid companyId)
+    {
+        var users = await _companyService.GetCompanyUsersAsync(companyId);
+        return Json(users);
+    }
+
+    /// <summary>Şirkətə istifadəçi (manager) əlavə edir</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignUser(Guid companyId, Guid userId, bool isManager = false)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) =
+            await _companyService.AssignUserToCompanyAsync(companyId, userId, isManager, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İstifadəçi əlavə edilərkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İstifadəçi uğurla əlavə edildi";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = companyId });
+    }
+
+    /// <summary>Şirkətdən istifadəçini çıxarır</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveUser(Guid companyId, Guid userId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) =
+            await _companyService.RemoveUserFromCompanyAsync(companyId, userId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İstifadəçi çıxarılarkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İstifadəçi uğurla çıxarıldı";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = companyId });
+    }
+
+    /// <summary>İstifadəçinin manager statusunu dəyişir</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleManagerStatus(Guid companyId, Guid userId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) =
+            await _companyService.ToggleManagerStatusAsync(companyId, userId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "Manager statusu dəyişərkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "Manager statusu uğurla dəyişdirildi";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = companyId });
+    }
+
+    #endregion
+
+
 }

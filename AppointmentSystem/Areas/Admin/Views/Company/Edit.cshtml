@@ -1,12 +1,17 @@
 ﻿@model CompanyViewModel
 @{
     ViewData["Title"] = "Şirkət Redaktəsi";
+    var companySubjects = ViewBag.CompanySubjects as List<SubjectListViewModel> ?? new List<SubjectListViewModel>();
+    var companyUsers = ViewBag.CompanyUsers as List<CompanyUserListViewModel> ?? new List<CompanyUserListViewModel>();
+    var allSubjects = ViewBag.AllSubjects as List<SelectListItem> ?? new List<SelectListItem>();
+    var allUsers = ViewBag.AllUsers as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card shadow-sm">
+            <!-- Əsas Məlumatlar Card -->
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark">
                     <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Şirkət/Məktəb Redaktə Et</h4>
                 </div>
@@ -270,6 +275,271 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Şirkət Fənləri (CompanySubject) Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book"></i> Şirkət Fənləri
+                        <span class="badge bg-light text-dark">@companySubjects.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Fənn Əlavə Et Formu -->
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-plus-circle"></i> Yeni Fənn Əlavə Et
+                        </h6>
+                        <form asp-action="AssignSubject" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="companyId" value="@Model.Id" />
+
+                            <div class="col-md-9">
+                                <select name="subjectId" class="form-select" required>
+                                    <option value="">Fənn seçin...</option>
+                                    @foreach (var subject in allSubjects)
+                                    {
+                                        // Artıq əlavə edilmiş fənləri göstərmə
+                                        if (!companySubjects.Any(cs => cs.Id.ToString() == subject.Value))
+                                        {
+                                            <option value="@subject.Value">@subject.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus"></i> Əlavə Et
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Mövcud Fənlər -->
+                    @if (companySubjects.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Fənn Adı</th>
+                                        <th>Kod</th>
+                                        <th>Təsvir</th>
+                                        <th style="width: 100px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int subjectIndex = 1;
+                                    }
+                                    @foreach (var subject in companySubjects)
+                                    {
+                                        <tr>
+                                            <td>@subjectIndex</td>
+                                            <td>
+                                                <strong>@subject.Name</strong>
+                                                @if (subject.IsActive)
+                                                {
+                                                    <span class="badge bg-success ms-2">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger ms-2">Deaktiv</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(subject.Code))
+                                                {
+                                                    <code>@subject.Code</code>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    @(subject.Description ?? "-")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <form asp-action="RemoveSubject" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="companyId" value="@Model.Id" />
+                                                    <input type="hidden" name="subjectId" value="@subject.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Bu fənni çıxarmaq istədiyinizdən əminsiniz?')"
+                                                            title="Çıxar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        subjectIndex++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ fənn əlavə edilməyib.
+                            Yuxarıdakı formdan fənn əlavə edə bilərsiniz.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Şirkət İstifadəçiləri (CompanyUser) Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Şirkət İstifadəçiləri (Manager-lər)
+                        <span class="badge bg-light text-dark">@companyUsers.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- İstifadəçi Əlavə Et Formu -->
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-person-plus"></i> Yeni İstifadəçi Əlavə Et
+                        </h6>
+                        <form asp-action="AssignUser" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="companyId" value="@Model.Id" />
+
+                            <div class="col-md-7">
+                                <select name="userId" class="form-select" required>
+                                    <option value="">İstifadəçi seçin...</option>
+                                    @foreach (var user in allUsers)
+                                    {
+                                        // Artıq əlavə edilmiş istifadəçiləri göstərmə
+                                        if (!companyUsers.Any(cu => cu.UserId.ToString() == user.Value))
+                                        {
+                                            <option value="@user.Value">@user.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check form-switch pt-2">
+                                    <input name="isManager" class="form-check-input"
+                                           type="checkbox" role="switch" id="isManagerSwitch" />
+                                    <label class="form-check-label" for="isManagerSwitch">
+                                        Manager statusu
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-plus"></i> Əlavə Et
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Mövcud İstifadəçilər -->
+                    @if (companyUsers.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>İstifadəçi</th>
+                                        <th>Email</th>
+                                        <th>Manager</th>
+                                        <th>Status</th>
+                                        <th style="width: 120px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int userIndex = 1;
+                                    }
+                                    @foreach (var user in companyUsers)
+                                    {
+                                        <tr>
+                                            <td>@userIndex</td>
+                                            <td>
+                                                <strong>@user.UserFullName</strong><br />
+                                                <small class="text-muted">@user.UserName</small>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(user.UserEmail))
+                                                {
+                                                    <a href="mailto:@user.UserEmail">@user.UserEmail</a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.IsManager)
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-star-fill"></i> Manager
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">İstifadəçi</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Deaktiv</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <form asp-action="ToggleManagerStatus" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="companyId" value="@Model.Id" />
+                                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                                        <button type="submit" class="btn btn-outline-warning"
+                                                                title="Manager statusunu dəyiş">
+                                                            <i class="bi bi-star"></i>
+                                                        </button>
+                                                    </form>
+
+                                                    <form asp-action="RemoveUser" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="companyId" value="@Model.Id" />
+                                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                                        <button type="submit" class="btn btn-outline-danger"
+                                                                onclick="return confirm('Bu istifadəçini çıxarmaq istədiyinizdən əminsiniz?')"
+                                                                title="Çıxar">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        userIndex++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ istifadəçi əlavə edilməyib.
+                            Yuxarıdakı formdan istifadəçi əlavə edə bilərsiniz.
+                        </div>
+                    }
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -1,6 +1,8 @@
 ﻿@model CompanyViewModel
 @{
     ViewData["Title"] = "Şirkət Detayları";
+    var companySubjects = ViewBag.CompanySubjects as List<SubjectListViewModel> ?? new List<SubjectListViewModel>();
+    var companyUsers = ViewBag.CompanyUsers as List<CompanyUserListViewModel> ?? new List<CompanyUserListViewModel>();
 }
 
 <div class="container py-4">
@@ -190,6 +192,115 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Şirkət Fənləri -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-book"></i> Şirkət Fənləri
+                        <span class="badge bg-primary">@companySubjects.Count</span>
+                    </h5>
+
+                    @if (companySubjects.Any())
+                    {
+                        <div class="row mb-4">
+                            @foreach (var subject in companySubjects)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-journal-text text-primary"></i>
+                                                @subject.Name
+                                            </h6>
+                                            @if (!string.IsNullOrEmpty(subject.Code))
+                                            {
+                                                <p class="card-text text-muted small mb-0">
+                                                    <code>@subject.Code</code>
+                                                </p>
+                                            }
+                                            @if (!string.IsNullOrEmpty(subject.Description))
+                                            {
+                                                <p class="card-text small text-muted">@subject.Description</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ fənn əlavə edilməyib.
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="alert-link">
+                                Fənn əlavə et
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Şirkət İstifadəçiləri (Manager-lər) -->
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-people"></i> Şirkət İstifadəçiləri
+                        <span class="badge bg-success">@companyUsers.Count</span>
+                    </h5>
+
+                    @if (companyUsers.Any())
+                    {
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>İstifadəçi</th>
+                                        <th>Email</th>
+                                        <th>Manager</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in companyUsers)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@user.UserFullName</strong><br />
+                                                <small class="text-muted">@user.UserName</small>
+                                            </td>
+                                            <td>@user.UserEmail</td>
+                                            <td>
+                                                @if (user.IsManager)
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-star-fill"></i> Manager
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">İstifadəçi</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Deaktiv</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ istifadəçi əlavə edilməyib.
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="alert-link">
+                                İstifadəçi əlavə et
+                            </a>
+                        </div>
+                    }
 
                     <!-- Xəritə -->
                     @if (!string.IsNullOrEmpty(Model.MapUrl))

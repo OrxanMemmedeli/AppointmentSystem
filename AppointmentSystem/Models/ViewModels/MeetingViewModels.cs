@@ -77,20 +77,20 @@ public class MeetingDetailsViewModel
 /// <summary>
 /// Görüş siyahısı ViewModel
 /// </summary>
-public class MeetingListViewModel
-{
-    public Guid Id { get; set; }
-    public DateTime MeetingDate { get; set; }
-    public TimeSpan StartTime { get; set; }
-    public TimeSpan EndTime { get; set; }
-    public MeetingStatus Status { get; set; }
-    public string StatusText { get; set; } = string.Empty;
-    public string TeacherName { get; set; } = string.Empty;
-    public string StudentName { get; set; } = string.Empty;
-    public string? ClassName { get; set; }
-    public bool CanCancel { get; set; }
-    public bool CanApprove { get; set; }
-}
+//public class MeetingListViewModel
+//{
+//    public Guid Id { get; set; }
+//    public DateTime MeetingDate { get; set; }
+//    public TimeSpan StartTime { get; set; }
+//    public TimeSpan EndTime { get; set; }
+//    public MeetingStatus Status { get; set; }
+//    public string StatusText { get; set; } = string.Empty;
+//    public string TeacherName { get; set; } = string.Empty;
+//    public string StudentName { get; set; } = string.Empty;
+//    public string? ClassName { get; set; }
+//    public bool CanCancel { get; set; }
+//    public bool CanApprove { get; set; }
+//}
 
 /// <summary>
 /// Müəllim təqvim ViewModel

@@ -68,8 +68,5 @@ public class User : AuditableEntity
     /// <summary>Şirkət əlaqələri</summary>
     public virtual ICollection<CompanyUser> CompanyUsers { get; set; } = new HashSet<CompanyUser>();
 
-    /// <summary>Müəssisə istifadəçiləri</summary>
-    public virtual ICollection<InstitutionUser> InstitutionUsers { get; set; } = new HashSet<InstitutionUser>();
-
     #endregion
 }
