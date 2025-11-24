@@ -104,6 +104,34 @@ public class TeacherService : ITeacherService
         }
     }
 
+    /// <summary>
+    /// Şirkətə görə aktiv müəllimləri gətirir (Entity)
+    /// </summary>
+    public async Task<List<Teacher>> GetActiveTeachersAsync(Guid? companyId)
+    {
+        try
+        {
+            var query = _context.Teachers
+                .AsNoTracking()
+                .Where(t => t.IsActive && !t.IsDeleted);
+
+            if (companyId.HasValue)
+            {
+                query = query.Where(t => t.CompanyId == companyId.Value);
+            }
+
+            return await query
+                .OrderBy(t => t.FirstName)
+                .ThenBy(t => t.LastName)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Aktiv müəllimlər yüklənərkən xəta. CompanyId: {CompanyId}", companyId);
+            return new List<Teacher>();
+        }
+    }
+
     /// <summary>Şirkətə görə müəllimləri gətirir</summary>
     public async Task<List<TeacherListViewModel>> GetTeachersByCompanyAsync(Guid companyId)
     {

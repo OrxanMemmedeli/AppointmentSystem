@@ -15,6 +15,9 @@ public interface IParentService
     /// <summary>Aktiv valideynləri gətirir</summary>
     Task<List<ParentListViewModel>> GetActiveParentsAsync();
 
+    /// <summary>Şirkətə görə aktiv valideynləri gətirir (Entity)</summary>
+    Task<List<Parent>> GetActiveParentsAsync(Guid? companyId);
+
     /// <summary>Şirkətə görə valideynləri gətirir</summary>
     Task<List<ParentListViewModel>> GetParentsByCompanyAsync(Guid companyId);
 

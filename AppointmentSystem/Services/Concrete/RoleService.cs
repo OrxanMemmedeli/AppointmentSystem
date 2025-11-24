@@ -4,7 +4,7 @@ using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 using AppointmentSystem.Areas.Admin.Models.ViewModels;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Role idarəetmə servisi implementasiyası

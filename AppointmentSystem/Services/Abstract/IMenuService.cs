@@ -8,24 +8,32 @@ namespace AppointmentSystem.Services.Abstract;
 /// </summary>
 public interface IMenuService
 {
+    #region Query Methods
+
     /// <summary>Bütün menyuları gətirir</summary>
     Task<List<MenuListViewModel>> GetAllMenusAsync();
 
     /// <summary>Root səviyyə menyuları gətirir</summary>
     Task<List<MenuListViewModel>> GetRootMenusAsync();
 
-    /// <summary>Parent ID-yə görə child menyuları gətirir</summary>
+    /// <summary>Child menyuları gətirir</summary>
     Task<List<MenuListViewModel>> GetChildMenusAsync(Guid parentId);
 
-    /// <summary>Iyerarxik menyu ağacı gətirir</summary>
+    /// <summary>İyerarxik menyu ağacı gətirir</summary>
     Task<List<MenuTreeViewModel>> GetMenuTreeAsync();
 
     /// <summary>ID-yə görə menyu gətirir</summary>
     Task<MenuViewModel?> GetMenuByIdAsync(Guid id);
 
+    /// <summary>İstifadəçinin icazəli menyularını gətirir (Role və Permission əsaslı)</summary>
+    Task<List<MenuTreeViewModel>> GetUserMenusWithPermissionsAsync(Guid userId);
+
     /// <summary>Parent menyu seçimləri gətirir</summary>
     Task<List<SelectListItem>> GetParentMenuSelectListAsync(Guid? excludeId = null);
 
+    #endregion
+
+    #region Command Methods
     /// <summary>Yeni menyu yaradır</summary>
     Task<(bool Success, string? ErrorMessage, Guid? MenuId)> CreateMenuAsync(
         MenuViewModel model,
@@ -51,9 +59,17 @@ public interface IMenuService
         List<(Guid Id, int OrderIndex)> menuOrders,
         Guid currentUserId);
 
+
+    #endregion
+
+    #region Validation Methods
+
     /// <summary>Kod unikallığını yoxlayır</summary>
     Task<bool> IsCodeUniqueAsync(string code, Guid? excludeId = null);
 
     /// <summary>İkon siyahısını gətirir</summary>
     List<string> GetAvailableIcons();
+
+    #endregion
+
 }

@@ -5,7 +5,7 @@ using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 public class AuthenticationService : IAuthenticationService
 {

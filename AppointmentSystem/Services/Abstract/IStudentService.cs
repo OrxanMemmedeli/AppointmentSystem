@@ -15,6 +15,9 @@ public interface IStudentService
     /// <summary>Aktiv şagirdləri gətirir</summary>
     Task<List<StudentListViewModel>> GetActiveStudentsAsync();
 
+    /// <summary>Şirkət və valideynə görə aktiv şagirdləri gətirir (Entity)</summary>
+    Task<List<Student>> GetActiveStudentsAsync(Guid? companyId, Guid? parentId);
+
     /// <summary>Şirkətə görə şagirdləri gətirir</summary>
     Task<List<StudentListViewModel>> GetStudentsByCompanyAsync(Guid companyId);
 

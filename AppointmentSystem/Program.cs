@@ -1,6 +1,6 @@
 ﻿using AppointmentSystem.Data;
 using AppointmentSystem.Services.Abstract;
-using AppointmentSystem.Services.Conrete;
+using AppointmentSystem.Services.Concrete;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 
 // Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AppointmentSystem.Data;
 using AppointmentSystem.Services.Abstract;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Cari istifadəçi məlumatları servisi

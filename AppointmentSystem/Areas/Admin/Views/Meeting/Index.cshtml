@@ -1,0 +1,289 @@
+﻿@model AppointmentSystem.Areas.Admin.Models.ViewModels.PaginatedMeetingListViewModel
+@{
+    ViewData["Title"] = "Görüşlər";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-calendar-event me-2"></i>Görüşlər
+            </h2>
+            <p class="text-muted mb-0">Cəmi: @Model.TotalCount görüş</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Yeni Görüş
+        </a>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>Filtrasiya
+            </h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <div class="row g-3">
+                    <!-- Date Range -->
+                    <div class="col-md-3">
+                        <label asp-for="Filter.StartDate" class="form-label">Başlanğıc Tarix</label>
+                        <input asp-for="Filter.StartDate" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Filter.EndDate" class="form-label">Son Tarix</label>
+                        <input asp-for="Filter.EndDate" type="date" class="form-control" />
+                    </div>
+
+                    <!-- Teacher -->
+                    <div class="col-md-3">
+                        <label asp-for="Filter.TeacherId" class="form-label">Müəllim</label>
+                        <select asp-for="Filter.TeacherId" asp-items="ViewBag.Teachers" class="form-select">
+                            <option value="">Hamısı</option>
+                        </select>
+                    </div>
+
+                    <!-- Parent -->
+                    <div class="col-md-3">
+                        <label asp-for="Filter.ParentId" class="form-label">Valideyn</label>
+                        <select asp-for="Filter.ParentId" asp-items="ViewBag.Parents" class="form-select">
+                            <option value="">Hamısı</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-3">
+                        <label asp-for="Filter.Status" class="form-label">Status</label>
+                        <select asp-for="Filter.Status" asp-items="ViewBag.Statuses" class="form-select">
+                            <option value="">Hamısı</option>
+                        </select>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="col-md-6">
+                        <label asp-for="Filter.SearchTerm" class="form-label">Axtarış</label>
+                        <input asp-for="Filter.SearchTerm" type="text" class="form-control"
+                               placeholder="Qeydlərdə axtarış..." />
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search me-1"></i>Axtar
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Təmizlə
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    @if (Model.Meetings.Any())
+    {
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarix</th>
+                                <th>Vaxt</th>
+                                <th>Müəllim</th>
+                                <th>Valideyn</th>
+                                <th>Şagird</th>
+                                <th>Status</th>
+                                <th>Qeydlər</th>
+                                <th class="text-end">Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var meeting in Model.Meetings)
+                            {
+                                <tr class="@(meeting.IsPast ? "table-secondary" : "")">
+                                    <td>
+                                        <strong>@meeting.MeetingDate.ToString("dd.MM.yyyy")</strong>
+                                        @if (meeting.IsToday)
+                                        {
+                                            <span class="badge bg-info ms-1">Bu gün</span>
+                                        }
+                                        else if (meeting.IsFuture)
+                                        {
+                                            <span class="badge bg-success ms-1">Gələcək</span>
+                                        }
+                                        else if (meeting.IsPast)
+                                        {
+                                            <span class="badge bg-secondary ms-1">Keçmiş</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @meeting.StartTime.ToString(@"hh\:mm") -
+                                        @meeting.EndTime.ToString(@"hh\:mm")
+                                    </td>
+                                    <td>@meeting.TeacherName</td>
+                                    <td>@meeting.ParentName</td>
+                                    <td>@(meeting.StudentName ?? "-")</td>
+                                    <td>
+                                        <span class="badge @meeting.StatusBadgeClass">
+                                            @meeting.StatusText
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(meeting.Notes))
+                                        {
+                                            <small class="text-truncate d-inline-block" style="max-width: 150px;"
+                                                   title="@meeting.Notes">
+                                                @meeting.Notes
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@meeting.Id"
+                                               class="btn btn-outline-info" title="Detallar">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@meeting.Id"
+                                               class="btn btn-outline-primary" title="Redaktə">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal-@meeting.Id"
+                                                    title="Sil">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal-@meeting.Id" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Görüşü Sil</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bu görüşü silmək istədiyinizdən əminsiniz?</p>
+                                                <p class="mb-0">
+                                                    <strong>Tarix:</strong> @meeting.MeetingDate.ToString("dd.MM.yyyy")<br />
+                                                    <strong>Müəllim:</strong> @meeting.TeacherName<br />
+                                                    <strong>Valideyn:</strong> @meeting.ParentName
+                                                </p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Ləğv et
+                                                </button>
+                                                <form asp-action="Delete" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@meeting.Id" />
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="bi bi-trash me-1"></i>Sil
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- Previous -->
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-startDate="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-endDate="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-teacherId="@Model.Filter.TeacherId"
+                                   asp-route-parentId="@Model.Filter.ParentId"
+                                   asp-route-status="@Model.Filter.Status"
+                                   asp-route-searchTerm="@Model.Filter.SearchTerm">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-pageNumber="@i"
+                                       asp-route-startDate="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")"
+                                       asp-route-endDate="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")"
+                                       asp-route-teacherId="@Model.Filter.TeacherId"
+                                       asp-route-parentId="@Model.Filter.ParentId"
+                                       asp-route-status="@Model.Filter.Status"
+                                       asp-route-searchTerm="@Model.Filter.SearchTerm">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <!-- Next -->
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-startDate="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-endDate="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-teacherId="@Model.Filter.TeacherId"
+                                   asp-route-parentId="@Model.Filter.ParentId"
+                                   asp-route-status="@Model.Filter.Status"
+                                   asp-route-searchTerm="@Model.Filter.SearchTerm">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <p class="text-center text-muted mt-2 mb-0">
+                        Səhifə @Model.PageNumber / @Model.TotalPages (Cəmi: @Model.TotalCount)
+                    </p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">Görüş tapılmadı</h4>
+                <p class="text-muted mb-4">Filter parametrlərini dəyişdirin və ya yeni görüş yaradın</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Yeni Görüş Yarat
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-submit filter on dropdown change (optional)
+        document.querySelectorAll('select[name^="Filter."]').forEach(select => {
+            select.addEventListener('change', function() {
+                // this.form.submit(); // Uncomment for auto-submit
+            });
+        });
+    </script>
+}

@@ -1,0 +1,346 @@
+﻿@model AppointmentSystem.Areas.Admin.Models.ViewModels.MeetingViewModel
+@{
+    ViewData["Title"] = "Görüş Redaktəsi";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-pencil-square me-2"></i>Görüş Redaktəsi
+            </h2>
+            <p class="text-muted mb-0">
+                ID: @Model.Id
+            </p>
+        </div>
+        <div>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info me-2">
+                <i class="bi bi-eye me-1"></i>Detallar
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i>Ləğv et
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Edit" method="post" id="meetingForm">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="CompanyId" type="hidden" />
+
+        <div class="row">
+            <!-- Left Column - Main Form -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-event me-2"></i>Görüş Məlumatları
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Meeting Date -->
+                            <div class="col-md-6">
+                                <label asp-for="MeetingDate" class="form-label">
+                                    Görüş Tarixi <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="MeetingDate" type="date" class="form-control"
+                                       min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="MeetingDate" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-6">
+                                <label asp-for="Status" class="form-label">
+                                    Status <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Status" asp-items="ViewBag.Statuses" class="form-select">
+                                    <option value="">Seçin...</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Start Time -->
+                            <div class="col-md-6">
+                                <label asp-for="StartTime" class="form-label">
+                                    Başlama Vaxtı <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="StartTime" type="time" class="form-control" id="startTime" />
+                                <span asp-validation-for="StartTime" class="text-danger small"></span>
+                            </div>
+
+                            <!-- End Time -->
+                            <div class="col-md-6">
+                                <label asp-for="EndTime" class="form-label">
+                                    Bitmə Vaxtı <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="EndTime" type="time" class="form-control" id="endTime" />
+                                <span asp-validation-for="EndTime" class="text-danger small"></span>
+                                <small class="text-muted" id="duration"></small>
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-2" />
+                            </div>
+
+                            <!-- Teacher -->
+                            <div class="col-md-6">
+                                <label asp-for="TeacherId" class="form-label">
+                                    Müəllim <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="TeacherId" asp-items="ViewBag.Teachers"
+                                        class="form-select" id="teacherSelect">
+                                    <option value="">Müəllim seçin...</option>
+                                </select>
+                                <span asp-validation-for="TeacherId" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Parent -->
+                            <div class="col-md-6">
+                                <label asp-for="ParentId" class="form-label">
+                                    Valideyn <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="ParentId" asp-items="ViewBag.Parents"
+                                        class="form-select" id="parentSelect">
+                                    <option value="">Valideyn seçin...</option>
+                                </select>
+                                <span asp-validation-for="ParentId" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Student -->
+                            <div class="col-12">
+                                <label asp-for="StudentId" class="form-label">
+                                    Şagird <span class="text-muted">(Seçmək vacib deyil)</span>
+                                </label>
+                                <select asp-for="StudentId" asp-items="ViewBag.Students"
+                                        class="form-select" id="studentSelect">
+                                    <option value="">Şagird seçin...</option>
+                                </select>
+                                <span asp-validation-for="StudentId" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="col-12">
+                                <label asp-for="Notes" class="form-label">
+                                    Qeydlər <span class="text-muted">(Maksimum 1000 simvol)</span>
+                                </label>
+                                <textarea asp-for="Notes" class="form-control" rows="4"
+                                          placeholder="Görüşlə bağlı əlavə məlumat..."
+                                          maxlength="1000" id="notesTextarea"></textarea>
+                                <span asp-validation-for="Notes" class="text-danger small"></span>
+                                <small class="text-muted float-end">
+                                    <span id="charCount">0</span> / 1000
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Actions & Warning -->
+            <div class="col-lg-4">
+                <!-- Submit Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check-circle me-2"></i>Təsdiq
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save me-2"></i>Dəyişiklikləri Saxla
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                                <i class="bi bi-eye me-2"></i>Detallar
+                            </a>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Ləğv et
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning Card -->
+                <div class="card border-warning">
+                    <div class="card-header bg-warning bg-opacity-10 text-warning">
+                        <h6 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Xəbərdarlıq
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small mb-0 ps-3">
+                            <li class="mb-2">
+                                Tarix və ya vaxt dəyişdirərkən diqqətli olun
+                            </li>
+                            <li class="mb-2">
+                                Sistem yenidən konflikt yoxlayacaq
+                            </li>
+                            <li class="mb-0">
+                                Müəllim və valideyn dəyişdirilə bilər, lakin bildiriş göndərilməyəcək
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="card border-info mt-3">
+                    <div class="card-header bg-info bg-opacity-10 text-info">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>Məsləhət
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small mb-0">
+                            Status dəyişdirmək üçün Details səhifəsindəki action button-lardan istifadə edin.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            // Character counter
+            $('#notesTextarea').on('input', function() {
+                const length = $(this).val().length;
+                $('#charCount').text(length);
+            });
+
+            // Initial count
+            $('#charCount').text($('#notesTextarea').val().length);
+
+            // Duration calculator
+            function calculateDuration() {
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+
+                if (startTime && endTime) {
+                    const start = new Date('2000-01-01 ' + startTime);
+                    const end = new Date('2000-01-01 ' + endTime);
+                    const diff = (end - start) / 1000 / 60; // minutes
+
+                    if (diff > 0) {
+                        $('#duration').text(`Müddət: ${diff} dəqiqə`).removeClass('text-danger').addClass('text-success');
+                    } else {
+                        $('#duration').text('Bitmə vaxtı başlama vaxtından sonra olmalıdır').removeClass('text-success').addClass('text-danger');
+                    }
+                } else {
+                    $('#duration').text('');
+                }
+            }
+
+            $('#startTime, #endTime').on('change', calculateDuration);
+
+            // Initial calculation
+            calculateDuration();
+
+            // Store current student value
+            const currentStudentId = $('#studentSelect').val();
+
+            // Load students when parent is selected
+            $('#parentSelect').on('change', function() {
+                const parentId = $(this).val();
+                const $studentSelect = $('#studentSelect');
+
+                // Clear current options
+                $studentSelect.html('<option value="">Yüklənir...</option>').prop('disabled', true);
+
+                if (parentId) {
+                    $.ajax({
+                        url: '@Url.Action("GetStudents")',
+                        type: 'GET',
+                        data: { parentId: parentId },
+                        success: function(data) {
+                            $studentSelect.html('<option value="">Şagird seçin...</option>');
+
+                            if (data && data.length > 0) {
+                                $.each(data, function(index, item) {
+                                    $studentSelect.append($('<option></option>')
+                                        .attr('value', item.id)
+                                        .text(item.text));
+                                });
+
+                                // Restore selected value if it exists in new list
+                                if (currentStudentId) {
+                                    $studentSelect.val(currentStudentId);
+                                }
+                            } else {
+                                $studentSelect.html('<option value="">Bu valideynin şagirdi yoxdur</option>');
+                            }
+
+                            $studentSelect.prop('disabled', false);
+                        },
+                        error: function() {
+                            $studentSelect.html('<option value="">Xəta baş verdi</option>').prop('disabled', false);
+                        }
+                    });
+                } else {
+                    $studentSelect.html('<option value="">Əvvəlcə valideyn seçin</option>').prop('disabled', false);
+                }
+            });
+
+            // Form validation enhancement
+            $('#meetingForm').on('submit', function(e) {
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+
+                if (startTime && endTime) {
+                    const start = new Date('2000-01-01 ' + startTime);
+                    const end = new Date('2000-01-01 ' + endTime);
+
+                    if (end <= start) {
+                        e.preventDefault();
+                        alert('Bitmə vaxtı başlama vaxtından sonra olmalıdır!');
+                        $('#endTime').focus();
+                        return false;
+                    }
+                }
+
+                // Confirm changes
+                if (!confirm('Dəyişiklikləri saxlamaq istədiyinizdən əminsiniz?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        #duration {
+            display: block;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .text-danger.small {
+            display: block;
+            margin-top: 0.25rem;
+        }
+    </style>
+}

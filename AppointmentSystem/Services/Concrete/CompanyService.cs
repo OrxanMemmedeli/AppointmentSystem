@@ -6,7 +6,7 @@ using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Şirkət idarəetmə servisi implementasiyası

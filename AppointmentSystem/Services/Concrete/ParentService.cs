@@ -5,7 +5,7 @@ using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Valideyn idarəetmə servisi implementasiyası
@@ -76,6 +76,34 @@ public class ParentService : IParentService
             .OrderBy(p => p.FirstName)
             .ThenBy(p => p.LastName)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Şirkətə görə aktiv valideynləri gətirir (Entity)
+    /// </summary>
+    public async Task<List<Parent>> GetActiveParentsAsync(Guid? companyId)
+    {
+        try
+        {
+            var query = _context.Parents
+                .AsNoTracking()
+                .Where(p => p.IsActive && !p.IsDeleted);
+
+            if (companyId.HasValue)
+            {
+                query = query.Where(p => p.CompanyId == companyId.Value);
+            }
+
+            return await query
+                .OrderBy(p => p.FirstName)
+                .ThenBy(p => p.LastName)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Aktiv valideynlər yüklənərkən xəta. CompanyId: {CompanyId}", companyId);
+            return new List<Parent>();
+        }
     }
 
     /// <summary>Şirkətə görə valideynləri gətirir</summary>

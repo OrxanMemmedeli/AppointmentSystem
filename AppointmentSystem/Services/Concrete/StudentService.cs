@@ -5,7 +5,7 @@ using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Şagird idarəetmə servisi implementasiyası
@@ -80,6 +80,44 @@ public class StudentService : IStudentService
             .ThenBy(s => s.FirstName)
             .ThenBy(s => s.LastName)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Şirkət və valideynə görə aktiv şagirdləri gətirir (Entity)
+    /// </summary>
+    public async Task<List<Student>> GetActiveStudentsAsync(Guid? companyId, Guid? parentId)
+    {
+        try
+        {
+            var query = _context.Students
+                .Include(s => s.Class) // Class name üçün
+                .AsNoTracking()
+                .Where(s => s.IsActive && !s.IsDeleted);
+
+            if (companyId.HasValue)
+            {
+                query = query.Where(s => s.CompanyId == companyId.Value);
+            }
+
+            if (parentId.HasValue)
+            {
+                query = query.Where(s => s.StudentParents.Any(sp =>
+                    sp.ParentId == parentId.Value &&
+                    sp.IsActive &&
+                    !sp.IsDeleted));
+            }
+
+            return await query
+                .OrderBy(s => s.FirstName)
+                .ThenBy(s => s.LastName)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Aktiv şagirdlər yüklənərkən xəta. CompanyId: {CompanyId}, ParentId: {ParentId}",
+                companyId, parentId);
+            return new List<Student>();
+        }
     }
 
     /// <summary>Şirkətə görə şagirdləri gətirir</summary>

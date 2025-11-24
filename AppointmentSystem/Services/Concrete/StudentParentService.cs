@@ -4,7 +4,7 @@ using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Şagird-Valideyn əlaqəsi idarəetmə servisi implementasiyası

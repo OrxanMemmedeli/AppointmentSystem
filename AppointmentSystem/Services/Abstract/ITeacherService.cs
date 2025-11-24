@@ -18,6 +18,9 @@ public interface ITeacherService
     /// <summary>Aktiv müəllimləri gətirir</summary>
     Task<List<TeacherListViewModel>> GetActiveTeachersAsync();
 
+    /// <summary>Şirkətə görə aktiv müəllimləri gətirir (Entity)</summary>
+    Task<List<Teacher>> GetActiveTeachersAsync(Guid? companyId);
+
     /// <summary>Şirkətə görə müəllimləri gətirir</summary>
     Task<List<TeacherListViewModel>> GetTeachersByCompanyAsync(Guid companyId);
 

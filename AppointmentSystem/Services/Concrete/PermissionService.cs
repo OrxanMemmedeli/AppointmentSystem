@@ -5,7 +5,7 @@ using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppointmentSystem.Services.Conrete;
+namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
 /// Permission idarəetmə servisi implementasiyası
