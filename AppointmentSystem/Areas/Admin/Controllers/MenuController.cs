@@ -13,7 +13,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Menu idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,MENU_MANAGER")]
 public class MenuController : Controller
 {
     private readonly IMenuService _menuService;

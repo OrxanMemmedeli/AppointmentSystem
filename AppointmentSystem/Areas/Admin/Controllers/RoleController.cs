@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Role idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,ROLE_MANAGER")]
 public class RoleController : Controller
 {
     private readonly IRoleService _roleService;

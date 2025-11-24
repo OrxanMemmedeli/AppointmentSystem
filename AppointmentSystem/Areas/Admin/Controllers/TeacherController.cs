@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Müəllim idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,TEACHER_MANAGER")]
 public class TeacherController : Controller
 {
     private readonly ITeacherService _teacherService;

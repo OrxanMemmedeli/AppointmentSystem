@@ -32,6 +32,7 @@ public class HomeController : Controller
     /// <summary>
     /// Xəta səhifəsi
     /// </summary>
+    [AllowAnonymous]
     public IActionResult Error()
     {
         return View();
@@ -40,6 +41,7 @@ public class HomeController : Controller
     /// <summary>
     /// Giriş qadağan
     /// </summary>
+    [AllowAnonymous]
     public IActionResult AccessDenied()
     {
         return View();

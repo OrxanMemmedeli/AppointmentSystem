@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Şirkət/Məktəb idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,COMPANY_MANAGER")]
 public class CompanyController : Controller
 {
     private readonly ICompanyService _companyService;
@@ -171,7 +170,6 @@ public class CompanyController : Controller
     /// <summary>Şirkəti doğrulayır</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> Verify(Guid id)
     {
         var currentUserId = GetCurrentUserId();

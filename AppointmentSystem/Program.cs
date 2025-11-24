@@ -1,6 +1,7 @@
-﻿using AppointmentSystem.Data;
-using AppointmentSystem.Services.Abstract;
+﻿using AppointmentSystem.Authorization;
+using AppointmentSystem.Data;
 using AppointmentSystem.Services.Concrete;
+using AppointmentSystem.Services.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,15 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // ✅ GLOBAL PERMISSION FILTER - Bütün action-lara tətbiq olunur
+    options.Filters.Add<GlobalPermissionAuthorizationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 
@@ -45,14 +54,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Home/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("TeacherOnly", policy => policy.RequireRole("TEACHER"));
-    options.AddPolicy("ParentOnly", policy => policy.RequireRole("PARENT"));
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("SUPERADMIN", "MANAGER"));
-});
+// ✅ Authorization policy yoxdur - Global filter istifadə edilir
+builder.Services.AddAuthorization();
 
 // FluentValidation (yeni yol)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -63,6 +71,7 @@ builder.Services.Scan(scan => scan
     .AddClasses()
     .AsMatchingInterface()
     .WithScopedLifetime());
+builder.Services.AddScoped<PermissionSeedService>();
 
 var app = builder.Build();
 
@@ -83,6 +92,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 // ✅ Area Routing (ÖNCƏLİKLİ!)
 app.MapControllerRoute(
     name: "areas",
@@ -93,11 +103,36 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=SelectCompany}/{id?}");
 
-// Seed Data (İlk işə salınanda)
+
+#region Database Initialization & Permission Seed
+
+// ✅ Database initialization və Permission seed
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await SeedData.InitializeAsync(context);
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+
+        // Database migrations
+        //await context.Database.MigrateAsync();
+
+        // Seed data
+        await SeedData.InitializeAsync(context);
+
+        // ✅ Permission seed - Route scan
+        var permissionSeedService = services.GetRequiredService<PermissionSeedService>();
+        await permissionSeedService.SeedPermissionsAsync();
+
+        Console.WriteLine("✅ Database və permissions uğurla hazırlandı");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "❌ Database initialization zamanı xəta");
+    }
 }
+
+#endregion
 
 app.Run();

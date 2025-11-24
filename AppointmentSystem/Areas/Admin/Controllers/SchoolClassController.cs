@@ -11,7 +11,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Sinif idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,CLASS_MANAGER")]
 public class SchoolClassController : Controller
 {
     private readonly ISchoolClassService _schoolClassService;

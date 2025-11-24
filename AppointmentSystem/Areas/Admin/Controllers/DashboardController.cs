@@ -9,7 +9,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Service-based, no direct DB access
 /// </summary>
 [Area("Admin")]
-[Authorize(Policy = "AdminOnly")]
 public class DashboardController : Controller
 {
     private readonly IAdminDashboardService _dashboardService;

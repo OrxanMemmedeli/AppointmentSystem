@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Şagird idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,STUDENT_MANAGER")]
 public class StudentController : Controller
 {
     private readonly IStudentService _studentService;

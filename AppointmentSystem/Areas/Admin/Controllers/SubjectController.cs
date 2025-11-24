@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Fənn idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,SUBJECT_MANAGER")]
 public class SubjectController : Controller
 {
     private readonly ISubjectService _subjectService;

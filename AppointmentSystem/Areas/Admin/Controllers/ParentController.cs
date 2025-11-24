@@ -10,7 +10,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Valideyn idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,PARENT_MANAGER")]
 public class ParentController : Controller
 {
     private readonly IParentService _parentService;

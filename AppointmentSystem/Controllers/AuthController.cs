@@ -2,6 +2,7 @@ using AppointmentSystem.Models.ViewModels;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AS = AppointmentSystem.Services;
 
@@ -10,6 +11,7 @@ namespace AppointmentSystem.Controllers;
 /// <summary>
 /// Authentication controller
 /// </summary>
+[AllowAnonymous]
 public class AuthController : Controller
 {
     private readonly AS.Abstract.IAuthenticationService _authService;

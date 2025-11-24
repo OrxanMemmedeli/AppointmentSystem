@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using AppointmentSystem.Data;
 using AppointmentSystem.Services.Abstract;
+using AppointmentSystem.Models.Enums;
 
 namespace AppointmentSystem.Services.Concrete;
 
@@ -13,18 +14,21 @@ public class CurrentUserService : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly AppDbContext _context;
+    private readonly ILogger<CurrentUserService> _logger;
 
     // Cache üçün
     private Guid? _cachedTeacherId;
     private Guid? _cachedParentId;
-    private Guid? _cachedStudentId;
+    private List<string>? _cachedPermissionCodes;
 
     public CurrentUserService(
         IHttpContextAccessor httpContextAccessor,
-        AppDbContext context)
+        AppDbContext context,
+        ILogger<CurrentUserService> logger)
     {
         _httpContextAccessor = httpContextAccessor;
         _context = context;
+        _logger = logger;
     }
 
     public Guid? UserId
@@ -64,6 +68,113 @@ public class CurrentUserService : ICurrentUserService
                ?? Enumerable.Empty<string>();
     }
 
+    #region ROUTE-BASED PERMISSION METHODS
+
+    /// <summary>
+    /// Route məlumatlarına görə permission yoxlayır
+    /// </summary>
+    public async Task<bool> HasPermissionAsync(string controller, string action, string? area = null)
+    {
+        if (!UserId.HasValue)
+            return false;
+
+        try
+        {
+            // SuperAdmin bypass
+            var isSuperAdmin = await _context.UserRoles
+                .Include(ur => ur.Role)
+                .AnyAsync(ur => ur.UserId == UserId.Value &&
+                               ur.Role.Code == "SUPERADMIN" &&
+                               ur.Role.IsActive &&
+                               !ur.Role.IsDeleted);
+
+            if (isSuperAdmin)
+                return true;
+
+            // Route-based check
+            var hasPermission = await _context.UserRoles
+                .Where(ur => ur.UserId == UserId.Value && ur.Role.IsActive && !ur.Role.IsDeleted)
+                .Include(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .AnyAsync(ur => ur.Role.RolePermissions.Any(rp =>
+                    rp.Permission.IsActive &&
+                    !rp.Permission.IsDeleted &&
+                    rp.Permission.Type == PermissionType.Action &&
+                    (string.IsNullOrEmpty(area)
+                        ? string.IsNullOrEmpty(rp.Permission.AreaName)
+                        : rp.Permission.AreaName == area) &&
+                    rp.Permission.ControllerName == controller &&
+                    rp.Permission.ActionName == action));
+
+            return hasPermission;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Permission yoxlanarkən xəta. Route: {Area}/{Controller}/{Action}",
+                area, controller, action);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Permission kod siyahısını gətirir (UI üçün, cache ilə)
+    /// </summary>
+    public async Task<List<string>> GetPermissionCodesAsync()
+    {
+        if (_cachedPermissionCodes != null)
+            return _cachedPermissionCodes;
+
+        if (!UserId.HasValue)
+            return new List<string>();
+
+        try
+        {
+            // SuperAdmin bypass
+            var isSuperAdmin = await _context.UserRoles
+                .Include(ur => ur.Role)
+                .AnyAsync(ur => ur.UserId == UserId.Value &&
+                               ur.Role.Code == "SUPERADMIN" &&
+                               ur.Role.IsActive);
+
+            if (isSuperAdmin)
+            {
+                // ✅ Nullable filter
+                _cachedPermissionCodes = await _context.Permissions
+                    .Where(p => p.IsActive && !p.IsDeleted && p.Code != null)
+                    .Select(p => p.Code!)
+                    .ToListAsync();
+
+                return _cachedPermissionCodes;
+            }
+
+            // ✅ Role-based permissions - nullable filter
+            _cachedPermissionCodes = await _context.UserRoles
+                .Where(ur => ur.UserId == UserId.Value)
+                .Include(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .SelectMany(ur => ur.Role.RolePermissions
+                    .Where(rp => rp.Permission.IsActive &&
+                                !rp.Permission.IsDeleted &&
+                                rp.Permission.Code != null)
+                    .Select(rp => rp.Permission.Code!))
+                .Distinct()
+                .ToListAsync();
+
+            return _cachedPermissionCodes;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Permission kodları yüklənərkən xəta");
+            return new List<string>();
+        }
+    }
+
+    #endregion
+
+    #region HELPER METHODS
+
     /// <summary>
     /// Teacher ID-ni qaytarır (cache ilə)
     /// </summary>
@@ -100,21 +211,5 @@ public class CurrentUserService : ICurrentUserService
         return _cachedParentId;
     }
 
-    /// <summary>
-    /// Student ID-ni qaytarır (cache ilə)
-    /// </summary>
-    //public async Task<Guid?> GetStudentIdAsync()
-    //{
-    //    if (_cachedStudentId.HasValue)
-    //        return _cachedStudentId;
-
-    //    if (!UserId.HasValue)
-    //        return null;
-
-    //    var student = await _context.Students
-    //        .FirstOrDefaultAsync(s => s.UserId == UserId.Value && s.IsActive);
-
-    //    _cachedStudentId = student?.Id;
-    //    return _cachedStudentId;
-    //}
+    #endregion
 }

@@ -12,7 +12,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Permission idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,PERMISSION_MANAGER")]
 public class PermissionController : Controller
 {
     private readonly IPermissionService _permissionService;

@@ -15,6 +15,11 @@ public interface ICurrentUserService
     bool IsInRole(string role);
     IEnumerable<string> GetRoles();
 
+    //Permission metodları
+    Task<bool> HasPermissionAsync(string controller, string action, string? area = null);
+    Task<List<string>> GetPermissionCodesAsync(); // Code list (UI üçün)
+
+
     // ✅ Helper metodları
     Task<Guid?> GetTeacherIdAsync();
     Task<Guid?> GetParentIdAsync();

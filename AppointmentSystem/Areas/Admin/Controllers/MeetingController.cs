@@ -12,7 +12,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Görüş CRUD əməliyyatları, filtrasiya və idarəetmə
 /// </summary>
 [Area("Admin")]
-[Authorize(Policy = "AdminOnly")]
 public class MeetingController : Controller
 {
     private readonly IMeetingService _meetingService;

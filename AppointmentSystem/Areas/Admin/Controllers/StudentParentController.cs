@@ -12,7 +12,6 @@ namespace AppointmentSystem.Areas.Admin.Controllers;
 /// Şagird-Valideyn əlaqəsi idarəetmə controller
 /// </summary>
 [Area("Admin")]
-[Authorize(Roles = "ADMIN,STUDENT_MANAGER")]
 public class StudentParentController : Controller
 {
     private readonly IStudentParentService _studentParentService;
