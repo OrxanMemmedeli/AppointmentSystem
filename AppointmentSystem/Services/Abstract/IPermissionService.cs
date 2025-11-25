@@ -1,5 +1,6 @@
 ﻿using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Areas.Admin.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AppointmentSystem.Services.Abstract;
 
@@ -19,6 +20,9 @@ public interface IPermissionService
 
     /// <summary>ID-yə görə icazə gətirir</summary>
     Task<PermissionViewModel?> GetPermissionByIdAsync(Guid id);
+
+    /// <summary>İcazə seçim siyahısı (dropdown)</summary>
+    Task<List<SelectListItem>> GetPermissionSelectListAsync();
 
     /// <summary>Yeni icazə yaradır</summary>
     Task<(bool Success, string? ErrorMessage, Guid? PermissionId)> CreatePermissionAsync(

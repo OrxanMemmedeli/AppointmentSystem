@@ -20,7 +20,7 @@ public class DashboardViewModel
     public List<UpcomingMeetingViewModel> UpcomingMeetings { get; set; } = new();
 
     /// <summary>Top performerlər</summary>
-    public TopPerformersViewModel TopPerformers { get; set; } = new();
+    public List<TopPerformerViewModel> TopPerformers { get; set; } = new();
 }
 
 /// <summary>
@@ -29,22 +29,22 @@ public class DashboardViewModel
 public class DashboardStatisticsViewModel
 {
     public int TotalCompanies { get; set; }
-    public int CompaniesChangePercent { get; set; } // +5% bu ay
+    public decimal CompaniesChangePercent { get; set; }
 
     public int TotalTeachers { get; set; }
-    public int TeachersChangePercent { get; set; }
+    public decimal TeachersChangePercent { get; set; }
 
     public int TotalStudents { get; set; }
-    public int StudentsChangePercent { get; set; }
+    public decimal StudentsChangePercent { get; set; }
 
     public int TotalParents { get; set; }
-    public int ParentsChangePercent { get; set; }
+    public decimal ParentsChangePercent { get; set; }
 
     public int TodayMeetings { get; set; }
-    public int TodayMeetingsChangePercent { get; set; }
+    public decimal TodayMeetingsChangePercent { get; set; }
 
     public int PendingMeetings { get; set; }
-    public int PendingMeetingsChangePercent { get; set; }
+    public decimal PendingMeetingsChangePercent { get; set; }
 
     public int CompletedMeetingsThisMonth { get; set; }
     public int CancelledMeetingsThisMonth { get; set; }
@@ -55,27 +55,20 @@ public class DashboardStatisticsViewModel
 /// </summary>
 public class DashboardTrendsViewModel
 {
-    /// <summary>Son 6 ayın görüş statistikası</summary>
-    public List<MonthlyMeetingTrend> MeetingTrends { get; set; } = new();
-
-    /// <summary>Son 6 ayın user artımı</summary>
-    public List<MonthlyUserGrowth> UserGrowth { get; set; } = new();
+    /// <summary>Son 6 ayın aylıq data-sı</summary>
+    public List<MonthlyDataPoint> MonthlyData { get; set; } = new();
 }
 
-public class MonthlyMeetingTrend
-{
-    public string Month { get; set; } = string.Empty; // "Oktyabr 2024"
-    public int Completed { get; set; }
-    public int Cancelled { get; set; }
-    public int Pending { get; set; }
-}
-
-public class MonthlyUserGrowth
+/// <summary>
+/// Aylıq data nöqtəsi
+/// </summary>
+public class MonthlyDataPoint
 {
     public string Month { get; set; } = string.Empty;
-    public int Teachers { get; set; }
-    public int Students { get; set; }
-    public int Parents { get; set; }
+    public int TotalMeetings { get; set; }
+    public int CompletedMeetings { get; set; }
+    public int NewStudents { get; set; }
+    public int NewTeachers { get; set; }
 }
 
 /// <summary>
@@ -83,12 +76,13 @@ public class MonthlyUserGrowth
 /// </summary>
 public class RecentActivityViewModel
 {
-    public DateTime ActivityDate { get; set; }
-    public string UserName { get; set; } = string.Empty;
-    public string ActivityType { get; set; } = string.Empty; // "Görüş yaratdı", "Təsdiqləndi" 
+    public Guid Id { get; set; }
+    public string Type { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string StatusBadgeClass { get; set; } = "bg-secondary"; // Bootstrap class
-    public string StatusText { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public string Icon { get; set; } = "bi-circle";
+    public string IconColor { get; set; } = "secondary";
 }
 
 /// <summary>
@@ -104,28 +98,30 @@ public class UpcomingMeetingViewModel
     public string ParentName { get; set; } = string.Empty;
     public string StudentName { get; set; } = string.Empty;
     public MeetingStatus Status { get; set; }
-    public string StatusBadgeClass { get; set; } = "bg-secondary";
+
+    public string StatusBadgeClass => Status switch
+    {
+        MeetingStatus.Pending => "bg-warning",
+        MeetingStatus.Approved => "bg-primary",
+        MeetingStatus.Completed => "bg-success",
+        MeetingStatus.Cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
 }
 
 /// <summary>
-/// Top performerlər (ən aktiv teacher/parent)
+/// Top performer
 /// </summary>
-public class TopPerformersViewModel
+public class TopPerformerViewModel
 {
-    public List<TopTeacherViewModel> TopTeachers { get; set; } = new();
-    public List<TopParentViewModel> TopParents { get; set; } = new();
-}
-
-public class TopTeacherViewModel
-{
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int CompletedMeetingsCount { get; set; }
-    public int TotalStudentsCount { get; set; }
-}
+    public string? ProfileImage { get; set; }
+    public int TotalMeetings { get; set; }
+    public int CompletedMeetings { get; set; }
+    public decimal Rating { get; set; }
 
-public class TopParentViewModel
-{
-    public string Name { get; set; } = string.Empty;
-    public int CompletedMeetingsCount { get; set; }
-    public int ChildrenCount { get; set; }
+    public decimal CompletionRate => TotalMeetings > 0
+        ? Math.Round((decimal)CompletedMeetings / TotalMeetings * 100, 1)
+        : 0;
 }

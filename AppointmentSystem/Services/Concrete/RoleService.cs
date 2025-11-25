@@ -2,6 +2,7 @@
 using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using AppointmentSystem.Areas.Admin.Models.ViewModels;
 
 namespace AppointmentSystem.Services.Concrete;
@@ -296,4 +297,251 @@ public class RoleService : IRoleService
 
         return !await query.AnyAsync();
     }
+
+    /// <summary>Rol seçim siyahısı (dropdown)</summary>
+    public async Task<List<SelectListItem>> GetRoleSelectListAsync()
+    {
+        return await _context.Roles
+            .AsNoTracking()
+            .Where(r => !r.IsDeleted && r.IsActive)
+            .OrderByDescending(r => r.Priority)
+            .ThenBy(r => r.Name)
+            .Select(r => new SelectListItem
+            {
+                Value = r.Id.ToString(),
+                Text = r.Name
+            })
+            .ToListAsync();
+    }
+
+    #region Role-Permission Management
+
+    /// <summary>Rola təyin olunmuş icazələri gətirir</summary>
+    public async Task<List<PermissionListViewModel>> GetRolePermissionsAsync(Guid roleId)
+    {
+        return await _context.RolePermissions
+            .AsNoTracking()
+            .Where(rp => rp.RoleId == roleId && !rp.IsDeleted)
+            .Select(rp => new PermissionListViewModel
+            {
+                Id = rp.PermissionId,
+                Name = rp.Permission.Name,
+                Code = rp.Permission.Code,
+                Description = rp.Permission.Description,
+                Type = rp.Permission.Type,
+                AreaName = rp.Permission.AreaName,
+                ControllerName = rp.Permission.ControllerName,
+                ActionName = rp.Permission.ActionName,
+                IsActive = rp.Permission.IsActive,
+                CreatedDate = rp.Permission.CreatedDate
+            })
+            .OrderBy(p => p.AreaName)
+            .ThenBy(p => p.ControllerName)
+            .ThenBy(p => p.ActionName)
+            .ToListAsync();
+    }
+
+    /// <summary>Rola icazə təyin edir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> AssignPermissionToRoleAsync(
+        Guid roleId, Guid permissionId, Guid currentUserId)
+    {
+        try
+        {
+            var exists = await _context.RolePermissions
+                .AnyAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId && !rp.IsDeleted);
+
+            if (exists)
+            {
+                return (false, "Bu icazə artıq rola təyin edilib");
+            }
+
+            var rolePermission = new RolePermission
+            {
+                Id = Guid.NewGuid(),
+                RoleId = roleId,
+                PermissionId = permissionId,
+                IsActive = true,
+                CreatedDate = DateTime.Now,
+                CreatedById = currentUserId
+            };
+
+            _context.RolePermissions.Add(rolePermission);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Rola icazə təyin edildi: RoleId={RoleId}, PermissionId={PermissionId}", roleId, permissionId);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Rola icazə təyin edilərkən xəta: RoleId={RoleId}, PermissionId={PermissionId}", roleId, permissionId);
+            return (false, "İcazə təyin edilərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Roldan icazəni çıxarır</summary>
+    public async Task<(bool Success, string? ErrorMessage)> RemovePermissionFromRoleAsync(
+        Guid roleId, Guid permissionId, Guid currentUserId)
+    {
+        try
+        {
+            var rolePermission = await _context.RolePermissions
+                .FirstOrDefaultAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId && !rp.IsDeleted);
+
+            if (rolePermission == null)
+            {
+                return (false, "Bu icazə rolda tapılmadı");
+            }
+
+            rolePermission.IsDeleted = true;
+            rolePermission.ModifiedDate = DateTime.Now;
+            rolePermission.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Roldan icazə çıxarıldı: RoleId={RoleId}, PermissionId={PermissionId}", roleId, permissionId);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Roldan icazə çıxarılarkən xəta: RoleId={RoleId}, PermissionId={PermissionId}", roleId, permissionId);
+            return (false, "İcazə çıxarılarkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Rola çoxlu icazə təyin edir (toplu)</summary>
+    public async Task<(bool Success, string? ErrorMessage)> AssignPermissionsToRoleAsync(
+        Guid roleId, List<Guid> permissionIds, Guid currentUserId)
+    {
+        try
+        {
+            var existingAssignments = await _context.RolePermissions
+                .Where(rp => rp.RoleId == roleId && !rp.IsDeleted)
+                .ToListAsync();
+
+            foreach (var assignment in existingAssignments)
+            {
+                assignment.IsDeleted = true;
+                assignment.ModifiedDate = DateTime.Now;
+                assignment.ModifiedById = currentUserId;
+            }
+
+            foreach (var permissionId in permissionIds)
+            {
+                var rolePermission = new RolePermission
+                {
+                    Id = Guid.NewGuid(),
+                    RoleId = roleId,
+                    PermissionId = permissionId,
+                    IsActive = true,
+                    CreatedDate = DateTime.Now,
+                    CreatedById = currentUserId
+                };
+                _context.RolePermissions.Add(rolePermission);
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Rola toplu icazələr təyin edildi: RoleId={RoleId}, Count={Count}", roleId, permissionIds.Count);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Rola toplu icazə təyin edilərkən xəta: RoleId={RoleId}", roleId);
+            return (false, "İcazələr təyin edilərkən xəta baş verdi");
+        }
+    }
+
+    #endregion
+
+    #region Role-User Management
+
+    /// <summary>Rola təyin olunmuş istifadəçiləri gətirir</summary>
+    public async Task<List<UserListViewModel>> GetRoleUsersAsync(Guid roleId)
+    {
+        return await _context.UserRoles
+            .AsNoTracking()
+            .Where(ur => ur.RoleId == roleId && !ur.IsDeleted)
+            .Select(ur => new UserListViewModel
+            {
+                Id = ur.UserId,
+                UserName = ur.User.UserName,
+                Email = ur.User.Email,
+                FirstName = ur.User.FirstName,
+                LastName = ur.User.LastName,
+                FullName = ur.User.FirstName + " " + ur.User.LastName,
+                IsActive = ur.User.IsActive,
+                CreatedDate = ur.User.CreatedDate
+            })
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+    }
+
+    /// <summary>Rola istifadəçi təyin edir</summary>
+    public async Task<(bool Success, string? ErrorMessage)> AssignUserToRoleAsync(
+        Guid roleId, Guid userId, Guid currentUserId)
+    {
+        try
+        {
+            var exists = await _context.UserRoles
+                .AnyAsync(ur => ur.RoleId == roleId && ur.UserId == userId && !ur.IsDeleted);
+
+            if (exists)
+            {
+                return (false, "Bu istifadəçi artıq rola təyin edilib");
+            }
+
+            var userRole = new UserRole
+            {
+                Id = Guid.NewGuid(),
+                RoleId = roleId,
+                UserId = userId,
+                IsActive = true,
+                CreatedDate = DateTime.Now,
+                CreatedById = currentUserId
+            };
+
+            _context.UserRoles.Add(userRole);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Rola istifadəçi təyin edildi: RoleId={RoleId}, UserId={UserId}", roleId, userId);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Rola istifadəçi təyin edilərkən xəta: RoleId={RoleId}, UserId={UserId}", roleId, userId);
+            return (false, "İstifadəçi təyin edilərkən xəta baş verdi");
+        }
+    }
+
+    /// <summary>Roldan istifadəçini çıxarır</summary>
+    public async Task<(bool Success, string? ErrorMessage)> RemoveUserFromRoleAsync(
+        Guid roleId, Guid userId, Guid currentUserId)
+    {
+        try
+        {
+            var userRole = await _context.UserRoles
+                .FirstOrDefaultAsync(ur => ur.RoleId == roleId && ur.UserId == userId && !ur.IsDeleted);
+
+            if (userRole == null)
+            {
+                return (false, "Bu istifadəçi rolda tapılmadı");
+            }
+
+            userRole.IsDeleted = true;
+            userRole.ModifiedDate = DateTime.Now;
+            userRole.ModifiedById = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Roldan istifadəçi çıxarıldı: RoleId={RoleId}, UserId={UserId}", roleId, userId);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Roldan istifadəçi çıxarılarkən xəta: RoleId={RoleId}, UserId={UserId}", roleId, userId);
+            return (false, "İstifadəçi çıxarılarkən xəta baş verdi");
+        }
+    }
+
+    #endregion
 }

@@ -7,21 +7,29 @@ using AppointmentSystem.Areas.Admin.Models.ViewModels;
 namespace AppointmentSystem.Areas.Admin.Controllers;
 
 /// <summary>
-/// Role idarəetmə controller
+/// Role idarəetmə controller - Permission və User əlavəsi daxil
 /// </summary>
 [Area("Admin")]
 public class RoleController : Controller
 {
     private readonly IRoleService _roleService;
+    private readonly IPermissionService _permissionService;
+    private readonly IUserService _userService;
     private readonly ILogger<RoleController> _logger;
 
     public RoleController(
         IRoleService roleService,
+        IPermissionService permissionService,
+        IUserService userService,
         ILogger<RoleController> logger)
     {
         _roleService = roleService;
+        _permissionService = permissionService;
+        _userService = userService;
         _logger = logger;
     }
+
+    #region CRUD Actions
 
     /// <summary>Rol siyahısı</summary>
     [HttpGet]
@@ -35,7 +43,7 @@ public class RoleController : Controller
     [HttpGet]
     public IActionResult Create()
     {
-        return View(new RoleViewModel());
+        return View(new RoleViewModel { IsActive = true });
     }
 
     /// <summary>Yeni rol yaradır</summary>
@@ -72,6 +80,14 @@ public class RoleController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        // Junction table məlumatlarını yüklə
+        ViewBag.RolePermissions = await _roleService.GetRolePermissionsAsync(id);
+        ViewBag.RoleUsers = await _roleService.GetRoleUsersAsync(id);
+
+        // Dropdown üçün bütün icazələr və istifadəçilər
+        ViewBag.AllPermissions = await _permissionService.GetPermissionSelectListAsync();
+        ViewBag.AllUsers = await _userService.GetUserSelectListAsync();
+
         return View(role);
     }
 
@@ -82,6 +98,7 @@ public class RoleController : Controller
     {
         if (!ModelState.IsValid)
         {
+            await LoadEditViewBagAsync(model.Id!.Value);
             return View(model);
         }
 
@@ -91,11 +108,12 @@ public class RoleController : Controller
         if (!success)
         {
             ModelState.AddModelError(string.Empty, errorMessage ?? "Rol yenilənərkən xəta baş verdi");
+            await LoadEditViewBagAsync(model.Id!.Value);
             return View(model);
         }
 
         TempData["SuccessMessage"] = "Rol uğurla yeniləndi";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Edit), new { id = model.Id });
     }
 
     /// <summary>Rol statusunu dəyişir</summary>
@@ -152,10 +170,113 @@ public class RoleController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    #endregion
+
+    #region Permission Management
+
+    /// <summary>Rola icazə əlavə edir</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignPermission(Guid roleId, Guid permissionId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) = await _roleService.AssignPermissionToRoleAsync(roleId, permissionId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İcazə əlavə edilərkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İcazə uğurla əlavə edildi";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = roleId });
+    }
+
+    /// <summary>Roldan icazəni çıxarır</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemovePermission(Guid roleId, Guid permissionId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) = await _roleService.RemovePermissionFromRoleAsync(roleId, permissionId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İcazə çıxarılarkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İcazə uğurla çıxarıldı";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = roleId });
+    }
+
+    #endregion
+
+    #region User Management
+
+    /// <summary>Rola istifadəçi əlavə edir</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignUser(Guid roleId, Guid userId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) = await _roleService.AssignUserToRoleAsync(roleId, userId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İstifadəçi əlavə edilərkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İstifadəçi uğurla əlavə edildi";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = roleId });
+    }
+
+    /// <summary>Roldan istifadəçini çıxarır</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveUser(Guid roleId, Guid userId)
+    {
+        var currentUserId = GetCurrentUserId();
+        var (success, errorMessage) = await _roleService.RemoveUserFromRoleAsync(roleId, userId, currentUserId);
+
+        if (!success)
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "İstifadəçi çıxarılarkən xəta baş verdi";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "İstifadəçi uğurla çıxarıldı";
+        }
+
+        return RedirectToAction(nameof(Edit), new { id = roleId });
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>Edit səhifəsi üçün ViewBag yükləyir</summary>
+    private async Task LoadEditViewBagAsync(Guid roleId)
+    {
+        ViewBag.RolePermissions = await _roleService.GetRolePermissionsAsync(roleId);
+        ViewBag.RoleUsers = await _roleService.GetRoleUsersAsync(roleId);
+        ViewBag.AllPermissions = await _permissionService.GetPermissionSelectListAsync();
+        ViewBag.AllUsers = await _userService.GetUserSelectListAsync();
+    }
+
     /// <summary>Cari istifadəçinin ID-sini gətirir</summary>
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
+
+    #endregion
 }

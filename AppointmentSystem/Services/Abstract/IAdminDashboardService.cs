@@ -46,5 +46,5 @@ public interface IAdminDashboardService
     /// </summary>
     /// <param name="companyId">Şirkət ID filter</param>
     /// <param name="topCount">Top neçə nəfər</param>
-    Task<TopPerformersViewModel> GetTopPerformersAsync(Guid? companyId = null, int topCount = 5);
+    Task<List<TopPerformerViewModel>> GetTopPerformersAsync(Guid? companyId = null, int topCount = 5);
 }

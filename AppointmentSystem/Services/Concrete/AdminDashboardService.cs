@@ -8,8 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
-/// Admin dashboard servisi - Production-ready implementasiya
-/// Compiled Queries, Caching, Multi-tenant support
+/// Admin dashboard servisi - Debug logging ilə
 /// </summary>
 public class AdminDashboardService : IAdminDashboardService
 {
@@ -17,46 +16,10 @@ public class AdminDashboardService : IAdminDashboardService
     private readonly ILogger<AdminDashboardService> _logger;
     private readonly IMemoryCache _cache;
 
-    // Cache keys - Admin-specific
     private const string CACHE_KEY_ADMIN_DASHBOARD = "AdminDashboard:Full:{0}";
     private const string CACHE_KEY_ADMIN_STATISTICS = "AdminDashboard:Statistics:{0}";
     private const string CACHE_KEY_ADMIN_TRENDS = "AdminDashboard:Trends:{0}";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
-
-    #region Compiled Queries - PERFORMANS KRİTİK
-
-    private static readonly Func<AppDbContext, Task<int>> CountActiveCompaniesCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx) =>
-            ctx.Companies.Count(c => c.IsActive && !c.IsDeleted));
-
-    private static readonly Func<AppDbContext, Guid?, Task<int>> CountActiveTeachersCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid? companyId) =>
-            ctx.Teachers.Count(t => t.IsActive && !t.IsDeleted &&
-                (!companyId.HasValue || t.CompanyId == companyId)));
-
-    private static readonly Func<AppDbContext, Guid?, Task<int>> CountActiveStudentsCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid? companyId) =>
-            ctx.Students.Count(s => s.IsActive && !s.IsDeleted &&
-                (!companyId.HasValue || s.CompanyId == companyId)));
-
-    private static readonly Func<AppDbContext, Guid?, Task<int>> CountActiveParentsCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid? companyId) =>
-            ctx.Parents.Count(p => p.IsActive && !p.IsDeleted &&
-                (!companyId.HasValue || p.CompanyId == companyId)));
-
-    private static readonly Func<AppDbContext, DateTime, Guid?, Task<int>> CountTodayMeetingsCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, DateTime today, Guid? companyId) =>
-            ctx.Meetings.Count(m => !m.IsDeleted &&
-                m.MeetingDate == today &&
-                (!companyId.HasValue || m.CompanyId == companyId)));
-
-    private static readonly Func<AppDbContext, Guid?, Task<int>> CountPendingMeetingsCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid? companyId) =>
-            ctx.Meetings.Count(m => !m.IsDeleted &&
-                m.Status == MeetingStatus.Pending &&
-                (!companyId.HasValue || m.CompanyId == companyId)));
-
-    #endregion
 
     public AdminDashboardService(
         AppDbContext context,
@@ -69,347 +32,307 @@ public class AdminDashboardService : IAdminDashboardService
     }
 
     /// <summary>
-    /// Admin dashboard üçün tam məlumatları gətirir (cached)
+    /// Admin dashboard üçün tam məlumatları gətirir
     /// </summary>
     public async Task<DashboardViewModel> GetDashboardDataAsync(Guid? companyId = null)
     {
-        var cacheKey = string.Format(CACHE_KEY_ADMIN_DASHBOARD, companyId?.ToString() ?? "global");
-
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        // Cache-i bypass edərək test edirik
+        try
         {
-            entry.SetAbsoluteExpiration(CacheDuration);
+            _logger.LogInformation("========== DASHBOARD DATA LOADING ==========");
+            _logger.LogInformation("CompanyId: {CompanyId}", companyId?.ToString() ?? "NULL (Global)");
 
-            try
+            var statistics = await GetStatisticsAsync(companyId);
+            var trends = await GetTrendsAsync(companyId);
+            var activities = await GetRecentActivitiesAsync(companyId, 10);
+            var meetings = await GetUpcomingMeetingsAsync(companyId, 7);
+            var performers = await GetTopPerformersAsync(companyId, 5);
+
+            _logger.LogInformation("Statistics loaded: Teachers={Teachers}, Students={Students}, Parents={Parents}",
+                statistics.TotalTeachers, statistics.TotalStudents, statistics.TotalParents);
+
+            return new DashboardViewModel
             {
-                _logger.LogInformation("Admin Dashboard məlumatları yüklənir. CompanyId: {CompanyId}", companyId);
-
-                // Parallel sorğularla performans artırımı
-                var statisticsTask = GetStatisticsAsync(companyId);
-                var trendsTask = GetTrendsAsync(companyId);
-                var activitiesTask = GetRecentActivitiesAsync(companyId, 10);
-                var meetingsTask = GetUpcomingMeetingsAsync(companyId, 7);
-                var performersTask = GetTopPerformersAsync(companyId, 5);
-
-                await Task.WhenAll(statisticsTask, trendsTask, activitiesTask, meetingsTask, performersTask);
-
-                return new DashboardViewModel
-                {
-                    Statistics = await statisticsTask,
-                    Trends = await trendsTask,
-                    RecentActivities = await activitiesTask,
-                    UpcomingMeetings = await meetingsTask,
-                    TopPerformers = await performersTask
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Admin Dashboard məlumatları yüklənərkən xəta. CompanyId: {CompanyId}", companyId);
-                return new DashboardViewModel();
-            }
-        }) ?? new DashboardViewModel();
+                Statistics = statistics,
+                Trends = trends,
+                RecentActivities = activities,
+                UpcomingMeetings = meetings,
+                TopPerformers = performers
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Dashboard data yüklənərkən xəta");
+            return new DashboardViewModel();
+        }
     }
 
     /// <summary>
-    /// Statistika kartları (compiled + cached)
+    /// Statistika kartları - CACHE DISABLED FOR DEBUG
     /// </summary>
     public async Task<DashboardStatisticsViewModel> GetStatisticsAsync(Guid? companyId = null)
     {
-        var cacheKey = string.Format(CACHE_KEY_ADMIN_STATISTICS, companyId?.ToString() ?? "global");
-
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        try
         {
-            entry.SetAbsoluteExpiration(CacheDuration);
-
             var today = DateTime.Today;
-            var lastMonth = today.AddMonths(-1);
             var thisMonthStart = new DateTime(today.Year, today.Month, 1);
 
-            // Parallel compiled query execution
-            var companiesTask = companyId.HasValue
-                ? Task.FromResult(1)
-                : CountActiveCompaniesCompiled(_context);
+            _logger.LogInformation("===== STATISTICS QUERY START =====");
 
-            var teachersTask = CountActiveTeachersCompiled(_context, companyId);
-            var studentsTask = CountActiveStudentsCompiled(_context, companyId);
-            var parentsTask = CountActiveParentsCompiled(_context, companyId);
-            var todayMeetingsTask = CountTodayMeetingsCompiled(_context, today, companyId);
-            var pendingMeetingsTask = CountPendingMeetingsCompiled(_context, companyId);
+            // Şirkət sayı
+            int totalCompanies;
+            if (companyId.HasValue)
+            {
+                totalCompanies = 1;
+            }
+            else
+            {
+                totalCompanies = await _context.Companies
+                    .IgnoreQueryFilters() // Global filter-i bypass et
+                    .CountAsync(c => c.IsActive && !c.IsDeleted);
+                _logger.LogInformation("Companies (raw count, no filter): {Count}", totalCompanies);
+            }
 
-            // Bu ayın completed və cancelled görüşləri
-            var completedThisMonthTask = _context.Meetings
-                .Where(m => !m.IsDeleted &&
-                    m.Status == MeetingStatus.Completed &&
+            // Müəllimlər - IgnoreQueryFilters ilə test
+            var teachersRaw = await _context.Teachers
+                .IgnoreQueryFilters()
+                .CountAsync(t => !t.IsDeleted);
+            _logger.LogInformation("Teachers (raw, IsDeleted=false): {Count}", teachersRaw);
+
+            var teachersFiltered = await _context.Teachers
+                .CountAsync(t => t.IsActive && (!companyId.HasValue || t.CompanyId == companyId));
+            _logger.LogInformation("Teachers (with company filter): {Count}", teachersFiltered);
+
+            // Şagirdlər
+            var studentsRaw = await _context.Students
+                .IgnoreQueryFilters()
+                .CountAsync(s => !s.IsDeleted);
+            _logger.LogInformation("Students (raw): {Count}", studentsRaw);
+
+            var studentsFiltered = await _context.Students
+                .CountAsync(s => s.IsActive && (!companyId.HasValue || s.CompanyId == companyId));
+            _logger.LogInformation("Students (filtered): {Count}", studentsFiltered);
+
+            // Valideynlər
+            var parentsRaw = await _context.Parents
+                .IgnoreQueryFilters()
+                .CountAsync(p => !p.IsDeleted);
+            _logger.LogInformation("Parents (raw): {Count}", parentsRaw);
+
+            var parentsFiltered = await _context.Parents
+                .CountAsync(p => p.IsActive && (!companyId.HasValue || p.CompanyId == companyId));
+            _logger.LogInformation("Parents (filtered): {Count}", parentsFiltered);
+
+            // Bugünkü görüşlər
+            var todayMeetings = await _context.Meetings
+                .CountAsync(m => m.MeetingDate == today && (!companyId.HasValue || m.CompanyId == companyId));
+            _logger.LogInformation("Today meetings: {Count}", todayMeetings);
+
+            // Gözləyən görüşlər
+            var pendingMeetings = await _context.Meetings
+                .CountAsync(m => m.Status == MeetingStatus.Pending && (!companyId.HasValue || m.CompanyId == companyId));
+            _logger.LogInformation("Pending meetings: {Count}", pendingMeetings);
+
+            // Bu ayın görüşləri
+            var completedThisMonth = await _context.Meetings
+                .CountAsync(m => m.Status == MeetingStatus.Completed &&
                     m.MeetingDate >= thisMonthStart &&
-                    (!companyId.HasValue || m.CompanyId == companyId))
-                .CountAsync();
+                    (!companyId.HasValue || m.CompanyId == companyId));
 
-            var cancelledThisMonthTask = _context.Meetings
-                .Where(m => !m.IsDeleted &&
-                    m.Status == MeetingStatus.Cancelled &&
+            var cancelledThisMonth = await _context.Meetings
+                .CountAsync(m => m.Status == MeetingStatus.Cancelled &&
                     m.MeetingDate >= thisMonthStart &&
-                    (!companyId.HasValue || m.CompanyId == companyId))
-                .CountAsync();
+                    (!companyId.HasValue || m.CompanyId == companyId));
 
-            // Keçən ayın sayları (trend hesablamaq üçün)
-            var teachersLastMonthTask = _context.Teachers
-                .Where(t => t.IsActive && !t.IsDeleted &&
-                    t.CreatedDate < lastMonth &&
-                    (!companyId.HasValue || t.CompanyId == companyId))
-                .CountAsync();
-
-            var studentsLastMonthTask = _context.Students
-                .Where(s => s.IsActive && !s.IsDeleted &&
-                    s.CreatedDate < lastMonth &&
-                    (!companyId.HasValue || s.CompanyId == companyId))
-                .CountAsync();
-
-            await Task.WhenAll(
-                companiesTask, teachersTask, studentsTask, parentsTask,
-                todayMeetingsTask, pendingMeetingsTask,
-                completedThisMonthTask, cancelledThisMonthTask,
-                teachersLastMonthTask, studentsLastMonthTask
-            );
-
-            var totalTeachers = await teachersTask;
-            var totalStudents = await studentsTask;
-            var teachersLastMonth = await teachersLastMonthTask;
-            var studentsLastMonth = await studentsLastMonthTask;
+            _logger.LogInformation("===== STATISTICS QUERY END =====");
 
             return new DashboardStatisticsViewModel
             {
-                TotalCompanies = await companiesTask,
+                TotalCompanies = totalCompanies,
                 CompaniesChangePercent = 0,
-
-                TotalTeachers = totalTeachers,
-                TeachersChangePercent = CalculateChangePercent(totalTeachers, teachersLastMonth),
-
-                TotalStudents = totalStudents,
-                StudentsChangePercent = CalculateChangePercent(totalStudents, studentsLastMonth),
-
-                TotalParents = await parentsTask,
+                TotalTeachers = teachersFiltered,
+                TeachersChangePercent = 0,
+                TotalStudents = studentsFiltered,
+                StudentsChangePercent = 0,
+                TotalParents = parentsFiltered,
                 ParentsChangePercent = 0,
-
-                TodayMeetings = await todayMeetingsTask,
+                TodayMeetings = todayMeetings,
                 TodayMeetingsChangePercent = 0,
-
-                PendingMeetings = await pendingMeetingsTask,
+                PendingMeetings = pendingMeetings,
                 PendingMeetingsChangePercent = 0,
-
-                CompletedMeetingsThisMonth = await completedThisMonthTask,
-                CancelledMeetingsThisMonth = await cancelledThisMonthTask
+                CompletedMeetingsThisMonth = completedThisMonth,
+                CancelledMeetingsThisMonth = cancelledThisMonth
             };
-        }) ?? new DashboardStatisticsViewModel();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Statistics yüklənərkən xəta");
+            return new DashboardStatisticsViewModel();
+        }
     }
 
     /// <summary>
-    /// Aylıq trend məlumatları (son 6 ay)
+    /// Aylıq trend məlumatları
     /// </summary>
     public async Task<DashboardTrendsViewModel> GetTrendsAsync(Guid? companyId = null)
     {
-        var cacheKey = string.Format(CACHE_KEY_ADMIN_TRENDS, companyId?.ToString() ?? "global");
-
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        try
         {
-            entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(15));
+            var trends = new DashboardTrendsViewModel
+            {
+                MonthlyData = new List<MonthlyDataPoint>()
+            };
 
             var today = DateTime.Today;
-            var sixMonthsAgo = today.AddMonths(-6);
 
-            // Son 6 ayın görüş statistikası
-            var meetingStats = await _context.Meetings
-                .Where(m => !m.IsDeleted &&
-                    m.MeetingDate >= sixMonthsAgo &&
-                    (!companyId.HasValue || m.CompanyId == companyId))
-                .GroupBy(m => new { m.MeetingDate.Year, m.MeetingDate.Month })
-                .Select(g => new
+            // Son 6 ayın datası
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthStart = new DateTime(today.Year, today.Month, 1).AddMonths(-i);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                var monthName = monthStart.ToString("MMM yyyy");
+
+                var meetingsCount = await _context.Meetings
+                    .CountAsync(m => m.MeetingDate >= monthStart &&
+                        m.MeetingDate <= monthEnd &&
+                        (!companyId.HasValue || m.CompanyId == companyId));
+
+                var completedCount = await _context.Meetings
+                    .CountAsync(m => m.Status == MeetingStatus.Completed &&
+                        m.MeetingDate >= monthStart &&
+                        m.MeetingDate <= monthEnd &&
+                        (!companyId.HasValue || m.CompanyId == companyId));
+
+                trends.MonthlyData.Add(new MonthlyDataPoint
                 {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
-                    Completed = g.Count(m => m.Status == MeetingStatus.Completed),
-                    Cancelled = g.Count(m => m.Status == MeetingStatus.Cancelled),
-                    Pending = g.Count(m => m.Status == MeetingStatus.Pending)
-                })
-                .ToListAsync();
+                    Month = monthName,
+                    TotalMeetings = meetingsCount,
+                    CompletedMeetings = completedCount,
+                    NewStudents = 0,
+                    NewTeachers = 0
+                });
+            }
 
-            // Azərbaycan dilində ay adları
-            var azMonths = new[] { "Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun",
-                                    "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr" };
-
-            var meetingTrends = meetingStats.Select(m => new MonthlyMeetingTrend
-            {
-                Month = $"{azMonths[m.Month - 1]} {m.Year}",
-                Completed = m.Completed,
-                Cancelled = m.Cancelled,
-                Pending = m.Pending
-            }).ToList();
-
-            return new DashboardTrendsViewModel
-            {
-                MeetingTrends = meetingTrends,
-                UserGrowth = new List<MonthlyUserGrowth>()
-            };
-        }) ?? new DashboardTrendsViewModel();
+            return trends;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Trends yüklənərkən xəta");
+            return new DashboardTrendsViewModel { MonthlyData = new List<MonthlyDataPoint>() };
+        }
     }
 
     /// <summary>
-    /// Son 10 fəaliyyət
+    /// Son fəaliyyətlər
     /// </summary>
     public async Task<List<RecentActivityViewModel>> GetRecentActivitiesAsync(Guid? companyId = null, int count = 10)
     {
-        var recentMeetings = await _context.Meetings
-            .Where(m => !m.IsDeleted && (!companyId.HasValue || m.CompanyId == companyId))
-            .OrderByDescending(m => m.ModifiedDate ?? m.CreatedDate)
-            .Take(count)
-            .Select(m => new
-            {
-                m.ModifiedDate,
-                m.CreatedDate,
-                m.Status,
-                TeacherName = m.Teacher != null ? m.Teacher.FirstName + " " + m.Teacher.LastName : "",
-                ParentName = m.Parent != null ? m.Parent.FirstName + " " + m.Parent.LastName : ""
-            })
-            .ToListAsync();
-
-        return recentMeetings.Select(m => new RecentActivityViewModel
+        try
         {
-            ActivityDate = m.ModifiedDate ?? m.CreatedDate,
-            UserName = m.ParentName,
-            ActivityType = GetActivityType(m.Status),
-            Description = $"{m.TeacherName} ilə görüş",
-            StatusBadgeClass = GetStatusBadgeClass(m.Status),
-            StatusText = GetStatusText(m.Status)
-        }).ToList();
+            var recentMeetings = await _context.Meetings
+                .Include(m => m.Teacher)
+                .Include(m => m.Parent)
+                .Include(m => m.Student)
+                .Where(m => !companyId.HasValue || m.CompanyId == companyId)
+                .OrderByDescending(m => m.CreatedDate)
+                .Take(count)
+                .Select(m => new RecentActivityViewModel
+                {
+                    Id = m.Id,
+                    Type = "Meeting",
+                    Title = $"Görüş: {m.Teacher.FirstName} {m.Teacher.LastName}",
+                    Description = $"{m.Parent.FirstName} {m.Parent.LastName} ilə görüş planlandı",
+                    Timestamp = m.CreatedDate,
+                    Icon = "bi-calendar-event",
+                    IconColor = m.Status == MeetingStatus.Completed ? "success" :
+                               m.Status == MeetingStatus.Cancelled ? "danger" : "primary"
+                })
+                .ToListAsync();
+
+            return recentMeetings;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Recent activities yüklənərkən xəta");
+            return new List<RecentActivityViewModel>();
+        }
     }
 
     /// <summary>
-    /// Gələcək görüşlər (bu gün + növbəti 7 gün)
+    /// Gələcək görüşlər
     /// </summary>
     public async Task<List<UpcomingMeetingViewModel>> GetUpcomingMeetingsAsync(Guid? companyId = null, int days = 7)
     {
-        var today = DateTime.Today;
-        var endDate = today.AddDays(days);
+        try
+        {
+            var today = DateTime.Today;
+            var endDate = today.AddDays(days);
 
-        var meetings = await _context.Meetings
-            .Where(m => !m.IsDeleted &&
-                m.MeetingDate >= today &&
-                m.MeetingDate <= endDate &&
-                (m.Status == MeetingStatus.Pending || m.Status == MeetingStatus.Approved) &&
-                (!companyId.HasValue || m.CompanyId == companyId))
-            .OrderBy(m => m.MeetingDate)
-            .ThenBy(m => m.StartTime)
-            .Select(m => new UpcomingMeetingViewModel
-            {
-                Id = m.Id,
-                MeetingDate = m.MeetingDate,
-                StartTime = m.StartTime,
-                EndTime = m.EndTime,
-                TeacherName = m.Teacher != null ? m.Teacher.FirstName + " " + m.Teacher.LastName : "",
-                ParentName = m.Parent != null ? m.Parent.FirstName + " " + m.Parent.LastName : "",
-                StudentName = m.Student != null ? m.Student.FirstName + " " + m.Student.LastName : "",
-                Status = m.Status,
-                StatusBadgeClass = GetStatusBadgeClass(m.Status)
-            })
-            .Take(10)
-            .ToListAsync();
-
-        return meetings;
+            return await _context.Meetings
+                .Include(m => m.Teacher)
+                .Include(m => m.Parent)
+                .Include(m => m.Student)
+                .Where(m => m.MeetingDate >= today &&
+                    m.MeetingDate <= endDate &&
+                    m.Status == MeetingStatus.Pending &&
+                    (!companyId.HasValue || m.CompanyId == companyId))
+                .OrderBy(m => m.MeetingDate)
+                .ThenBy(m => m.StartTime)
+                .Take(10)
+                .Select(m => new UpcomingMeetingViewModel
+                {
+                    Id = m.Id,
+                    TeacherName = $"{m.Teacher.FirstName} {m.Teacher.LastName}",
+                    ParentName = $"{m.Parent.FirstName} {m.Parent.LastName}",
+                    StudentName = m.Student != null ? $"{m.Student.FirstName} {m.Student.LastName}" : "-",
+                    MeetingDate = m.MeetingDate,
+                    StartTime = m.StartTime,
+                    EndTime = m.EndTime,
+                    Status = m.Status
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Upcoming meetings yüklənərkən xəta");
+            return new List<UpcomingMeetingViewModel>();
+        }
     }
 
     /// <summary>
     /// Top performerlər
     /// </summary>
-    public async Task<TopPerformersViewModel> GetTopPerformersAsync(Guid? companyId = null, int topCount = 5)
+    public async Task<List<TopPerformerViewModel>> GetTopPerformersAsync(Guid? companyId = null, int topCount = 5)
     {
-        var thisMonthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-
-        // Top teachers
-        var topTeachers = await _context.Teachers
-            .Where(t => t.IsActive && !t.IsDeleted &&
-                (!companyId.HasValue || t.CompanyId == companyId))
-            .Select(t => new TopTeacherViewModel
-            {
-                Name = t.FirstName + " " + t.LastName,
-                CompletedMeetingsCount = t.Meetings.Count(m =>
-                    !m.IsDeleted &&
-                    m.Status == MeetingStatus.Completed &&
-                    m.MeetingDate >= thisMonthStart),
-                TotalStudentsCount = t.TeacherClasses
-                    .SelectMany(tc => tc.Class.Students)
-                    .Distinct()
-                    .Count(s => s.IsActive && !s.IsDeleted)
-            })
-            .OrderByDescending(t => t.CompletedMeetingsCount)
-            .Take(topCount)
-            .ToListAsync();
-
-        // Top parents
-        var topParents = await _context.Parents
-            .Where(p => p.IsActive && !p.IsDeleted &&
-                (!companyId.HasValue || p.CompanyId == companyId))
-            .Select(p => new TopParentViewModel
-            {
-                Name = p.FirstName + " " + p.LastName,
-                CompletedMeetingsCount = p.Meetings.Count(m =>
-                    !m.IsDeleted &&
-                    m.Status == MeetingStatus.Completed &&
-                    m.MeetingDate >= thisMonthStart),
-                ChildrenCount = p.StudentParents.Count(sp =>
-                    sp.Student.IsActive && !sp.Student.IsDeleted)
-            })
-            .OrderByDescending(p => p.CompletedMeetingsCount)
-            .Take(topCount)
-            .ToListAsync();
-
-        return new TopPerformersViewModel
+        try
         {
-            TopTeachers = topTeachers,
-            TopParents = topParents
-        };
+            var thisMonthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+            return await _context.Teachers
+                .Where(t => t.IsActive && (!companyId.HasValue || t.CompanyId == companyId))
+                .Select(t => new TopPerformerViewModel
+                {
+                    Id = t.Id,
+                    Name = $"{t.FirstName} {t.LastName}",
+                    ProfileImage = t.ImagePath,
+                    TotalMeetings = t.Meetings.Count(m => m.MeetingDate >= thisMonthStart),
+                    CompletedMeetings = t.Meetings.Count(m => m.Status == MeetingStatus.Completed && m.MeetingDate >= thisMonthStart),
+                    Rating = 4.5m // Placeholder
+                })
+                .OrderByDescending(t => t.CompletedMeetings)
+                .Take(topCount)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Top performers yüklənərkən xəta");
+            return new List<TopPerformerViewModel>();
+        }
     }
 
-    #region Helper Methods
-
-    private int CalculateChangePercent(int current, int previous)
+    private static decimal CalculateChangePercent(int current, int previous)
     {
         if (previous == 0) return current > 0 ? 100 : 0;
-        return (int)Math.Round(((double)(current - previous) / previous) * 100);
+        return Math.Round((decimal)(current - previous) / previous * 100, 1);
     }
-
-    private string GetActivityType(MeetingStatus status)
-    {
-        return status switch
-        {
-            MeetingStatus.Pending => "Görüş sorğusu göndərdi",
-            MeetingStatus.Approved => "Görüşü təsdiqlədi",
-            MeetingStatus.Completed => "Görüş tamamlandı",
-            MeetingStatus.Cancelled => "Görüşü ləğv etdi",
-            _ => "Fəaliyyət"
-        };
-    }
-
-    private string GetStatusBadgeClass(MeetingStatus status)
-    {
-        return status switch
-        {
-            MeetingStatus.Pending => "bg-warning",
-            MeetingStatus.Approved => "bg-primary",
-            MeetingStatus.Completed => "bg-success",
-            MeetingStatus.Cancelled => "bg-danger",
-            _ => "bg-secondary"
-        };
-    }
-
-    private string GetStatusText(MeetingStatus status)
-    {
-        return status switch
-        {
-            MeetingStatus.Pending => "Gözləyir",
-            MeetingStatus.Approved => "Təsdiqləndi",
-            MeetingStatus.Completed => "Tamamlandı",
-            MeetingStatus.Cancelled => "Ləğv edildi",
-            _ => "Naməlum"
-        };
-    }
-
-    #endregion
 }

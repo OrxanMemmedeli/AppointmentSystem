@@ -32,6 +32,11 @@
     var initials = !string.IsNullOrEmpty(fullName)
         ? string.Concat(fullName.Split(' ').Select(s => s.FirstOrDefault()).Take(2)).ToUpper()
         : "A";
+
+    // Current route - aktiv menu üçün (Server-Side)
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString()?.ToLower() ?? "";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower() ?? "";
 }
 <!DOCTYPE html>
 <html lang="az">
@@ -642,7 +647,7 @@
                 display: block;
             }
 
-        /* Meeting table enhancements */
+        /* Table enhancements */
         .table-responsive {
             max-height: 600px;
             overflow-y: auto;
@@ -706,25 +711,28 @@
                     {
                         @if (menu.HasChildren)
                         {
+                            var isParentActive = menu.Children.Any(c =>
+                            c.ControllerName?.ToLower() == currentController);
                             <!-- Parent Menu with Children -->
                             <div class="nav-item">
                                 <a href="javascript:void(0)"
-                                   class="nav-link"
+                                   class="nav-link @(isParentActive ? "active" : "")"
                                    data-bs-toggle="collapse"
                                    data-bs-target="#submenu-@menu.Id"
-                                   aria-expanded="false">
-                                    <i class="@menu.IconSVG"></i>
+                                   aria-expanded="@(isParentActive ? "true" : "false")">
+                                    <i class="@(string.IsNullOrEmpty(menu.IconSVG) ? "bi bi-circle" : menu.IconSVG)"></i>
                                     <span>@menu.Name</span>
                                     <i class="bi bi-chevron-down"></i>
                                 </a>
-                                <div class="nav-submenu collapse" id="submenu-@menu.Id">
+                                <div class="nav-submenu collapse @(isParentActive ? "show" : "")" id="submenu-@menu.Id">
                                     @foreach (var child in menu.Children.Where(c => c.IsVisible))
                                     {
-                                        <a class="nav-link"
-                                           asp-area="@child.AreaName"
+                                        var isChildActive = child.ControllerName?.ToLower() == currentController;
+                                        <a class="nav-link @(isChildActive ? "active" : "")"
+                                           asp-area="@(child.AreaName ?? "Admin")"
                                            asp-controller="@child.ControllerName"
-                                           asp-action="@child.ActionName">
-                                            <i class="@child.IconSVG"></i>
+                                           asp-action="@(child.ActionName ?? "Index")">
+                                            <i class="@(string.IsNullOrEmpty(child.IconSVG) ? "bi bi-circle" : child.IconSVG)"></i>
                                             <span>@child.Name</span>
                                         </a>
                                     }
@@ -733,18 +741,15 @@
                         }
                         else
                         {
+                            var isActive = menu.ControllerName?.ToLower() == currentController;
                             <!-- Single Menu Item -->
                             <div class="nav-item">
-                                <a class="nav-link"
-                                   asp-area="@menu.AreaName"
+                                <a class="nav-link @(isActive ? "active" : "")"
+                                   asp-area="@(menu.AreaName ?? "Admin")"
                                    asp-controller="@menu.ControllerName"
-                                   asp-action="@menu.ActionName">
-                                    <i class="@menu.IconSVG"></i>
+                                   asp-action="@(menu.ActionName ?? "Index")">
+                                    <i class="@(string.IsNullOrEmpty(menu.IconSVG) ? "bi bi-circle" : menu.IconSVG)"></i>
                                     <span>@menu.Name</span>
-                                    @if (menu.Code == "MEETINGS")
-                                    {
-                                        <span class="badge bg-danger">3</span>
-                                    }
                                 </a>
                             </div>
                         }
@@ -752,45 +757,112 @@
                 }
                 else
                 {
-                    <!-- Fallback Static Menu -->
-                    <div class="nav-section-title">Əsas</div>
+                    <!-- ========== FALLBACK STATIC MENU ========== -->
+                    <!-- ƏSAS BÖLMƏ -->
+                    <div class="nav-section-title">ƏSAS</div>
+
                     <div class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <a class="nav-link @(currentController == "dashboard" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                             <i class="bi bi-speedometer2"></i>
                             <span>Dashboard</span>
                         </a>
                     </div>
                     <div class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Company" asp-action="Index">
+                        <a class="nav-link @(currentController == "company" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Company" asp-action="Index">
                             <i class="bi bi-building"></i>
                             <span>Şirkətlər</span>
                         </a>
                     </div>
                     <div class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Teacher" asp-action="Index">
+                        <a class="nav-link @(currentController == "teacher" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Teacher" asp-action="Index">
                             <i class="bi bi-person-badge"></i>
                             <span>Müəllimlər</span>
                         </a>
                     </div>
                     <div class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Student" asp-action="Index">
+                        <a class="nav-link @(currentController == "student" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Student" asp-action="Index">
                             <i class="bi bi-mortarboard"></i>
                             <span>Şagirdlər</span>
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "parent" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Parent" asp-action="Index">
+                            <i class="bi bi-people"></i>
+                            <span>Valideynlər</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "schoolclass" ? "active" : "")"
+                           asp-area="Admin" asp-controller="SchoolClass" asp-action="Index">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Siniflər</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "subject" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Subject" asp-action="Index">
+                            <i class="bi bi-book"></i>
+                            <span>Fənlər</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "meeting" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Meeting" asp-action="Index">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Görüşlər</span>
+                        </a>
+                    </div>
+
+                    <!-- İDARƏETMƏ BÖLMƏSI -->
+                    <div class="nav-section-title">İDARƏETMƏ</div>
+
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "role" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Role" asp-action="Index">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Rollar</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "permission" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Permission" asp-action="Index">
+                            <i class="bi bi-key"></i>
+                            <span>İcazələr</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "parenttype" ? "active" : "")"
+                           asp-area="Admin" asp-controller="ParentType" asp-action="Index">
+                            <i class="bi bi-tag"></i>
+                            <span>Valideyn Tipləri</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link @(currentController == "studentparent" ? "active" : "")"
+                           asp-area="Admin" asp-controller="StudentParent" asp-action="Index">
+                            <i class="bi bi-link-45deg"></i>
+                            <span>Şagird-Valideyn</span>
+                        </a>
+                    </div>
                 }
 
-                <!-- System Section -->
-                <div class="dropdown-divider mx-3 my-2"></div>
-                <div class="nav-section-title">Sistem</div>
+                <!-- SİSTEM BÖLMƏSI - Həmişə Görünür -->
+                <div class="nav-section-title">SİSTEM</div>
                 <div class="nav-item">
-                    <a class="nav-link" asp-area="Admin" asp-controller="Menu" asp-action="Index">
+                    <a class="nav-link @(currentController == "menu" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Menu" asp-action="Index">
                         <i class="bi bi-menu-button-wide"></i>
                         <span>Menyu İdarəsi</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a class="nav-link" asp-area="Admin" asp-controller="Settings" asp-action="Index">
+                    <a class="nav-link @(currentController == "settings" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Settings" asp-action="Index">
                         <i class="bi bi-gear"></i>
                         <span>Tənzimləmələr</span>
                     </a>
@@ -942,7 +1014,6 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('adminSidebar');
             const overlay = document.getElementById('sidebarOverlay');
-
             sidebar.classList.toggle('mobile-show');
             overlay.classList.toggle('show');
         }
@@ -962,39 +1033,46 @@
         document.addEventListener('click', function(event) {
             const userDropdown = document.querySelector('.user-dropdown');
             const userMenu = document.getElementById('userDropdownMenu');
-
             if (!userDropdown.contains(event.target)) {
                 userMenu.classList.remove('show');
             }
         });
 
-        // Active menu highlight
+        // Active menu highlight (JavaScript backup - Server-side artıq işləyir)
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname.toLowerCase();
             const navLinks = document.querySelectorAll('.nav-link:not([data-bs-toggle])');
 
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && currentPath.includes(href.toLowerCase()) && href !== '#') {
-                    link.classList.add('active');
-
-                    // If in submenu, show parent
-                    const parentSubmenu = link.closest('.nav-submenu');
-                    if (parentSubmenu) {
-                        parentSubmenu.classList.add('show');
-                        const parentToggle = document.querySelector(`[data-bs-target="#${parentSubmenu.id}"]`);
-                        if (parentToggle) {
-                            parentToggle.setAttribute('aria-expanded', 'true');
-                        }
+            // Server-side artıq active class qoyub, amma submenu açılması üçün JS lazımdır
+            const activeLinks = document.querySelectorAll('.nav-link.active');
+            activeLinks.forEach(link => {
+                const parentSubmenu = link.closest('.nav-submenu');
+                if (parentSubmenu) {
+                    parentSubmenu.classList.add('show');
+                    const parentToggle = document.querySelector(`[data-bs-target="#${parentSubmenu.id}"]`);
+                    if (parentToggle) {
+                        parentToggle.setAttribute('aria-expanded', 'true');
+                        parentToggle.classList.add('active');
                     }
                 }
             });
+
+            // Submenu toggle functionality
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const target = document.querySelector(this.getAttribute('data-bs-target'));
+                    if (target) {
+                        target.classList.toggle('show');
+                        this.setAttribute('aria-expanded', target.classList.contains('show'));
+                    }
+                });
+            });
         });
 
-        // Auto-hide alerts
+        // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
-                const alerts = document.querySelectorAll('.alert:not(.alert-dismissible)');
+                const alerts = document.querySelectorAll('.alert.alert-dismissible');
                 alerts.forEach(alert => {
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();

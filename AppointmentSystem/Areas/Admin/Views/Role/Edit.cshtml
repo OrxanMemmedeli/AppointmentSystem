@@ -1,176 +1,322 @@
-﻿@model RoleViewModel
+﻿@model AppointmentSystem.Areas.Admin.Models.ViewModels.RoleViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Rol Redaktəsi";
+    var rolePermissions = ViewBag.RolePermissions as List<AppointmentSystem.Areas.Admin.Models.ViewModels.PermissionListViewModel> ?? new();
+    var roleUsers = ViewBag.RoleUsers as List<AppointmentSystem.Areas.Admin.Models.ViewModels.UserListViewModel> ?? new();
+    var allPermissions = ViewBag.AllPermissions as List<SelectListItem> ?? new();
+    var allUsers = ViewBag.AllUsers as List<SelectListItem> ?? new();
+
+    // Artıq təyin edilmiş permission və user ID-ləri
+    var assignedPermissionIds = rolePermissions.Select(p => p.Id.ToString()).ToHashSet();
+    var assignedUserIds = roleUsers.Select(u => u.Id.ToString()).ToHashSet();
 }
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Rol Redaktə Et</h4>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-shield-check text-primary me-2"></i>
+                Rol Redaktəsi
+            </h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-action="Index">Rollar</a></li>
+                    <li class="breadcrumb-item active">@Model.Name</li>
+                </ol>
+            </nav>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Geri
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Sol Panel - Əsas Məlumatlar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Rol Məlumatları
+                    </h6>
                 </div>
                 <div class="card-body">
                     <form asp-action="Edit" method="post">
-                        @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
-
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                         <div class="mb-3">
                             <label asp-for="Name" class="form-label">
-                                Rol Adı <span class="text-danger">*</span>
+                                Ad <span class="text-danger">*</span>
                             </label>
-                            <input asp-for="Name" class="form-control form-control-lg"
-                                   placeholder="Administrator" autofocus />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <input asp-for="Name" class="form-control" placeholder="Rol adı" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Code" class="form-label">
-                                Rol Kodu
-                            </label>
-                            @{
-                                var readOnlyAttrForCode = Model.IsSystemRole ? "readonly" : string.Empty;
-                            }
-
-                            @if (string.IsNullOrEmpty(readOnlyAttrForCode))
-                            {
-                                <input asp-for="Code" class="form-control text-uppercase"
-                                       placeholder="ADMIN" maxlength="50" />
-                            }
-                            else
-                            {
-                                <input asp-for="Code" class="form-control text-uppercase"
-                                       placeholder="ADMIN" maxlength="50" readonly />
-                            }
-
-                            <span asp-validation-for="Code" class="text-danger"></span>
+                            <label asp-for="Code" class="form-label">Kod</label>
                             @if (Model.IsSystemRole)
                             {
-                                <small class="form-text text-warning">
-                                    <i class="bi bi-lock"></i> Sistem rolunun kodu dəyişdirilə bilməz
-                                </small>
+                                <input asp-for="Code" class="form-control text-uppercase"
+                                       placeholder="ROLE_CODE" readonly />
                             }
                             else
                             {
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i>
-                                    Yalnız böyük hərflər və alt xətt
-                                </small>
+                                <input asp-for="Code" class="form-control text-uppercase"
+                                       placeholder="ROLE_CODE" />
+                            }
+                            <span asp-validation-for="Code" class="text-danger small"></span>
+                            @if (Model.IsSystemRole)
+                            {
+                                <small class="text-muted">Sistem rolunun kodu dəyişdirilə bilməz</small>
                             }
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Description" class="form-label">Təsvir</label>
                             <textarea asp-for="Description" class="form-control" rows="3"
-                                      placeholder="Bu rolun məqsədi və vəzifələri..."></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                                      placeholder="Rol haqqında qısa məlumat"></textarea>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Priority" class="form-label">
-                                        Prioritet <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="Priority" type="number" class="form-control"
-                                           min="0" max="100" />
-                                    <span asp-validation-for="Priority" class="text-danger"></span>
-                                    <small class="form-text text-muted">
-                                        0-100 arası
-                                    </small>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label asp-for="Priority" class="form-label">Prioritet</label>
+                            <input asp-for="Priority" type="number" class="form-control" min="0" max="100" />
+                            <small class="text-muted">Yüksək prioritet = daha çox səlahiyyət</small>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mb-3">
-                                    @{
-                                        var disabledAttrForCode = Model.IsSystemRole ? "disabled" : string.Empty;
-                                    }
-
-                                    @if (string.IsNullOrEmpty(readOnlyAttrForCode))
-                                    {
-                                        <input asp-for="IsSystemRole" class="form-check-input"
-                                               type="checkbox" role="switch" />
-                                    }
-                                    else
-                                    {
-                                        <input asp-for="IsSystemRole" class="form-check-input"
-                                               type="checkbox" role="switch"
-                                               disabled />
-                                    }
-                                    <label asp-for="IsSystemRole" class="form-check-label">
-                                        <i class="bi bi-gear"></i> Sistem Rolu
-                                    </label>
-                                    @if (Model.IsSystemRole)
-                                    {
-                                        <input type="hidden" asp-for="IsSystemRole" value="true" />
-                                        <div class="form-text text-warning">
-                                            Bu parametr dəyişdirilə bilməz
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mb-3">
-                                    <input asp-for="IsActive" class="form-check-input"
-                                           type="checkbox" role="switch" />
-                                    <label asp-for="IsActive" class="form-check-label">
-                                        <i class="bi bi-check-circle"></i> Aktiv
-                                    </label>
-                                </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">Aktiv</label>
                             </div>
                         </div>
 
                         @if (Model.IsSystemRole)
                         {
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                <strong>Diqqət:</strong> Bu sistem rolu olduğu üçün bəzi parametrlər dəyişdirilə bilməz.
+                            <div class="alert alert-warning py-2 mb-3">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <small>Bu sistem roludur, bəzi parametrlər dəyişdirilə bilməz.</small>
                             </div>
+                            <input type="hidden" asp-for="IsSystemRole" />
                         }
 
-                        <hr class="my-4" />
-
-                        <div class="d-flex justify-content-between">
-                            <a asp-action="Index" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Geri
-                            </a>
-                            <button type="submit" class="btn btn-warning btn-lg">
-                                <i class="bi bi-save"></i> Dəyişiklikləri Yadda Saxla
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i> Yadda Saxla
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Statistika Kartı -->
-            <div class="card mt-3 border-primary">
+            <!-- Statistika -->
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-primary mb-3">
-                        <i class="bi bi-graph-up"></i> Rol Statistikası
-                    </h6>
                     <div class="row text-center">
                         <div class="col-6">
-                            <div class="border rounded p-3">
-                                <h3 class="mb-0 text-primary">
-                                    <i class="bi bi-people"></i>
-                                </h3>
-                                <small class="text-muted">İstifadəçilər</small>
+                            <div class="border-end">
+                                <h3 class="text-primary mb-0">@rolePermissions.Count</h3>
+                                <small class="text-muted">İcazə</small>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="border rounded p-3">
-                                <h3 class="mb-0 text-success">
-                                    <i class="bi bi-key"></i>
-                                </h3>
-                                <small class="text-muted">İcazələr</small>
-                            </div>
+                            <h3 class="text-success mb-0">@roleUsers.Count</h3>
+                            <small class="text-muted">İstifadəçi</small>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel - Junction Tables -->
+        <div class="col-lg-8">
+            <!-- İcazələr -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-key me-2"></i>
+                        İcazələr (@rolePermissions.Count)
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-dark"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#addPermissionForm">
+                        <i class="bi bi-plus-lg"></i> Əlavə et
+                    </button>
+                </div>
+
+                <!-- İcazə Əlavə Formu -->
+                <div class="collapse" id="addPermissionForm">
+                    <div class="card-body border-bottom bg-light">
+                        <form asp-action="AssignPermission" method="post" class="row g-2 align-items-end">
+                            <input type="hidden" name="roleId" value="@Model.Id" />
+                            <div class="col-md-8">
+                                <label class="form-label small">İcazə Seçin</label>
+                                <select name="permissionId" class="form-select" required>
+                                    <option value="">-- İcazə seçin --</option>
+                                    @foreach (var perm in allPermissions.Where(p => !assignedPermissionIds.Contains(p.Value)))
+                                    {
+                                        <option value="@perm.Value">@perm.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="bi bi-plus-lg me-1"></i> Əlavə Et
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (rolePermissions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ad</th>
+                                        <th>Kod</th>
+                                        <th>Tip</th>
+                                        <th class="text-center" style="width: 80px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var perm in rolePermissions)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@perm.Name</strong>
+                                                @if (!string.IsNullOrEmpty(perm.Description))
+                                                {
+                                                    <br />
+                                        
+                                                    <small class="text-muted">@perm.Description</small>
+                                                }
+                                            </td>
+                                            <td><code>@perm.Code</code></td>
+                                            <td>
+                                                <span class="badge bg-info">@perm.Type</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <form asp-action="RemovePermission" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Bu icazəni silmək istədiyinizə əminsiniz?');">
+                                                    <input type="hidden" name="roleId" value="@Model.Id" />
+                                                    <input type="hidden" name="permissionId" value="@perm.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-key display-6 d-block mb-2"></i>
+                            <p class="mb-0">Bu rola heç bir icazə təyin edilməyib</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- İstifadəçilər -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        İstifadəçilər (@roleUsers.Count)
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-light"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#addUserForm">
+                        <i class="bi bi-plus-lg"></i> Əlavə et
+                    </button>
+                </div>
+
+                <!-- İstifadəçi Əlavə Formu -->
+                <div class="collapse" id="addUserForm">
+                    <div class="card-body border-bottom bg-light">
+                        <form asp-action="AssignUser" method="post" class="row g-2 align-items-end">
+                            <input type="hidden" name="roleId" value="@Model.Id" />
+                            <div class="col-md-8">
+                                <label class="form-label small">İstifadəçi Seçin</label>
+                                <select name="userId" class="form-select" required>
+                                    <option value="">-- İstifadəçi seçin --</option>
+                                    @foreach (var user in allUsers.Where(u => !assignedUserIds.Contains(u.Value)))
+                                    {
+                                        <option value="@user.Value">@user.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-plus-lg me-1"></i> Əlavə Et
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (roleUsers.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ad Soyad</th>
+                                        <th>İstifadəçi adı</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th class="text-center" style="width: 80px;">Əməliyyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in roleUsers)
+                                    {
+                                        <tr>
+                                            <td><strong>@user.FullName</strong></td>
+                                            <td>@user.UserName</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Aktiv</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Deaktiv</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <form asp-action="RemoveUser" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Bu istifadəçini roldan çıxarmaq istədiyinizə əminsiniz?');">
+                                                    <input type="hidden" name="roleId" value="@Model.Id" />
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Çıxar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-people display-6 d-block mb-2"></i>
+                            <p class="mb-0">Bu rola heç bir istifadəçi təyin edilməyib</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -179,15 +325,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const codeInput = document.getElementById('@Html.IdFor(m => m.Code)');
-            if (codeInput && !codeInput.hasAttribute('readonly')) {
-                codeInput.addEventListener('input', function() {
-                    this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
-                });
-            }
+        // Collapse toggle with auto-focus
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const target = document.querySelector(this.getAttribute('data-bs-target'));
+                setTimeout(() => {
+                    if (target.classList.contains('show')) {
+                        const firstInput = target.querySelector('select, input');
+                        if (firstInput) firstInput.focus();
+                    }
+                }, 350);
+            });
         });
     </script>
 }

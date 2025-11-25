@@ -3,6 +3,7 @@ using AppointmentSystem.Data;
 using AppointmentSystem.Models.Entities;
 using AppointmentSystem.Models.Enums;
 using AppointmentSystem.Services.Abstract;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace AppointmentSystem.Services.Concrete;
@@ -321,5 +322,23 @@ public class PermissionService : IPermissionService
     public List<string> GetHttpMethods()
     {
         return new List<string> { "GET", "POST", "PUT", "DELETE", "PATCH" };
+    }
+
+    /// <summary>İcazə seçim siyahısı (dropdown)</summary>
+    public async Task<List<SelectListItem>> GetPermissionSelectListAsync()
+    {
+        return await _context.Permissions
+            .AsNoTracking()
+            .Where(p => !p.IsDeleted && p.IsActive)
+            .OrderBy(p => p.Type)
+            .ThenBy(p => p.Name)
+            .Select(p => new SelectListItem
+            {
+                Value = p.Id.ToString(),
+                Text = !string.IsNullOrEmpty(p.Code)
+                    ? $"{p.Name} ({p.Code})"
+                    : p.Name
+            })
+            .ToListAsync();
     }
 }

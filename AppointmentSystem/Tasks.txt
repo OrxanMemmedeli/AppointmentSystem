@@ -1,8 +1,8 @@
-﻿* Menu Controller ve HTML kodlarini yaz. 
-* Identity ucun qalan hisseleri yaz. 
-* Layout-Menuda Idendity ucun saheleri elave et.
+﻿* Identity ucun qalan hisseleri yaz. 
+* Dashboard hissesinde melumatlar getirilmir her sey 0 gorunur. (Bazada data var)	
+* Esas sehifede company melumatini getirib gostere bilmir. (Bazada data var)
 
-
+* Menuda her hansi bir deyisiklik olsa cache temizle
 
 ------------------------------------------------------ Hazir ------------------------------------------------------
 * Service-ler merkezi olaraq inject edilsin. 

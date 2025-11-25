@@ -9,8 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace AppointmentSystem.Services.Concrete;
 
 /// <summary>
-/// Menyu idarəetmə servisi - Production-ready implementasiya
-/// DRY, SOLID, Compiled Queries, Caching
+/// Menyu idarəetmə servisi - EF Core 8 uyğun, sadə implementasiya
 /// </summary>
 public class MenuService : IMenuService
 {
@@ -18,77 +17,9 @@ public class MenuService : IMenuService
     private readonly ILogger<MenuService> _logger;
     private readonly IMemoryCache _cache;
 
-    // Cache keys
     private const string CACHE_KEY_ALL_MENUS = "Menus:All";
-    private const string CACHE_KEY_ROOT_MENUS = "Menus:Root";
     private const string CACHE_KEY_USER_MENUS = "Menus:User:{0}";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
-
-    #region Compiled Queries - PERFORMANS ÜÇÜN KRİTİK
-
-    /// <summary>
-    /// Compiled Query - Bütün aktiv menular
-    /// DÜZGÜN: IQueryable<Menu> qaytarır
-    /// </summary>
-    private static readonly Func<AppDbContext, IQueryable<Menu>> GetAllActiveMenusCompiled =
-        EF.CompileQuery((AppDbContext ctx) =>
-            ctx.Menus
-                .AsNoTracking()
-                .Where(m => !m.IsDeleted && m.IsActive)
-                .OrderBy(m => m.Level)
-                .ThenBy(m => m.OrderIndex)
-                .ThenBy(m => m.Name));
-
-    /// <summary>
-    /// Compiled Query - Root menular
-    /// DÜZGÜN: IQueryable<Menu> qaytarır
-    /// </summary>
-    private static readonly Func<AppDbContext, IQueryable<Menu>> GetRootMenusCompiled =
-        EF.CompileQuery((AppDbContext ctx) =>
-            ctx.Menus
-                .AsNoTracking()
-                .Where(m => !m.IsDeleted && m.IsActive && m.ParentId == null)
-                .OrderBy(m => m.OrderIndex)
-                .ThenBy(m => m.Name));
-
-    /// <summary>
-    /// Compiled Query - İstifadəçinin role-larına görə menular
-    /// DÜZGÜN: IQueryable<Menu> qaytarır
-    /// </summary>
-    private static readonly Func<AppDbContext, Guid, IQueryable<Menu>> GetUserMenusByRolesCompiled =
-        EF.CompileQuery((AppDbContext ctx, Guid userId) =>
-            ctx.Menus
-                .AsNoTracking()
-                .Where(m => !m.IsDeleted && m.IsActive && m.IsVisible &&
-                    (ctx.UserMenus.Any(um => um.UserId == userId && um.MenuId == m.Id) ||
-                     ctx.RoleMenus.Any(rm => rm.MenuId == m.Id &&
-                        ctx.UserRoles.Any(ur => ur.UserId == userId && ur.RoleId == rm.RoleId))))
-                .OrderBy(m => m.Level)
-                .ThenBy(m => m.OrderIndex)
-                .ThenBy(m => m.Name));
-
-    /// <summary>
-    /// Compiled Query - Menyu ID-yə görə
-    /// </summary>
-    private static readonly Func<AppDbContext, Guid, Task<Menu?>> GetMenuByIdCompiled =
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid id) =>
-            ctx.Menus
-                .AsNoTracking()
-                .FirstOrDefault(m => m.Id == id && !m.IsDeleted));
-
-    /// <summary>
-    /// Compiled Query - Child menular
-    /// DÜZGÜN: IQueryable<Menu> qaytarır
-    /// </summary>
-    private static readonly Func<AppDbContext, Guid, IQueryable<Menu>> GetChildMenusCompiled =
-        EF.CompileQuery((AppDbContext ctx, Guid parentId) =>
-            ctx.Menus
-                .AsNoTracking()
-                .Where(m => !m.IsDeleted && m.ParentId == parentId)
-                .OrderBy(m => m.OrderIndex)
-                .ThenBy(m => m.Name));
-
-    #endregion
 
     public MenuService(
         AppDbContext context,
@@ -103,16 +34,19 @@ public class MenuService : IMenuService
     #region Query Methods
 
     /// <summary>
-    /// Bütün menyuları gətirir (Cache ilə)
+    /// Bütün menyuları gətirir
     /// </summary>
     public async Task<List<MenuListViewModel>> GetAllMenusAsync()
     {
-        return await _cache.GetOrCreateAsync(CACHE_KEY_ALL_MENUS, async entry =>
+        try
         {
-            entry.SetAbsoluteExpiration(CacheDuration);
-
-            // DÜZGÜN: IQueryable-dan ToListAsync()
-            var menus = await GetAllActiveMenusCompiled(_context).ToListAsync();
+            var menus = await _context.Menus
+                .AsNoTracking()
+                .Where(m => !m.IsDeleted)
+                .OrderBy(m => m.Level)
+                .ThenBy(m => m.OrderIndex)
+                .ThenBy(m => m.Name)
+                .ToListAsync();
 
             return menus.Select(m => new MenuListViewModel
             {
@@ -133,20 +67,27 @@ public class MenuService : IMenuService
                 ControllerName = m.ControllerName,
                 ActionName = m.ActionName
             }).ToList();
-        }) ?? new List<MenuListViewModel>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Menyular yüklənərkən xəta");
+            return new List<MenuListViewModel>();
+        }
     }
 
     /// <summary>
-    /// Root səviyyə menyuları gətirir (Cache ilə)
+    /// Root menyuları gətirir
     /// </summary>
     public async Task<List<MenuListViewModel>> GetRootMenusAsync()
     {
-        return await _cache.GetOrCreateAsync(CACHE_KEY_ROOT_MENUS, async entry =>
+        try
         {
-            entry.SetAbsoluteExpiration(CacheDuration);
-
-            // DÜZGÜN: IQueryable-dan ToListAsync()
-            var menus = await GetRootMenusCompiled(_context).ToListAsync();
+            var menus = await _context.Menus
+                .AsNoTracking()
+                .Where(m => !m.IsDeleted && m.IsActive && m.ParentId == null)
+                .OrderBy(m => m.OrderIndex)
+                .ThenBy(m => m.Name)
+                .ToListAsync();
 
             return menus.Select(m => new MenuListViewModel
             {
@@ -160,203 +101,205 @@ public class MenuService : IMenuService
                 IsVisible = m.IsVisible,
                 IsActive = m.IsActive
             }).ToList();
-        }) ?? new List<MenuListViewModel>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Root menyular yüklənərkən xəta");
+            return new List<MenuListViewModel>();
+        }
     }
 
     /// <summary>
-    /// Child menyuları gətirir (Compiled Query ilə)
+    /// Child menyuları gətirir
     /// </summary>
     public async Task<List<MenuListViewModel>> GetChildMenusAsync(Guid parentId)
     {
-        // DÜZGÜN: IQueryable-dan ToListAsync()
-        var menus = await GetChildMenusCompiled(_context, parentId).ToListAsync();
-
-        return menus.Select(m => new MenuListViewModel
+        try
         {
-            Id = m.Id,
-            ParentId = m.ParentId,
-            Name = m.Name,
-            Code = m.Code,
-            OrderIndex = m.OrderIndex,
-            Level = m.Level,
-            IconSVG = m.IconSVG,
-            Type = m.Type,
-            IsVisible = m.IsVisible,
-            IsActive = m.IsActive
-        }).ToList();
+            var menus = await _context.Menus
+                .AsNoTracking()
+                .Where(m => !m.IsDeleted && m.ParentId == parentId)
+                .OrderBy(m => m.OrderIndex)
+                .ThenBy(m => m.Name)
+                .ToListAsync();
+
+            return menus.Select(m => new MenuListViewModel
+            {
+                Id = m.Id,
+                ParentId = m.ParentId,
+                Name = m.Name,
+                Code = m.Code,
+                OrderIndex = m.OrderIndex,
+                Level = m.Level,
+                IconSVG = m.IconSVG,
+                Type = m.Type,
+                IsVisible = m.IsVisible,
+                IsActive = m.IsActive
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Child menyular yüklənərkən xəta: ParentId={ParentId}", parentId);
+            return new List<MenuListViewModel>();
+        }
     }
 
     /// <summary>
-    /// İyerarxik menyu ağacı gətirir
-    /// Optimized - N+1 problemi həll edilib
+    /// Menyu ağacını gətirir
     /// </summary>
     public async Task<List<MenuTreeViewModel>> GetMenuTreeAsync()
     {
-        // Bütün menyuları bir sorğuda yüklə
-        var allMenus = await GetAllActiveMenusCompiled(_context).ToListAsync();
-
-        // Dictionary ilə lookup sürətləndirmə
-        var menuLookup = allMenus.ToDictionary(m => m.Id);
-
-        // Tree quruluşu
-        var tree = new List<MenuTreeViewModel>();
-
-        foreach (var menu in allMenus.Where(m => m.ParentId == null))
+        try
         {
-            tree.Add(BuildMenuTreeNode(menu, allMenus, menuLookup));
-        }
+            var allMenus = await _context.Menus
+                .AsNoTracking()
+                .Where(m => !m.IsDeleted && m.IsActive)
+                .OrderBy(m => m.Level)
+                .ThenBy(m => m.OrderIndex)
+                .ThenBy(m => m.Name)
+                .ToListAsync();
 
-        return tree;
+            var tree = new List<MenuTreeViewModel>();
+            var menuLookup = allMenus.ToDictionary(m => m.Id);
+
+            foreach (var menu in allMenus.Where(m => m.ParentId == null))
+            {
+                tree.Add(BuildTreeNode(menu, allMenus));
+            }
+
+            return tree;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Menyu ağacı yüklənərkən xəta");
+            return new List<MenuTreeViewModel>();
+        }
     }
 
     /// <summary>
-    /// Rekursiv tree node builder - optimized
-    /// </summary>
-    private MenuTreeViewModel BuildMenuTreeNode(
-        Menu menu,
-        List<Menu> allMenus,
-        Dictionary<Guid, Menu> lookup)
-    {
-        var node = new MenuTreeViewModel
-        {
-            Id = menu.Id,
-            Name = menu.Name,
-            Code = menu.Code,
-            IconSVG = menu.IconSVG,
-            Level = menu.Level,
-            OrderIndex = menu.OrderIndex,
-            Type = menu.Type,
-            IsVisible = menu.IsVisible,
-            IsActive = menu.IsActive,
-            AreaName = menu.AreaName,
-            ControllerName = menu.ControllerName,
-            ActionName = menu.ActionName,
-            Children = new List<MenuTreeViewModel>()
-        };
-
-        // Child-ları tap və əlavə et
-        var children = allMenus.Where(m => m.ParentId == menu.Id);
-        foreach (var child in children)
-        {
-            node.Children.Add(BuildMenuTreeNode(child, allMenus, lookup));
-        }
-
-        return node;
-    }
-
-    /// <summary>
-    /// İstifadəçinin role və permission-larına görə menular
-    /// Bu metod Layout-da istifadə olunur - ÇOX KRİTİK!
+    /// İstifadəçinin menyularını gətirir (Layout üçün) - KRİTİK METOD
     /// </summary>
     public async Task<List<MenuTreeViewModel>> GetUserMenusWithPermissionsAsync(Guid userId)
     {
         var cacheKey = string.Format(CACHE_KEY_USER_MENUS, userId);
 
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        // Cache-dən yoxla
+        if (_cache.TryGetValue(cacheKey, out List<MenuTreeViewModel>? cachedMenus) && cachedMenus != null)
         {
-            entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-
-            try
-            {
-                // İstifadəçinin bütün icazəli menyularını gətir
-                var userMenus = await GetUserMenusByRolesCompiled(_context, userId).ToListAsync();
-
-                if (!userMenus.Any())
-                {
-                    _logger.LogWarning("İstifadəçinin heç bir menyusu tapılmadı. User ID: {UserId}", userId);
-                    return new List<MenuTreeViewModel>();
-                }
-
-                // Dictionary ilə lookup
-                var menuLookup = userMenus.ToDictionary(m => m.Id);
-
-                // Tree structure qur
-                var tree = new List<MenuTreeViewModel>();
-
-                foreach (var menu in userMenus.Where(m => m.ParentId == null))
-                {
-                    tree.Add(BuildUserMenuTreeNode(menu, userMenus, menuLookup));
-                }
-
-                return tree;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "İstifadəçi menyuları yüklənərkən xəta. User ID: {UserId}", userId);
-                return new List<MenuTreeViewModel>();
-            }
-        }) ?? new List<MenuTreeViewModel>();
-    }
-
-    /// <summary>
-    /// User menu tree node builder
-    /// </summary>
-    private MenuTreeViewModel BuildUserMenuTreeNode(
-        Menu menu,
-        List<Menu> userMenus,
-        Dictionary<Guid, Menu> lookup)
-    {
-        var node = new MenuTreeViewModel
-        {
-            Id = menu.Id,
-            ParentId = menu.ParentId,
-            Name = menu.Name,
-            Code = menu.Code,
-            IconSVG = menu.IconSVG,
-            Level = menu.Level,
-            OrderIndex = menu.OrderIndex,
-            Type = menu.Type,
-            IsVisible = menu.IsVisible,
-            IsActive = menu.IsActive,
-            AreaName = menu.AreaName,
-            ControllerName = menu.ControllerName,
-            ActionName = menu.ActionName,
-            Url = menu.Url,
-            Children = new List<MenuTreeViewModel>()
-        };
-
-        // Bu menyunun child-larını tap
-        var children = userMenus
-            .Where(m => m.ParentId == menu.Id && m.IsVisible)
-            .OrderBy(m => m.OrderIndex)
-            .ThenBy(m => m.Name);
-
-        foreach (var child in children)
-        {
-            node.Children.Add(BuildUserMenuTreeNode(child, userMenus, lookup));
+            return cachedMenus;
         }
 
-        return node;
+        try
+        {
+            // İstifadəçinin rollarını yoxla
+            var userRolesCodes = await _context.UserRoles
+                .AsNoTracking()
+                .Where(ur => ur.UserId == userId && !ur.IsDeleted && ur.Role.IsActive)
+                .Select(ur => ur.Role.Code)
+                .ToListAsync();
+
+            List<Menu> userMenus;
+
+            // SuperAdmin bütün menyuları görür
+            if (userRolesCodes.Contains("SUPERADMIN"))
+            {
+                userMenus = await _context.Menus
+                    .AsNoTracking()
+                    .Where(m => !m.IsDeleted && m.IsActive && m.IsVisible)
+                    .OrderBy(m => m.Level)
+                    .ThenBy(m => m.OrderIndex)
+                    .ThenBy(m => m.Name)
+                    .ToListAsync();
+            }
+            else
+            {
+                // Role-based menyular - sadələşdirilmiş
+                var userRoleIds = await _context.UserRoles
+                    .AsNoTracking()
+                    .Where(ur => ur.UserId == userId && !ur.IsDeleted)
+                    .Select(ur => ur.RoleId)
+                    .ToListAsync();
+
+                var roleMenuIds = await _context.RoleMenus
+                    .AsNoTracking()
+                    .Where(rm => userRoleIds.Contains(rm.RoleId) && !rm.IsDeleted)
+                    .Select(rm => rm.MenuId)
+                    .ToListAsync();
+
+                var userMenuIds = await _context.UserMenus
+                    .AsNoTracking()
+                    .Where(um => um.UserId == userId && !um.IsDeleted)
+                    .Select(um => um.MenuId)
+                    .ToListAsync();
+
+                var allMenuIds = roleMenuIds.Union(userMenuIds).Distinct().ToList();
+
+                userMenus = await _context.Menus
+                    .AsNoTracking()
+                    .Where(m => !m.IsDeleted && m.IsActive && m.IsVisible && allMenuIds.Contains(m.Id))
+                    .OrderBy(m => m.Level)
+                    .ThenBy(m => m.OrderIndex)
+                    .ThenBy(m => m.Name)
+                    .ToListAsync();
+            }
+
+            // Tree quruluşu yarat
+            var tree = new List<MenuTreeViewModel>();
+            foreach (var menu in userMenus.Where(m => m.ParentId == null))
+            {
+                tree.Add(BuildTreeNode(menu, userMenus));
+            }
+
+            // Cache-ə yaz
+            _cache.Set(cacheKey, tree, CacheDuration);
+
+            return tree;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "İstifadəçi menyuları yüklənərkən xəta. UserId: {UserId}", userId);
+            return new List<MenuTreeViewModel>();
+        }
     }
 
     /// <summary>
-    /// ID-yə görə menyu gətirir (Compiled Query ilə)
+    /// ID-yə görə menyu gətirir
     /// </summary>
     public async Task<MenuViewModel?> GetMenuByIdAsync(Guid id)
     {
-        var menu = await GetMenuByIdCompiled(_context, id);
-
-        if (menu == null)
-            return null;
-
-        return new MenuViewModel
+        try
         {
-            Id = menu.Id,
-            ParentId = menu.ParentId,
-            Name = menu.Name,
-            Code = menu.Code,
-            Description = menu.Description,
-            OrderIndex = menu.OrderIndex,
-            Level = menu.Level,
-            IconSVG = menu.IconSVG,
-            Url = menu.Url,
-            AreaName = menu.AreaName,
-            ControllerName = menu.ControllerName,
-            ActionName = menu.ActionName,
-            IsVisible = menu.IsVisible, // DÜZƏLDILDI: menu.IsVisible
-            Type = menu.Type,
-            IsActive = menu.IsActive
-        };
+            var menu = await _context.Menus
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted);
+
+            if (menu == null)
+                return null;
+
+            return new MenuViewModel
+            {
+                Id = menu.Id,
+                ParentId = menu.ParentId,
+                Name = menu.Name,
+                Code = menu.Code,
+                Description = menu.Description,
+                OrderIndex = menu.OrderIndex,
+                Level = menu.Level,
+                IconSVG = menu.IconSVG,
+                Url = menu.Url,
+                AreaName = menu.AreaName,
+                ControllerName = menu.ControllerName,
+                ActionName = menu.ActionName,
+                IsVisible = menu.IsVisible,
+                Type = menu.Type,
+                IsActive = menu.IsActive
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Menyu yüklənərkən xəta. Id: {Id}", id);
+            return null;
+        }
     }
 
     /// <summary>
@@ -364,18 +307,41 @@ public class MenuService : IMenuService
     /// </summary>
     public async Task<List<SelectListItem>> GetParentMenuSelectListAsync(Guid? excludeId = null)
     {
-        var menus = await GetAllActiveMenusCompiled(_context).ToListAsync();
-
-        if (excludeId.HasValue)
+        try
         {
-            menus = menus.Where(m => m.Id != excludeId.Value).ToList();
+            var query = _context.Menus
+                .AsNoTracking()
+                .Where(m => !m.IsDeleted && m.IsActive);
+
+            if (excludeId.HasValue)
+            {
+                query = query.Where(m => m.Id != excludeId.Value);
+            }
+
+            var menus = await query
+                .OrderBy(m => m.Level)
+                .ThenBy(m => m.OrderIndex)
+                .ThenBy(m => m.Name)
+                .ToListAsync();
+
+            var result = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Ana menyu (yoxdur) --" }
+            };
+
+            result.AddRange(menus.Select(m => new SelectListItem
+            {
+                Value = m.Id.ToString(),
+                Text = $"{new string('-', m.Level * 2)} {m.Name}"
+            }));
+
+            return result;
         }
-
-        return menus.Select(m => new SelectListItem
+        catch (Exception ex)
         {
-            Value = m.Id.ToString(),
-            Text = $"{new string('-', m.Level * 2)} {m.Name}"
-        }).ToList();
+            _logger.LogError(ex, "Parent menyu siyahısı yüklənərkən xəta");
+            return new List<SelectListItem>();
+        }
     }
 
     #endregion
@@ -391,13 +357,11 @@ public class MenuService : IMenuService
     {
         try
         {
-            // Validation
             if (string.IsNullOrWhiteSpace(model.Name))
             {
                 return (false, "Menyu adı boş ola bilməz", null);
             }
 
-            // Kod unikallığı
             if (!string.IsNullOrWhiteSpace(model.Code))
             {
                 var isUnique = await IsCodeUniqueAsync(model.Code);
@@ -407,11 +371,13 @@ public class MenuService : IMenuService
                 }
             }
 
-            // Level hesabla
             int level = 0;
             if (model.ParentId.HasValue)
             {
-                var parent = await GetMenuByIdCompiled(_context, model.ParentId.Value);
+                var parent = await _context.Menus
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.Id == model.ParentId.Value && !m.IsDeleted);
+
                 if (parent == null)
                 {
                     return (false, "Parent menyu tapılmadı", null);
@@ -444,12 +410,9 @@ public class MenuService : IMenuService
             _context.Menus.Add(menu);
             await _context.SaveChangesAsync();
 
-            // Cache-i təmizlə
             ClearMenuCaches();
 
-            _logger.LogInformation(
-                "Yeni menyu yaradıldı: {MenuName} (ID: {MenuId})",
-                menu.Name, menu.Id);
+            _logger.LogInformation("Yeni menyu yaradıldı: {MenuName} (ID: {MenuId})", menu.Name, menu.Id);
 
             return (true, null, menuId);
         }
@@ -477,13 +440,11 @@ public class MenuService : IMenuService
                 return (false, "Menyu tapılmadı");
             }
 
-            // Validation
             if (string.IsNullOrWhiteSpace(model.Name))
             {
                 return (false, "Menyu adı boş ola bilməz");
             }
 
-            // Kod unikallığı
             if (!string.IsNullOrWhiteSpace(model.Code) && model.Code != menu.Code)
             {
                 var isUnique = await IsCodeUniqueAsync(model.Code, menu.Id);
@@ -493,20 +454,20 @@ public class MenuService : IMenuService
                 }
             }
 
-            // Parent dəyişikliyi
             if (model.ParentId != menu.ParentId)
             {
-                // Özünü parent etməyə icazə vermə
                 if (model.ParentId == menu.Id)
                 {
                     return (false, "Menyu özünə parent ola bilməz");
                 }
 
-                // Level yenilə
                 menu.Level = 0;
                 if (model.ParentId.HasValue)
                 {
-                    var newParent = await GetMenuByIdCompiled(_context, model.ParentId.Value);
+                    var newParent = await _context.Menus
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(m => m.Id == model.ParentId.Value && !m.IsDeleted);
+
                     if (newParent == null)
                     {
                         return (false, "Parent menyu tapılmadı");
@@ -515,7 +476,6 @@ public class MenuService : IMenuService
                 }
             }
 
-            // Update
             menu.ParentId = model.ParentId;
             menu.Name = model.Name.Trim();
             menu.Code = model.Code?.ToUpperInvariant().Trim();
@@ -534,12 +494,9 @@ public class MenuService : IMenuService
 
             await _context.SaveChangesAsync();
 
-            // Cache-i təmizlə
             ClearMenuCaches();
 
-            _logger.LogInformation(
-                "Menyu yeniləndi: {MenuName} (ID: {MenuId})",
-                menu.Name, menu.Id);
+            _logger.LogInformation("Menyu yeniləndi: {MenuName} (ID: {MenuId})", menu.Name, menu.Id);
 
             return (true, null);
         }
@@ -573,12 +530,9 @@ public class MenuService : IMenuService
 
             await _context.SaveChangesAsync();
 
-            // Cache-i təmizlə
             ClearMenuCaches();
 
-            _logger.LogInformation(
-                "Menyu statusu dəyişdi: {MenuName} - Yeni status: {IsActive}",
-                menu.Name, menu.IsActive);
+            _logger.LogInformation("Menyu statusu dəyişdi: {MenuName} - {IsActive}", menu.Name, menu.IsActive);
 
             return (true, null);
         }
@@ -607,7 +561,6 @@ public class MenuService : IMenuService
                 return (false, "Menyu tapılmadı");
             }
 
-            // Child yoxlaması
             var activeChildCount = menu.Children.Count(c => !c.IsDeleted);
             if (activeChildCount > 0)
             {
@@ -621,12 +574,9 @@ public class MenuService : IMenuService
 
             await _context.SaveChangesAsync();
 
-            // Cache-i təmizlə
             ClearMenuCaches();
 
-            _logger.LogWarning(
-                "Menyu silindi: {MenuName} (ID: {MenuId})",
-                menu.Name, menu.Id);
+            _logger.LogWarning("Menyu silindi: {MenuName} (ID: {MenuId})", menu.Name, menu.Id);
 
             return (true, null);
         }
@@ -661,7 +611,6 @@ public class MenuService : IMenuService
 
             await _context.SaveChangesAsync();
 
-            // Cache-i təmizlə
             ClearMenuCaches();
 
             _logger.LogInformation("Menyu sıralaması yeniləndi");
@@ -698,7 +647,7 @@ public class MenuService : IMenuService
     }
 
     /// <summary>
-    /// Mövcud ikonların siyahısını gətirir (Bootstrap Icons 1.11)
+    /// İkon siyahısı
     /// </summary>
     public List<string> GetAvailableIcons()
     {
@@ -711,7 +660,8 @@ public class MenuService : IMenuService
             "bi-heart", "bi-shield-check", "bi-lock", "bi-key",
             "bi-truck", "bi-cart", "bi-credit-card", "bi-wallet",
             "bi-graph-up-arrow", "bi-pie-chart", "bi-bar-chart", "bi-clipboard-data",
-            "bi-building", "bi-briefcase", "bi-file-text", "bi-printer"
+            "bi-building", "bi-briefcase", "bi-file-text", "bi-printer",
+            "bi-diagram-3", "bi-tag", "bi-link-45deg", "bi-menu-button-wide"
         };
     }
 
@@ -719,15 +669,44 @@ public class MenuService : IMenuService
 
     #region Private Helper Methods
 
-    /// <summary>
-    /// Bütün menyu cache-lərini təmizləyir
-    /// </summary>
+    private MenuTreeViewModel BuildTreeNode(Menu menu, List<Menu> allMenus)
+    {
+        var node = new MenuTreeViewModel
+        {
+            Id = menu.Id,
+            ParentId = menu.ParentId,
+            Name = menu.Name,
+            Code = menu.Code,
+            IconSVG = menu.IconSVG,
+            Level = menu.Level,
+            OrderIndex = menu.OrderIndex,
+            Type = menu.Type,
+            IsVisible = menu.IsVisible,
+            IsActive = menu.IsActive,
+            AreaName = menu.AreaName,
+            ControllerName = menu.ControllerName,
+            ActionName = menu.ActionName,
+            Url = menu.Url,
+            Children = new List<MenuTreeViewModel>()
+        };
+
+        var children = allMenus
+            .Where(m => m.ParentId == menu.Id)
+            .OrderBy(m => m.OrderIndex)
+            .ThenBy(m => m.Name);
+
+        foreach (var child in children)
+        {
+            node.Children.Add(BuildTreeNode(child, allMenus));
+        }
+
+        return node;
+    }
+
     private void ClearMenuCaches()
     {
         _cache.Remove(CACHE_KEY_ALL_MENUS);
-        _cache.Remove(CACHE_KEY_ROOT_MENUS);
-
-        // User-specific cache-ləri də təmizlə
+        // User-specific cache-ləri silmək çətindir, ona görə sadəcə timeout-a buraxırıq
         _logger.LogDebug("Menu cache-ləri təmizləndi");
     }
 

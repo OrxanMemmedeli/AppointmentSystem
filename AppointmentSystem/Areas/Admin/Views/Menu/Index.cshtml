@@ -1,282 +1,154 @@
-﻿@model List<MenuListViewModel>
+﻿@model List<AppointmentSystem.Areas.Admin.Models.ViewModels.MenuListViewModel>
 @{
-    ViewData["Title"] = "Menyu İdarəetməsi";
+    ViewData["Title"] = "Menyu İdarəsi";
+    var viewType = ViewData["ViewType"]?.ToString() ?? "table";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-list-nested"></i> Menyu İdarəetməsi</h2>
-        <div class="btn-group">
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Yeni Menyu
-            </a>
-            <a asp-action="Index" asp-route-view="tree" class="btn btn-outline-secondary">
-                <i class="bi bi-diagram-3"></i> Ağac Görünüşü
-            </a>
+        <div>
+            <h4 class="mb-1">
+                <i class="bi bi-menu-button-wide text-primary me-2"></i>
+                Menyu İdarəsi
+            </h4>
+            <p class="text-muted mb-0">Sistem menyularını idarə edin</p>
         </div>
-    </div>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <!-- Filter Panel -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Səviyyə</label>
-                    <select class="form-select form-select-sm" id="filterLevel">
-                        <option value="">Hamısı</option>
-                        <option value="0">Root (Səviyyə 0)</option>
-                        <option value="1">Səviyyə 1</option>
-                        <option value="2">Səviyyə 2</option>
-                        <option value="3">Səviyyə 3</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Tip</label>
-                    <select class="form-select form-select-sm" id="filterType">
-                        <option value="">Hamısı</option>
-                        @foreach (MenuType type in Enum.GetValues<MenuType>())
-                        {
-                            <option value="@type">@type</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Status</label>
-                    <select class="form-select form-select-sm" id="filterStatus">
-                        <option value="">Hamısı</option>
-                        <option value="active">Aktiv</option>
-                        <option value="inactive">Deaktiv</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Görünürlük</label>
-                    <select class="form-select form-select-sm" id="filterVisibility">
-                        <option value="">Hamısı</option>
-                        <option value="visible">Görünən</option>
-                        <option value="hidden">Gizli</option>
-                    </select>
-                </div>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <a asp-action="Index" asp-route-view="table"
+                   class="btn btn-outline-secondary @(viewType == "table" ? "active" : "")">
+                    <i class="bi bi-list"></i>
+                </a>
+                <a asp-action="Index" asp-route-view="tree"
+                   class="btn btn-outline-secondary @(viewType == "tree" ? "active" : "")">
+                    <i class="bi bi-diagram-3"></i>
+                </a>
             </div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Yeni Menyu
+            </a>
         </div>
     </div>
 
+    <!-- Menus Table -->
     <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle" id="menuTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 30px;"></th>
-                            <th>Menyu</th>
-                            <th>Kod</th>
-                            <th>Parent</th>
-                            <th>Tip</th>
-                            <th>URL/Route</th>
-                            <th>Sıra</th>
-                            <th>Səviyyə</th>
-                            <th>Child</th>
-                            <th>Status</th>
-                            <th style="width: 200px;">Əməliyyatlar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var menu in Model.OrderBy(m => m.Level).ThenBy(m => m.OrderIndex))
-                        {
-                            <tr data-level="@menu.Level"
-                                data-type="@menu.Type"
-                                data-status="@(menu.IsActive ? "active" : "inactive")"
-                                data-visibility="@(menu.IsVisible ? "visible" : "hidden")">
-                                <td>
-                                    @if (!string.IsNullOrEmpty(menu.IconSVG))
-                                    {
-                                        <i class="@menu.IconSVG"></i>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
+        <div class="card-body p-0">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">Sıra</th>
+                                <th>Ad</th>
+                                <th>Kod</th>
+                                <th>Controller/Action</th>
+                                <th>Tip</th>
+                                <th class="text-center">Görünür</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end" style="width: 150px;">Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var menu in Model.OrderBy(m => m.Level).ThenBy(m => m.OrderIndex))
+                            {
+                                var indent = new string('─', menu.Level * 2);
+                                <tr>
+                                    <td>@menu.OrderIndex</td>
+                                    <td>
                                         @if (menu.Level > 0)
                                         {
-                                            <span class="text-muted me-2">@(new string('│', menu.Level))└─</span>
+                                            <span class="text-muted">@indent </span>
                                         }
+                                        <i class="@(menu.IconSVG ?? "bi-circle") me-2"></i>
                                         <strong>@menu.Name</strong>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(menu.Code))
-                                    {
-                                        <code class="small">@menu.Code</code>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(menu.ParentName))
-                                    {
-                                        <span class="badge bg-secondary">@menu.ParentName</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-primary">Root</span>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge bg-@(menu.Type switch
-                                    {
-                                        MenuType.Link => "primary",
-                                        MenuType.Group => "info",
-                                        MenuType.Separator => "secondary",
-                                        _ => "dark"
-                                    })">
-                                        @menu.Type
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(menu.Url))
-                                    {
-                                        <small class="text-muted">@menu.Url</small>
-                                    }
-                                    else if (!string.IsNullOrEmpty(menu.ControllerName))
-                                    {
-                                        <small class="text-muted">
-                                            @menu.AreaName/@menu.ControllerName/@menu.ActionName
-                                        </small>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge bg-dark">@menu.OrderIndex</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">@menu.Level</span>
-                                </td>
-                                <td>
-                                    @if (menu.ChildCount > 0)
-                                    {
-                                        <span class="badge bg-warning text-dark">@menu.ChildCount</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (menu.IsVisible)
-                                    {
-                                        <i class="bi bi-eye text-success" title="Görünən"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-eye-slash text-muted" title="Gizli"></i>
-                                    }
-                                    @if (menu.IsActive)
-                                    {
-                                        <span class="badge bg-success">Aktiv</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Deaktiv</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Create" asp-route-parentId="@menu.Id"
-                                           class="btn btn-outline-success" title="Alt menyu əlavə et">
-                                            <i class="bi bi-plus"></i>
-                                        </a>
-
-                                        <a asp-action="Edit" asp-route-id="@menu.Id"
-                                           class="btn btn-outline-primary" title="Redaktə et">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-
-                                        <form asp-action="ToggleStatus" asp-route-id="@menu.Id"
-                                              method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-warning"
-                                                    title="@(menu.IsActive ? "Deaktiv et" : "Aktiv et")">
-                                                <i class="bi bi-@(menu.IsActive ? "pause" : "play")-circle"></i>
-                                            </button>
-                                        </form>
-
-                                        <a asp-action="Delete" asp-route-id="@menu.Id"
-                                           class="btn btn-outline-danger" title="Sil">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            @if (!Model.Any())
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(menu.Code))
+                                        {
+                                            <code>@menu.Code</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(menu.ControllerName))
+                                        {
+                                            <code>@menu.AreaName/@menu.ControllerName/@menu.ActionName</code>
+                                        }
+                                        else if (!string.IsNullOrEmpty(menu.Url))
+                                        {
+                                            <a href="@menu.Url" target="_blank" class="text-decoration-none">
+                                                <i class="bi bi-box-arrow-up-right"></i> @menu.Url
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@menu.Type</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (menu.IsVisible)
+                                        {
+                                            <i class="bi bi-eye text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-eye-slash text-muted"></i>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (menu.IsActive)
+                                        {
+                                            <span class="badge bg-success">Aktiv</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Deaktiv</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Edit" asp-route-id="@menu.Id"
+                                               class="btn btn-outline-primary" title="Redaktə">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@menu.Id" />
+                                                <button type="submit"
+                                                        class="btn btn-outline-warning"
+                                                        title="@(menu.IsActive ? "Deaktiv et" : "Aktiv et")">
+                                                    <i class="bi @(menu.IsActive ? "bi-pause" : "bi-play")"></i>
+                                                </button>
+                                            </form>
+                                            <a asp-action="Delete" asp-route-id="@menu.Id"
+                                               class="btn btn-outline-danger" title="Sil">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
             {
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                    <p class="mt-3">Hələ menyu yaradılmayıb</p>
+                <div class="text-center py-5">
+                    <i class="bi bi-menu-button-wide display-4 text-muted"></i>
+                    <p class="text-muted mt-3">Heç bir menyu tapılmadı</p>
                     <a asp-action="Create" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> İlk Menyunu Yarat
+                        <i class="bi bi-plus-lg me-1"></i> İlk Menyu Yarat
                     </a>
                 </div>
             }
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        // Filter funksionallığı
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterLevel = document.getElementById('filterLevel');
-            const filterType = document.getElementById('filterType');
-            const filterStatus = document.getElementById('filterStatus');
-            const filterVisibility = document.getElementById('filterVisibility');
-            const tableRows = document.querySelectorAll('#menuTable tbody tr');
-
-            function applyFilters() {
-                const levelValue = filterLevel.value;
-                const typeValue = filterType.value;
-                const statusValue = filterStatus.value;
-                const visibilityValue = filterVisibility.value;
-
-                tableRows.forEach(row => {
-                    let show = true;
-
-                    if (levelValue && row.dataset.level !== levelValue) show = false;
-                    if (typeValue && row.dataset.type !== typeValue) show = false;
-                    if (statusValue && row.dataset.status !== statusValue) show = false;
-                    if (visibilityValue && row.dataset.visibility !== visibilityValue) show = false;
-
-                    row.style.display = show ? '' : 'none';
-                });
-            }
-
-            filterLevel.addEventListener('change', applyFilters);
-            filterType.addEventListener('change', applyFilters);
-            filterStatus.addEventListener('change', applyFilters);
-            filterVisibility.addEventListener('change', applyFilters);
-        });
-    </script>
-}

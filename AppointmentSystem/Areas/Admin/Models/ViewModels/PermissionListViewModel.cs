@@ -19,4 +19,7 @@ public class PermissionListViewModel
     public int RoleCount { get; set; }
     public int UserCount { get; set; }
     public DateTime CreatedDate { get; set; }
+    public string? AreaName { get; set; }
+    public string? ControllerName { get; set; }
+    public string? ActionName { get; set; }
 }

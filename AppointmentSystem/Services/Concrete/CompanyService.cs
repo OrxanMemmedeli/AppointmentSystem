@@ -193,67 +193,64 @@ public class CompanyService : ICompanyService
     {
         try
         {
-            if (!model.Id.HasValue)
-            {
-                return (false, "Şirkət ID-si tələb olunur");
-            }
-
             var company = await _context.Companies
-                .FirstOrDefaultAsync(c => c.Id == model.Id.Value && !c.IsDeleted);
+                .FirstOrDefaultAsync(c => c.Id == model.Id && !c.IsDeleted);
 
             if (company == null)
             {
                 return (false, "Şirkət tapılmadı");
             }
 
-            // Kod unikallığını yoxla
-            if (model.Code != company.Code)
-            {
-                var isUnique = await IsCodeUniqueAsync(model.Code, company.Id);
-                if (!isUnique)
-                {
-                    return (false, "Bu kod artıq istifadə olunur");
-                }
-            }
-
-            company.Name = model.Name.Trim();
-            company.Code = model.Code.ToUpperInvariant().Trim();
-            company.Email = model.Email?.Trim().ToLowerInvariant();
+            // Əsas məlumatları yenilə
+            company.Name = model.Name?.Trim();
+            company.Code = model.Code?.Trim();
+            company.Email = model.Email?.Trim();
             company.PhoneNumber = model.PhoneNumber?.Trim();
-            company.Address = model.Address?.Trim();
             company.Website = model.Website?.Trim();
-            company.Description = model.Description?.Trim();
+            company.Address = model.Address?.Trim();
             company.MapUrl = model.MapUrl?.Trim();
-            company.MapCoordinates = model.MapCoordinates?.Trim();
-            company.DefaultMeetingDuration = model.DefaultMeetingDuration;
-            company.DefaultBreakDuration = model.DefaultBreakDuration;
+            company.MapCoordinates = model.MapCoordinates;
             company.DefaultStartTime = model.DefaultStartTime;
             company.DefaultEndTime = model.DefaultEndTime;
-            company.WorkingDays = model.WorkingDays;
+            company.DefaultBreakDuration = model.DefaultBreakDuration;
+            company.DefaultMeetingDuration = model.DefaultMeetingDuration;
+            company.Description = model.Description?.Trim();
             company.IsActive = model.IsActive;
             company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
-            // Yeni logo yüklənməsi
-            if (model.LogoFile != null)
+            // Logo yükləmə (OPSIONAL - əgər yüklənibsə)
+            if (model.LogoFile != null && model.LogoFile.Length > 0)
             {
-                var (success, errorMessage, filePath) = await UploadLogoAsync(model.LogoFile, company.Id);
-                if (success && !string.IsNullOrEmpty(filePath))
+                // Köhnə logosu sil
+                if (!string.IsNullOrEmpty(company.LogoPath))
                 {
-                    company.LogoPath = filePath;
+                    DeleteFile(company.LogoPath);
                 }
+
+                company.LogoPath = await SaveFileAsync(
+                    model.LogoFile,
+                    "companies",
+                    $"logo_{company.Id}");
             }
 
-            // Yeni background şəkil yüklənməsi
-            if (model.BackgroundImageFile != null)
+            // Background yükləmə (OPSIONAL - əgər yüklənibsə)
+            if (model.BackgroundImageFile != null && model.BackgroundImageFile.Length > 0)
             {
-                var (success, errorMessage, filePath) = await UploadBackgroundImageAsync(model.BackgroundImageFile, company.Id);
-                if (success && !string.IsNullOrEmpty(filePath))
+                // Köhnə background-u sil
+                if (!string.IsNullOrEmpty(company.BackgroundImagePath))
                 {
-                    company.BackgroundImagePath = filePath;
+                    DeleteFile(company.BackgroundImagePath);
                 }
+
+                company.BackgroundImagePath = await SaveFileAsync(
+                    model.BackgroundImageFile,
+                    "companies",
+                    $"bg_{company.Id}");
             }
 
+            // Əsas save
+            _context.Companies.Update(company);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
@@ -265,9 +262,10 @@ public class CompanyService : ICompanyService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Şirkət yenilənərkən xəta: ID {CompanyId}", model.Id);
-            return (false, "Şirkət yenilənərkən xəta baş verdi");
+            return (false, "Şirkət yenilənərkən xəta baş verdi: " + ex.Message);
         }
     }
+
 
     /// <summary>Şirkət statusunu dəyişir</summary>
     public async Task<(bool Success, string? ErrorMessage)> ToggleCompanyStatusAsync(
@@ -906,4 +904,34 @@ public class CompanyService : ICompanyService
     }
 
     #endregion
+
+
+    // Helper metodlar
+    private async Task<string> SaveFileAsync(IFormFile file, string folder, string fileName)
+    {
+        var uploadsFolder = Path.Combine("wwwroot", "uploads", folder);
+        Directory.CreateDirectory(uploadsFolder);
+
+        var extension = Path.GetExtension(file.FileName);
+        var fullFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+        var filePath = Path.Combine(uploadsFolder, fullFileName);
+
+        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(fileStream);
+        }
+
+        return $"/uploads/{folder}/{fullFileName}";
+    }
+
+    private void DeleteFile(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return;
+
+        var fullPath = Path.Combine("wwwroot", path.TrimStart('/'));
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+        }
+    }
 }

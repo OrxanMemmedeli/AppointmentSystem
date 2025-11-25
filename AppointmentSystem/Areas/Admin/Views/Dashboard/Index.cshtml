@@ -1,763 +1,250 @@
 ﻿@model AppointmentSystem.Areas.Admin.Models.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    Layout = "_LayoutAdmin";
 }
 
-@section Styles {
-    <style>
-        /* Dashboard-specific styles */
-        .stat-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            border: 1px solid #e1e8ed;
-            height: 100%;
-        }
-
-            .stat-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-            }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 8px 0 4px;
-            color: #2c3e50;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-change {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-            .stat-change.positive {
-                color: #27ae60;
-            }
-
-                .stat-change.positive::before {
-                    content: '↑ ';
-                }
-
-            .stat-change.negative {
-                color: #e74c3c;
-            }
-
-                .stat-change.negative::before {
-                    content: '↓ ';
-                }
-
-            .stat-change.neutral {
-                color: #95a5a6;
-            }
-
-        .chart-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e1e8ed;
-            height: 100%;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f5f7fa;
-        }
-
-        .chart-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin: 0;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 320px;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border-radius: 8px;
-            transition: background 0.2s;
-            margin-bottom: 8px;
-        }
-
-            .activity-item:hover {
-                background: #f8f9fa;
-            }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 1.1rem;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-user {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-
-        .activity-desc {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            margin-top: 2px;
-        }
-
-        .activity-time {
-            font-size: 0.75rem;
-            color: #95a5a6;
-            margin-left: 12px;
-        }
-
-        .meeting-item {
-            padding: 14px;
-            border-left: 4px solid #3498db;
-            background: #f8f9fa;
-            border-radius: 0 8px 8px 0;
-            margin-bottom: 10px;
-            transition: all 0.2s;
-        }
-
-            .meeting-item:hover {
-                background: #ecf0f1;
-                transform: translateX(4px);
-            }
-
-        .meeting-date {
-            font-weight: 700;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-
-        .meeting-time {
-            color: #7f8c8d;
-            font-size: 0.8rem;
-        }
-
-        .meeting-participants {
-            margin-top: 6px;
-            font-size: 0.85rem;
-            color: #555;
-        }
-
-        .quick-action-btn {
-            padding: 14px;
-            border-radius: 8px;
-            border: 2px solid #e1e8ed;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: #2c3e50;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-            .quick-action-btn:hover {
-                border-color: #3498db;
-                background: #f8f9fa;
-                color: #3498db;
-                transform: translateY(-2px);
-            }
-
-            .quick-action-btn i {
-                font-size: 1.3rem;
-            }
-
-        .performer-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-        }
-
-        .performer-rank {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            margin-right: 12px;
-        }
-
-        .performer-info {
-            flex: 1;
-        }
-
-        .performer-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-
-        .performer-stats {
-            font-size: 0.75rem;
-            color: #7f8c8d;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #95a5a6;
-        }
-
-            .empty-state i {
-                font-size: 3rem;
-                margin-bottom: 16px;
-                opacity: 0.5;
-            }
-    </style>
-}
-
-<!-- Welcome Header -->
-<div class="row mb-4">
-    <div class="col">
-        <h2 class="mb-1">
-            <i class="bi bi-speedometer2 text-primary"></i>
-            Xoş gəlmisiniz, @User.Identity?.Name!
-        </h2>
-        <p class="text-muted mb-0">Sistem statistikası və son məlumatlar</p>
-    </div>
-</div>
-
-<!-- Statistics Cards -->
-<div class="row g-4 mb-4">
-    <!-- Companies -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Şirkətlər</div>
-                    <div class="stat-value">@Model.Statistics.TotalCompanies</div>
-                    @if (Model.Statistics.CompaniesChangePercent != 0)
-                    {
-                        <div class="stat-change @(Model.Statistics.CompaniesChangePercent > 0 ? "positive" : "negative")">
-                            @Math.Abs(Model.Statistics.CompaniesChangePercent)% bu ay
+<div class="container-fluid">
+    <!-- Statistika Kartları -->
+    <div class="row g-4 mb-4">
+        <!-- Şirkətlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Şirkətlər</p>
+                            <h3 class="mb-0 fw-bold">@Model.Statistics.TotalCompanies</h3>
                         </div>
-                    }
-                </div>
-                <div class="stat-icon" style="background: rgba(52, 152, 219, 0.1);">
-                    <i class="bi bi-building" style="color: #3498db;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Teachers -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Müəllimlər</div>
-                    <div class="stat-value">@Model.Statistics.TotalTeachers</div>
-                    @if (Model.Statistics.TeachersChangePercent != 0)
-                    {
-                        <div class="stat-change @(Model.Statistics.TeachersChangePercent > 0 ? "positive" : "negative")">
-                            @Math.Abs(Model.Statistics.TeachersChangePercent)% bu ay
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-building text-primary fs-4"></i>
                         </div>
-                    }
-                </div>
-                <div class="stat-icon" style="background: rgba(39, 174, 96, 0.1);">
-                    <i class="bi bi-person-badge" style="color: #27ae60;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Students -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Şagirdlər</div>
-                    <div class="stat-value">@Model.Statistics.TotalStudents</div>
-                    @if (Model.Statistics.StudentsChangePercent != 0)
-                    {
-                        <div class="stat-change @(Model.Statistics.StudentsChangePercent > 0 ? "positive" : "negative")">
-                            @Math.Abs(Model.Statistics.StudentsChangePercent)% bu ay
-                        </div>
-                    }
-                </div>
-                <div class="stat-icon" style="background: rgba(41, 128, 185, 0.1);">
-                    <i class="bi bi-mortarboard" style="color: #2980b9;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Parents -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Valideynlər</div>
-                    <div class="stat-value">@Model.Statistics.TotalParents</div>
-                    @if (Model.Statistics.ParentsChangePercent != 0)
-                    {
-                        <div class="stat-change @(Model.Statistics.ParentsChangePercent > 0 ? "positive" : "negative")">
-                            @Math.Abs(Model.Statistics.ParentsChangePercent)% bu ay
-                        </div>
-                    }
-                </div>
-                <div class="stat-icon" style="background: rgba(243, 156, 18, 0.1);">
-                    <i class="bi bi-people" style="color: #f39c12;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Today Meetings -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Bu Günkü Görüşlər</div>
-                    <div class="stat-value">@Model.Statistics.TodayMeetings</div>
-                    @if (Model.Statistics.TodayMeetingsChangePercent != 0)
-                    {
-                        <div class="stat-change @(Model.Statistics.TodayMeetingsChangePercent > 0 ? "positive" : "negative")">
-                            @Math.Abs(Model.Statistics.TodayMeetingsChangePercent)% dünənə görə
-                        </div>
-                    }
-                </div>
-                <div class="stat-icon" style="background: rgba(155, 89, 182, 0.1);">
-                    <i class="bi bi-calendar-event" style="color: #9b59b6;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pending Meetings -->
-    <div class="col-md-6 col-xl-4">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="stat-label">Gözləyən Görüşlər</div>
-                    <div class="stat-value">@Model.Statistics.PendingMeetings</div>
-                    <div class="stat-change neutral">
-                        <i class="bi bi-hourglass-split"></i> Təsdiqlənməyi gözləyir
                     </div>
                 </div>
-                <div class="stat-icon" style="background: rgba(231, 76, 60, 0.1);">
-                    <i class="bi bi-clock-history" style="color: #e74c3c;"></i>
-                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Charts and Data -->
-<div class="row g-4 mb-4">
-    <!-- Meeting Trends Chart -->
-    <div class="col-lg-8">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h5 class="chart-title">
-                    <i class="bi bi-bar-chart-line text-primary"></i>
-                    Görüş Statistikası (Son 6 Ay)
-                </h5>
-                <div>
-                    <span class="badge bg-success me-2">
-                        <i class="bi bi-check-circle"></i> @Model.Statistics.CompletedMeetingsThisMonth Tamamlandı
-                    </span>
-                    <span class="badge bg-danger">
-                        <i class="bi bi-x-circle"></i> @Model.Statistics.CancelledMeetingsThisMonth Ləğv edildi
-                    </span>
-                </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="meetingTrendsChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Performers -->
-    <div class="col-lg-4">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h5 class="chart-title">
-                    <i class="bi bi-star text-warning"></i>
-                    Top Performerlər
-                </h5>
-            </div>
-
-            <div class="mb-3">
-                <h6 class="text-muted mb-2" style="font-size: 0.85rem;">
-                    <i class="bi bi-person-badge"></i> Ən Aktiv Müəllimlər
-                </h6>
-                @if (Model.TopPerformers.TopTeachers.Any())
-                {
-                    @for (int i = 0; i < Model.TopPerformers.TopTeachers.Count; i++)
-                    {
-                        var teacher = Model.TopPerformers.TopTeachers[i];
-                        <div class="performer-item">
-                            <div class="performer-rank">@(i + 1)</div>
-                            <div class="performer-info">
-                                <div class="performer-name">@teacher.Name</div>
-                                <div class="performer-stats">
-                                    <i class="bi bi-calendar-check"></i> @teacher.CompletedMeetingsCount görüş
-                                    • <i class="bi bi-people"></i> @teacher.TotalStudentsCount şagird
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="empty-state py-2">
-                        <i class="bi bi-inbox"></i>
-                        <p class="mb-0" style="font-size: 0.85rem;">Məlumat yoxdur</p>
-                    </div>
-                }
-            </div>
-
-            <div>
-                <h6 class="text-muted mb-2" style="font-size: 0.85rem;">
-                    <i class="bi bi-people"></i> Ən Aktiv Valideynlər
-                </h6>
-                @if (Model.TopPerformers.TopParents.Any())
-                {
-                    @for (int i = 0; i < Model.TopPerformers.TopParents.Count; i++)
-                    {
-                        var parent = Model.TopPerformers.TopParents[i];
-                        <div class="performer-item">
-                            <div class="performer-rank">@(i + 1)</div>
-                            <div class="performer-info">
-                                <div class="performer-name">@parent.Name</div>
-                                <div class="performer-stats">
-                                    <i class="bi bi-calendar-check"></i> @parent.CompletedMeetingsCount görüş
-                                    • <i class="bi bi-person"></i> @parent.ChildrenCount uşaq
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="empty-state py-2">
-                        <i class="bi bi-inbox"></i>
-                        <p class="mb-0" style="font-size: 0.85rem;">Məlumat yoxdur</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activities and Upcoming Meetings -->
-<div class="row g-4">
-    <!-- Recent Activities -->
-    <div class="col-lg-7">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h5 class="chart-title">
-                    <i class="bi bi-activity text-info"></i>
-                    Son Fəaliyyətlər
-                </h5>
-            </div>
-            <div style="max-height: 400px; overflow-y: auto;">
-                @if (Model.RecentActivities.Any())
-                {
-                    @foreach (var activity in Model.RecentActivities)
-                    {
-                        <div class="activity-item">
-                            <div class="activity-icon" style="background: rgba(52, 152, 219, 0.1);">
-                                <i class="bi bi-calendar-event" style="color: #3498db;"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-user">@activity.UserName</div>
-                                <div class="activity-desc">
-                                    @activity.ActivityType - @activity.Description
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge @activity.StatusBadgeClass">@activity.StatusText</span>
-                                <span class="activity-time">
-                                    @activity.ActivityDate.ToString("dd.MM.yyyy HH:mm")
-                                </span>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>Hələ ki heç bir fəaliyyət yoxdur</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Upcoming Meetings -->
-    <div class="col-lg-5">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h5 class="chart-title">
-                    <i class="bi bi-calendar-week text-success"></i>
-                    Gələcək Görüşlər
-                </h5>
-            </div>
-            <div style="max-height: 400px; overflow-y: auto;">
-                @if (Model.UpcomingMeetings.Any())
-                {
-                    @foreach (var meeting in Model.UpcomingMeetings)
-                    {
-                        <div class="meeting-item">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="meeting-date">
-                                    <i class="bi bi-calendar3"></i>
-                                    @meeting.MeetingDate.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("az-AZ"))
-                                </div>
-                                <span class="badge @meeting.StatusBadgeClass">
-                                    @meeting.Status.ToString()
-                                </span>
-                            </div>
-                            <div class="meeting-time">
-                                <i class="bi bi-clock"></i>
-                                @meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")
-                            </div>
-                            <div class="meeting-participants">
-                                <i class="bi bi-person-badge"></i> @meeting.TeacherName
-                                <br />
-                                <i class="bi bi-people"></i> @meeting.ParentName
-                                @if (!string.IsNullOrEmpty(meeting.StudentName))
-                                {
-                                    <span>(@meeting.StudentName)</span>
-                                }
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <i class="bi bi-calendar-x"></i>
-                        <p>Yaxın günlərdə görüş planlanmayıb</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions (Optional) -->
-<div class="row g-4 mt-2">
-    <div class="col-12">
-        <div class="chart-card">
-            <div class="chart-header mb-3">
-                <h5 class="chart-title">
-                    <i class="bi bi-lightning-charge text-warning"></i>
-                    Sürətli Əməliyyatlar
-                </h5>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <a asp-area="Admin" asp-controller="Company" asp-action="Create" class="quick-action-btn">
-                        <i class="bi bi-plus-circle text-primary"></i>
-                        <span>Yeni Şirkət</span>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a asp-area="Admin" asp-controller="Teacher" asp-action="Create" class="quick-action-btn">
-                        <i class="bi bi-person-plus text-success"></i>
-                        <span>Yeni Müəllim</span>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a asp-area="Admin" asp-controller="Student" asp-action="Create" class="quick-action-btn">
-                        <i class="bi bi-person-add text-info"></i>
-                        <span>Yeni Şagird</span>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a asp-area="Admin" asp-controller="Settings" asp-action="Index" class="quick-action-btn">
-                        <i class="bi bi-gear text-secondary"></i>
-                        <span>Tənzimləmələr</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-    <script>
-        // Meeting Trends Chart
-        const meetingCtx = document.getElementById('meetingTrendsChart');
-
-        // Data from server
-        const meetingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Trends.MeetingTrends));
-
-        const labels = meetingData.map(d => d.month);
-        const completedData = meetingData.map(d => d.completed);
-        const cancelledData = meetingData.map(d => d.cancelled);
-        const pendingData = meetingData.map(d => d.pending);
-
-        new Chart(meetingCtx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Tamamlandı',
-                        data: completedData,
-                        backgroundColor: 'rgba(39, 174, 96, 0.8)',
-                        borderColor: 'rgba(39, 174, 96, 1)',
-                        borderWidth: 2,
-                        borderRadius: 6
-                    },
-                    {
-                        label: 'Ləğv edildi',
-                        data: cancelledData,
-                        backgroundColor: 'rgba(231, 76, 60, 0.8)',
-                        borderColor: 'rgba(231, 76, 60, 1)',
-                        borderWidth: 2,
-                        borderRadius: 6
-                    },
-                    {
-                        label: 'Gözləyir',
-                        data: pendingData,
-                        backgroundColor: 'rgba(243, 156, 18, 0.8)',
-                        borderColor: 'rgba(243, 156, 18, 1)',
-                        borderWidth: 2,
-                        borderRadius: 6
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            usePointStyle: true,
-                            pointStyle: 'circle'
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        borderRadius: 8,
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y + ' görüş';
+        <!-- Müəllimlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Müəllimlər</p>
+                            <h3 class="mb-0 fw-bold">@Model.Statistics.TotalTeachers</h3>
+                            @if (Model.Statistics.TeachersChangePercent != 0)
+                            {
+                                <small class="@(Model.Statistics.TeachersChangePercent > 0 ? "text-success" : "text-danger")">
+                                    <i class="bi @(Model.Statistics.TeachersChangePercent > 0 ? "bi-arrow-up" : "bi-arrow-down")"></i>
+                                    @Model.Statistics.TeachersChangePercent%
+                                </small>
                             }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 11,
-                                weight: '500'
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-person-badge text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Şagirdlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Şagirdlər</p>
+                            <h3 class="mb-0 fw-bold">@Model.Statistics.TotalStudents</h3>
+                            @if (Model.Statistics.StudentsChangePercent != 0)
+                            {
+                                <small class="@(Model.Statistics.StudentsChangePercent > 0 ? "text-success" : "text-danger")">
+                                    <i class="bi @(Model.Statistics.StudentsChangePercent > 0 ? "bi-arrow-up" : "bi-arrow-down")"></i>
+                                    @Model.Statistics.StudentsChangePercent%
+                                </small>
                             }
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            stepSize: 1
-                        }
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-mortarboard text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Valideynlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small">Valideynlər</p>
+                            <h3 class="mb-0 fw-bold">@Model.Statistics.TotalParents</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-people text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İkinci sətir - Görüşlər -->
+    <div class="row g-4 mb-4">
+        <!-- Bugünkü görüşlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Bugünkü Görüşlər</p>
+                            <h3 class="mb-0 fw-bold text-primary">@Model.Statistics.TodayMeetings</h3>
+                        </div>
+                        <i class="bi bi-calendar-day text-primary fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gözləyən görüşlər -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Gözləyən</p>
+                            <h3 class="mb-0 fw-bold text-warning">@Model.Statistics.PendingMeetings</h3>
+                        </div>
+                        <i class="bi bi-hourglass-split text-warning fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tamamlanmış -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Bu Ay Tamamlanmış</p>
+                            <h3 class="mb-0 fw-bold text-success">@Model.Statistics.CompletedMeetingsThisMonth</h3>
+                        </div>
+                        <i class="bi bi-check-circle text-success fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ləğv edilmiş -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Bu Ay Ləğv Edilmiş</p>
+                            <h3 class="mb-0 fw-bold text-danger">@Model.Statistics.CancelledMeetingsThisMonth</h3>
+                        </div>
+                        <i class="bi bi-x-circle text-danger fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Gələcək Görüşlər -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                        Gələcək Görüşlər
+                    </h6>
+                    <a asp-area="Admin" asp-controller="Meeting" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        Hamısına bax
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.UpcomingMeetings != null && Model.UpcomingMeetings.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tarix</th>
+                                        <th>Vaxt</th>
+                                        <th>Müəllim</th>
+                                        <th>Valideyn</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var meeting in Model.UpcomingMeetings)
+                                    {
+                                        <tr>
+                                            <td>@meeting.MeetingDate.ToString("dd MMM")</td>
+                                            <td>@meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")</td>
+                                            <td>@meeting.TeacherName</td>
+                                            <td>@meeting.ParentName</td>
+                                            <td><span class="badge @meeting.StatusBadgeClass">@meeting.Status</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                }
-            }
-        });
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x display-4"></i>
+                            <p class="mt-3">Gələcək görüş yoxdur</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
 
-        // Animate statistics cards on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const statCards = document.querySelectorAll('.stat-card');
-            statCards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'all 0.5s ease';
-
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 50);
-                }, index * 100);
-            });
-        });
-    </script>
-}
+        <!-- Son Fəaliyyətlər -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-activity text-success me-2"></i>
+                        Son Fəaliyyətlər
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentActivities != null && Model.RecentActivities.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var activity in Model.RecentActivities.Take(5))
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex align-items-start">
+                                        <div class="bg-@activity.IconColor bg-opacity-10 rounded p-2 me-3">
+                                            <i class="bi @activity.Icon text-@activity.IconColor"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 fw-medium">@activity.Title</p>
+                                            <small class="text-muted">@activity.Description</small>
+                                            <br />
+                                            <small class="text-muted">@activity.Timestamp.ToString("dd MMM HH:mm")</small>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4"></i>
+                            <p class="mt-3">Fəaliyyət yoxdur</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
