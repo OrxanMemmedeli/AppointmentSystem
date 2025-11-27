@@ -84,6 +84,9 @@ public class MenuController : Controller
             return View(model);
         }
 
+        // ✅ Cache təmizləmə
+        _menuService.InvalidateAllMenuCaches();
+
         TempData["SuccessMessage"] = "Menyu uğurla yaradıldı";
         return RedirectToAction(nameof(Index));
     }
@@ -125,6 +128,9 @@ public class MenuController : Controller
             return View(model);
         }
 
+        // ✅ Cache təmizləmə
+        _menuService.InvalidateAllMenuCaches();
+
         TempData["SuccessMessage"] = "Menyu uğurla yeniləndi";
         return RedirectToAction(nameof(Index));
     }
@@ -144,6 +150,9 @@ public class MenuController : Controller
         }
         else
         {
+            // ✅ Cache təmizləmə
+            _menuService.InvalidateAllMenuCaches();
+
             TempData["SuccessMessage"] = "Status uğurla dəyişdirildi";
         }
 
@@ -183,6 +192,9 @@ public class MenuController : Controller
         }
         else
         {
+            // ✅ Cache təmizləmə
+            _menuService.InvalidateAllMenuCaches();
+
             TempData["SuccessMessage"] = "Menyu uğurla silindi";
         }
 
@@ -204,6 +216,9 @@ public class MenuController : Controller
 
         var (success, errorMessage) =
             await _menuService.UpdateMenuOrderAsync(menuOrders, currentUserId);
+
+        if (success)
+            _menuService.InvalidateAllMenuCaches(); // ✅ Cache təmizləmə
 
         return Json(new { success, message = errorMessage ?? "Sıralama uğurla yeniləndi" });
     }

@@ -276,9 +276,7 @@
                 </div>
             </div>
 
-            @* Company/Edit.cshtml - Junction Table bölmələri *@
-
-            <!-- Şirkət Fənləri (Company Subjects) -->
+            <!-- ✅ Şirkət Fənləri (Company Subjects) -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-book"></i> Şirkət Fənləri</h5>
@@ -289,15 +287,18 @@
 
                 <div class="collapse" id="subjectSection">
                     <div class="card-body">
-                        <form asp-action="AssignSubject" asp-controller="Company" method="post" class="row g-3">
+                        <form asp-action="AssignSubject" method="post" class="row g-3">
                             <input type="hidden" name="companyId" value="@Model.Id" />
 
                             <div class="col-md-10">
                                 <select name="subjectId" class="form-select" required>
                                     <option value="">Fənn seçin...</option>
-                                    @foreach (var subject in ViewBag.AllSubjects as List<SelectListItem>)
+                                    @if (allSubjects != null && allSubjects.Any())
                                     {
-                                        <option value="@subject.Value">@subject.Text</option>
+                                        @foreach (var subject in allSubjects)
+                                        {
+                                            <option value="@subject.Value">@subject.Text</option>
+                                        }
                                     }
                                 </select>
                             </div>
@@ -314,48 +315,61 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Fənn Adı</th>
-                                    <th>Kod</th>
-                                    <th>Əməliyyatlar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.CompanySubjects != null)
-                                {
-                                    var subjects = ViewBag.CompanySubjects as List<dynamic>;
-                                    var index = 1;
-                                    foreach (var item in subjects)
+                    @if (companySubjects != null && companySubjects.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Fənn Adı</th>
+                                        <th>Kod</th>
+                                        <th>Status</th>
+                                        <th>Əməliyyatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var index = 1;
+                                    }
+                                    @foreach (var subject in companySubjects)
                                     {
                                         <tr>
                                             <td>@(index++)</td>
-                                            <td>@item.SubjectName</td>
-                                            <td>@item.SubjectCode</td>
+                                            <td>@subject.Name</td>
+                                            <td><code>@subject.Code</code></td>
                                             <td>
-                                                <form asp-action="RemoveSubject" asp-controller="Company" method="post" class="d-inline">
+                                                <span class="badge bg-@(subject.IsActive ? "success" : "secondary")">
+                                                    @(subject.IsActive ? "Aktiv" : "Deaktiv")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <form asp-action="RemoveSubject" method="post" class="d-inline">
                                                     <input type="hidden" name="companyId" value="@Model.Id" />
-                                                    <input type="hidden" name="subjectId" value="@item.SubjectId" />
+                                                    <input type="hidden" name="subjectId" value="@subject.Id" />
+                                                    @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-danger"
                                                             onclick="return confirm('Bu fənni çıxarmaq istədiyinizə əminsiniz?')">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
-                                                    @Html.AntiForgeryToken()
                                                 </form>
                                             </td>
                                         </tr>
                                     }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ fənn əlavə edilməyib.
+                        </div>
+                    }
                 </div>
             </div>
 
-            <!-- Şirkət İstifadəçiləri (Company Users) - Eyni struktur -->
+            <!-- ✅ Şirkət İstifadəçiləri (Company Users) - TEK SECTION -->
             <div class="card mb-4">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people"></i> Şirkət İstifadəçiləri</h5>
@@ -366,15 +380,18 @@
 
                 <div class="collapse" id="userSection">
                     <div class="card-body">
-                        <form asp-action="AssignUser" asp-controller="Company" method="post" class="row g-3">
+                        <form asp-action="AssignUser" method="post" class="row g-3">
                             <input type="hidden" name="companyId" value="@Model.Id" />
 
                             <div class="col-md-8">
                                 <select name="userId" class="form-select" required>
                                     <option value="">İstifadəçi seçin...</option>
-                                    @foreach (var user in ViewBag.AllUsers as List<SelectListItem>)
+                                    @if (allUsers != null && allUsers.Any())
                                     {
-                                        <option value="@user.Value">@user.Text</option>
+                                        @foreach (var user in allUsers)
+                                        {
+                                            <option value="@user.Value">@user.Text</option>
+                                        }
                                     }
                                 </select>
                             </div>
@@ -398,59 +415,75 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>İstifadəçi</th>
-                                    <th>Email</th>
-                                    <th>Manager</th>
-                                    <th>Əməliyyatlar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.CompanyUsers != null)
-                                {
-                                    var users = ViewBag.CompanyUsers as List<dynamic>;
-                                    var index = 1;
-                                    foreach (var item in users)
+                    @if (companyUsers != null && companyUsers.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>İstifadəçi</th>
+                                        <th>Email</th>
+                                        <th>Manager</th>
+                                        <th>Status</th>
+                                        <th>Əməliyyatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var userIndex = 1;
+                                    }
+                                    @foreach (var user in companyUsers)
                                     {
                                         <tr>
-                                            <td>@(index++)</td>
-                                            <td>@item.UserName</td>
-                                            <td>@item.Email</td>
+                                            <td>@(userIndex++)</td>
                                             <td>
-                                                <span class="badge bg-@(item.IsManager ? "primary" : "secondary")">
-                                                    @(item.IsManager ? "Bəli" : "Xeyr")
+                                                <strong>@user.UserFullName</strong><br />
+                                                <small class="text-muted">@user.UserName</small>
+                                            </td>
+                                            <td>@user.UserEmail</td>
+                                            <td>
+                                                <span class="badge bg-@(user.IsManager ? "warning" : "secondary")">
+                                                    @(user.IsManager ? "Manager" : "İstifadəçi")
                                                 </span>
                                             </td>
                                             <td>
-                                                <form asp-action="ToggleManagerStatus" asp-controller="Company" method="post" class="d-inline">
+                                                <span class="badge bg-@(user.IsActive ? "success" : "danger")">
+                                                    @(user.IsActive ? "Aktiv" : "Deaktiv")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <form asp-action="ToggleManagerStatus" method="post" class="d-inline">
                                                     <input type="hidden" name="companyId" value="@Model.Id" />
-                                                    <input type="hidden" name="userId" value="@item.UserId" />
-                                                    <button type="submit" class="btn btn-sm btn-warning">
-                                                        <i class="bi bi-arrow-repeat"></i> Toggle Manager
-                                                    </button>
+                                                    <input type="hidden" name="userId" value="@user.UserId" />
                                                     @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-warning" title="Manager statusunu dəyiş">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </button>
                                                 </form>
 
-                                                <form asp-action="RemoveUser" asp-controller="Company" method="post" class="d-inline">
+                                                <form asp-action="RemoveUser" method="post" class="d-inline">
                                                     <input type="hidden" name="companyId" value="@Model.Id" />
-                                                    <input type="hidden" name="userId" value="@item.UserId" />
+                                                    <input type="hidden" name="userId" value="@user.UserId" />
+                                                    @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-danger"
                                                             onclick="return confirm('Bu istifadəçini çıxarmaq istədiyinizə əminsiniz?')">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
-                                                    @Html.AntiForgeryToken()
                                                 </form>
                                             </td>
                                         </tr>
                                     }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> Bu şirkətə hələ istifadəçi əlavə edilməyib.
+                        </div>
+                    }
                 </div>
             </div>
 

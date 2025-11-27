@@ -72,4 +72,9 @@ public interface IMenuService
 
     #endregion
 
+    #region Helper Methods
+    /// <summary>Bütün menu cache-lərini invalidate edir</summary>
+    void InvalidateAllMenuCaches();
+    #endregion
+
 }

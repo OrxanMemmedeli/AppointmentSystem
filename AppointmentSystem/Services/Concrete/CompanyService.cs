@@ -47,7 +47,8 @@ public class CompanyService : ICompanyService
                 TeacherCount = c.Teachers.Count(t => !t.IsDeleted && t.IsActive),
                 ClassCount = c.Classes.Count(sc => !sc.IsDeleted && sc.IsActive),
                 SubjectCount = c.Subjects.Count(s => !s.IsDeleted && s.IsActive),
-                CreatedDate = c.CreatedDate
+                CreatedDate = c.CreatedDate,
+                IsVerified = c.IsVerified
             })
             .OrderByDescending(c => c.CreatedDate)
             .ToListAsync();
@@ -68,7 +69,8 @@ public class CompanyService : ICompanyService
                 Phone = c.PhoneNumber,
                 LogoPath = c.LogoPath,
                 IsActive = c.IsActive,
-                CreatedDate = c.CreatedDate
+                CreatedDate = c.CreatedDate,
+                IsVerified = c.IsVerified
             })
             .OrderBy(c => c.Name)
             .ToListAsync();
@@ -594,9 +596,7 @@ public class CompanyService : ICompanyService
                 return (false, "Şirkət tapılmadı");
             }
 
-            // Əgər şirkətdə IsVerified field-i varsa (yoxdursa bu metod sadəcə log yazsın)
-            // Hazırda Company entity-də IsVerified yoxdur, ona görə sadəcə log yazırıq
-
+            company.IsVerified = true;
             company.ModifiedDate = DateTime.Now;
             company.ModifiedById = currentUserId;
 
@@ -646,8 +646,11 @@ public class CompanyService : ICompanyService
     /// <summary>Şirkətin fənlərini gətirir</summary>
     public async Task<List<SubjectListViewModel>> GetCompanySubjectsAsync(Guid companyId)
     {
-        return await _context.CompanySubjects
+        try
+        {
+            return await _context.CompanySubjects
             .AsNoTracking()
+            .Include(cs => cs.Subject)
             .Where(cs => cs.CompanyId == companyId && !cs.IsDeleted)
             .Select(cs => new SubjectListViewModel
             {
@@ -662,6 +665,12 @@ public class CompanyService : ICompanyService
             })
             .OrderBy(s => s.Name)
             .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Şirkət fənləri yüklənərkən xəta: CompanyId={CompanyId}", companyId);
+            return new List<SubjectListViewModel>();
+        }
     }
 
     /// <summary>Şirkətə fənn əlavə edir</summary>
@@ -760,6 +769,7 @@ public class CompanyService : ICompanyService
     {
         return await _context.CompanyUsers
             .AsNoTracking()
+            .Include(u => u.User)
             .Where(cu => cu.CompanyId == companyId && !cu.IsDeleted)
             .Select(cu => new CompanyUserListViewModel
             {

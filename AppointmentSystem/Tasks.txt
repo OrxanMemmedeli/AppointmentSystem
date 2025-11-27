@@ -1,12 +1,10 @@
 ﻿* Identity ucun qalan hisseleri yaz. 
-* Dashboard hissesinde melumatlar getirilmir her sey 0 gorunur. (Bazada data var)	
-* Esas sehifede company melumatini getirib gostere bilmir. (Bazada data var)
+* sol menuda munu modulunda emeliyat aparan zaman deyisiklik olmur. 
 
-* Menuda her hansi bir deyisiklik olsa cache temizle
 
 ------------------------------------------------------ Hazir ------------------------------------------------------
 * Service-ler merkezi olaraq inject edilsin. 
-
+* Butur melumatlari tapib save eden method numunesi gonder ki, onu seed datada duzelde bilsin. Permission indi yaza ve update ede bilmir. 
 
 
 

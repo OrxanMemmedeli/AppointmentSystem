@@ -783,7 +783,10 @@ public static class SeedData
             Type = MenuType.Link,
             OrderIndex = 1,
             IsVisible = true,
-            IsActive = true
+            IsActive = true,
+            AreaName = "Admin",
+            ControllerName = "Dashboard",
+            ActionName = "Index"
         };
         menus.Add(adminDashboard);
 
@@ -811,7 +814,10 @@ public static class SeedData
             OrderIndex = 1,
             Type = MenuType.Link,
             IsVisible = true,
-            IsActive = true
+            IsActive = true,
+            AreaName = "Admin",
+            ControllerName = "Company",
+            ActionName = "Index"
         });
         menus.Add(new Menu
         {
@@ -823,7 +829,10 @@ public static class SeedData
             OrderIndex = 2,
             Type = MenuType.Link,
             IsVisible = true,
-            IsActive = true
+            IsActive = true,
+            AreaName = "Admin",
+            ControllerName = "Company",
+            ActionName = "Create"
         });
 
         // Müəllimlər
@@ -840,30 +849,30 @@ public static class SeedData
         };
         menus.Add(teachers);
 
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = teachers.Id, Name = "TeacherList", Code = "ADMIN_TEACHER_LIST", Url = "/Admin/Teacher/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true });
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = teachers.Id, Name = "TeacherCreate", Code = "ADMIN_TEACHER_CREATE", Url = "/Admin/Teacher/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = teachers.Id, Name = "TeacherList", Code = "ADMIN_TEACHER_LIST", Url = "/Admin/Teacher/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Teacher", ActionName = "Index" });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = teachers.Id, Name = "TeacherCreate", Code = "ADMIN_TEACHER_CREATE", Url = "/Admin/Teacher/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Teacher", ActionName = "Create" });
 
         // Valideynlər
         var parents = new Menu { Id = Guid.NewGuid(), Name = "Parents", Code = "ADMIN_PARENTS", IconSVG = "bi bi-people", Type = MenuType.Group, OrderIndex = 4, IsVisible = true, IsActive = true };
         menus.Add(parents);
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = parents.Id, Name = "ParentList", Code = "ADMIN_PARENT_LIST", Url = "/Admin/Parent/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true });
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = parents.Id, Name = "ParentCreate", Code = "ADMIN_PARENT_CREATE", Url = "/Admin/Parent/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = parents.Id, Name = "ParentList", Code = "ADMIN_PARENT_LIST", Url = "/Admin/Parent/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Parent", ActionName = "Index" });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = parents.Id, Name = "ParentCreate", Code = "ADMIN_PARENT_CREATE", Url = "/Admin/Parent/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Parent", ActionName = "Create" });
 
         // Şagirdlər
         var students = new Menu { Id = Guid.NewGuid(), Name = "Students", Code = "ADMIN_STUDENTS", IconSVG = "bi bi-mortarboard", Type = MenuType.Group, OrderIndex = 5, IsVisible = true, IsActive = true };
         menus.Add(students);
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = students.Id, Name = "StudentList", Code = "ADMIN_STUDENT_LIST", Url = "/Admin/Student/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true });
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = students.Id, Name = "StudentCreate", Code = "ADMIN_STUDENT_CREATE", Url = "/Admin/Student/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = students.Id, Name = "StudentList", Code = "ADMIN_STUDENT_LIST", Url = "/Admin/Student/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Student", ActionName = "Index" });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = students.Id, Name = "StudentCreate", Code = "ADMIN_STUDENT_CREATE", Url = "/Admin/Student/Create", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Student", ActionName = "Create" });
 
         // Görüşlər
-        menus.Add(new Menu { Id = Guid.NewGuid(), Name = "Meetings", Code = "ADMIN_MEETINGS", Url = "/Admin/Meeting/Index", IconSVG = "bi bi-calendar-event", Type = MenuType.Link, OrderIndex = 6, IsVisible = true, IsActive = true });
+        menus.Add(new Menu { Id = Guid.NewGuid(), Name = "Meetings", Code = "ADMIN_MEETINGS", Url = "/Admin/Meeting/Index", IconSVG = "bi bi-calendar-event", Type = MenuType.Link, OrderIndex = 6, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Meeting", ActionName = "Index" });
 
         // Tənzimləmələr
         var settings = new Menu { Id = Guid.NewGuid(), Name = "Settings", Code = "ADMIN_SETTINGS", IconSVG = "bi bi-gear", Type = MenuType.Group, OrderIndex = 10, IsVisible = true, IsActive = true };
         menus.Add(settings);
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Roles", Code = "ADMIN_ROLES", Url = "/Admin/Role/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true });
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Permissions", Code = "ADMIN_PERMISSIONS", Url = "/Admin/Permission/Index", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true });
-        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Menus", Code = "ADMIN_MENUS", Url = "/Admin/Menu/Index", OrderIndex = 3, Type = MenuType.Link, IsVisible = true, IsActive = true });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Roles", Code = "ADMIN_ROLES", Url = "/Admin/Role/Index", OrderIndex = 1, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Role", ActionName = "Index" });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Permissions", Code = "ADMIN_PERMISSIONS", Url = "/Admin/Permission/Index", OrderIndex = 2, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Permission", ActionName = "Index" });
+        menus.Add(new Menu { Id = Guid.NewGuid(), ParentId = settings.Id, Name = "Menus", Code = "ADMIN_MENUS", Url = "/Admin/Menu/Index", OrderIndex = 3, Type = MenuType.Link, IsVisible = true, IsActive = true, AreaName = "Admin", ControllerName = "Menu", ActionName = "Index" });
 
         await context.Menus.AddRangeAsync(menus);
         await context.SaveChangesAsync();

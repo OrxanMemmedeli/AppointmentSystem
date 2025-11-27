@@ -107,4 +107,5 @@ public class CompanyListViewModel
     public int ClassCount { get; set; }
     public int SubjectCount { get; set; }
     public DateTime CreatedDate { get; set; }
+    public bool IsVerified { get; set; }
 }

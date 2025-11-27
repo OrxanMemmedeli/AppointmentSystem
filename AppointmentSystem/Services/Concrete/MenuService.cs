@@ -711,4 +711,13 @@ public class MenuService : IMenuService
     }
 
     #endregion
+
+    #region Helper Methods
+    /// <summary>
+    /// Bütün menu cache-lərini təmizləyir (Admin əməliyyatlarından sonra)
+    /// </summary>
+    public void InvalidateAllMenuCaches()
+        => ClearMenuCaches();
+    
+    #endregion
 }

@@ -1,0 +1,99 @@
+﻿@model AppointmentSystem.Areas.Admin.Models.ViewModels.MenuTreeViewModel
+
+<div class="menu-tree-node">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center flex-grow-1">
+            <!-- Icon & Name -->
+            <div class="me-3">
+                <i class="@(Model.IconSVG ?? "bi-circle") @(Model.IsActive ? "text-primary" : "text-muted")"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2">
+                    <strong class="@(Model.IsActive ? "" : "text-muted")">@Model.Name</strong>
+
+                    @if (!string.IsNullOrEmpty(Model.Code))
+                    {
+                        <code class="text-muted small">@Model.Code</code>
+                    }
+
+                    <!-- Type Badge -->
+                    <span class="badge bg-info">@Model.Type</span>
+
+                    <!-- Status Badges -->
+                    @if (!Model.IsActive)
+                    {
+                        <span class="badge bg-secondary">Deaktiv</span>
+                    }
+                    @if (!Model.IsVisible)
+                    {
+                        <span class="badge bg-warning text-dark">Gizli</span>
+                    }
+                </div>
+
+                <!-- URL or Route Info - ✅ DÜZƏLDİLDİ -->
+                <div class="small text-muted mt-1">
+                    @if (!string.IsNullOrEmpty(Model.Url))
+                    {
+                        <span><i class="bi bi-link-45deg"></i> @Model.Url</span>
+                    }
+                    else if (!string.IsNullOrEmpty(Model.ControllerName))
+                    {
+                        <span><i class="bi bi-diagram-3"></i> 
+                            @if (string.IsNullOrWhiteSpace(Model.AreaName))
+                            {
+                                @($"{Model.ControllerName}/{Model.ActionName}")
+                            }
+                            else
+                            {
+                                @($"{Model.AreaName}/{Model.ControllerName}/{Model.ActionName}")
+                            }
+                        </span>
+                    }
+                    else
+                    {
+                        <span><i class="bi bi-folder2"></i> Qrup</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-group btn-group-sm">
+            <a asp-action="Create" asp-route-parentId="@Model.Id"
+               class="btn btn-outline-success"
+               title="Alt menyu əlavə et">
+                <i class="bi bi-plus"></i>
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id"
+               class="btn btn-outline-primary"
+               title="Redaktə et">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form asp-action="ToggleStatus" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="btn btn-outline-warning"
+                        title="@(Model.IsActive ? "Deaktiv et" : "Aktiv et")">
+                    <i class="bi @(Model.IsActive ? "bi-pause" : "bi-play")"></i>
+                </button>
+            </form>
+            <a asp-action="Delete" asp-route-id="@Model.Id"
+               class="btn btn-outline-danger"
+               title="Sil">
+                <i class="bi bi-trash"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Children (Recursive) -->
+    @if (Model.HasChildren)
+    {
+        <div class="menu-tree-children">
+            @foreach (var child in Model.Children.OrderBy(c => c.OrderIndex))
+            {
+                <partial name="_MenuTreeNode" model="child" />
+            }
+        </div>
+    }
+</div>

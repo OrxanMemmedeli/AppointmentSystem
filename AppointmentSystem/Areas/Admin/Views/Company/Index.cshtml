@@ -151,13 +151,15 @@
                                     <div class="small">
                                         @if (!string.IsNullOrEmpty(company.Email))
                                         {
-                                            <i class="bi bi-envelope"></i> @company.Email
+                                            <i class="bi bi-envelope"></i> 
+                                            @company.Email
 
                                             <br />
                                         }
                                         @if (!string.IsNullOrEmpty(company.Phone))
                                         {
-                                            <i class="bi bi-telephone"></i> @company.Phone
+                                            <i class="bi bi-telephone"></i> 
+                                            @company.Phone
                                         }
                                     </div>
                                 </td>
@@ -201,6 +203,19 @@
                                            class="btn btn-outline-primary" title="Redaktə et">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+
+                                        @if (!company.IsVerified)
+                                        {
+                                            <form asp-action="Verify" asp-route-id="@company.Id"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-success"
+                                                        title="Təsdiq et"
+                                                        onclick="return confirm('Bu şirkəti təsdiq etmək istədiyinizdən əminsiniz?')">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
 
                                         <form asp-action="ToggleStatus" asp-route-id="@company.Id"
                                               method="post" class="d-inline">
